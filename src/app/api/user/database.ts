@@ -19,6 +19,7 @@ import {
   ProfileFormValues,
   SmartCaloriePlannerFormValues,
 } from '../../../lib/schemas';
+
 export async function addUser(u: string) {
   'use server';
   let user = JSON.parse(u) as User;
@@ -74,6 +75,7 @@ export async function onboardingUpdateUser(
     throw e;
   }
 }
+
 export async function getSmartPlannerData(userId: string): Promise<{
   formValues: Partial<SmartCaloriePlannerFormValues>;
   results?: GlobalCalculatedTargets | null;
@@ -212,4 +214,26 @@ export async function getProfileData(
 
   console.log('Returning fallback values');
   return {};
+}
+
+export async function getUserProfile(
+  userId: string
+): Promise<FullProfileType | null> {
+  'use server';
+  if (!userId) return null;
+
+  try {
+    const userDocRef = doc(db, 'users', userId);
+    const docSnap = await getDoc(userDocRef);
+
+    if (docSnap.exists()) {
+      return docSnap.data() as FullProfileType;
+    } else {
+      console.log('No user profile found for userId:', userId);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    throw error;
+  }
 }
