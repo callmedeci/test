@@ -41,7 +41,7 @@ import type {
   WeeklyMealPlan,
 } from '@/lib/schemas';
 import { preprocessDataForFirestore } from '@/lib/schemas';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, getDocFromServer, setDoc } from 'firebase/firestore';
 import { Loader2, Pencil, PlusCircle, Trash2, Wand2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -49,52 +49,102 @@ async function getMealPlanData(userId: string): Promise<WeeklyMealPlan | null> {
   if (!userId) return null;
   try {
     const userProfileRef = doc(db, 'users', userId);
-    const docSnap = await getDoc(userProfileRef);
-    if (docSnap.exists()) {
-      const profileData = docSnap.data() as any;
-      if (profileData.currentWeeklyPlan) {
-        const fullPlan: WeeklyMealPlan = {
-          days: daysOfWeek.map((dayName: string) => {
-            const existingDay = profileData.currentWeeklyPlan?.days?.find(
-              (d: any) => d.dayOfWeek === dayName
+    const docSnap = await getDocFromServer(userProfileRef);
+    if (!docSnap.exists()) throw new Error('Failed to fetch profile data');
+
+    const profileData = docSnap.data() as any;
+
+    // Debug logging
+    console.log('Profile data exists:', !!profileData.currentWeeklyPlan);
+
+    if (profileData.currentWeeklyPlan) {
+      console.log(
+        'Days in Firebase:',
+        profileData.currentWeeklyPlan.days.length
+      );
+
+      const fullPlan: WeeklyMealPlan = {
+        days: daysOfWeek.map((dayName: string) => {
+          const existingDay = profileData.currentWeeklyPlan.days.find(
+            (d: any) => d.dayOfWeek === dayName
+          );
+
+          console.log(`Processing ${dayName}:`, !!existingDay);
+
+          if (existingDay) {
+            console.log(`${dayName} has ${existingDay.meals.length} meals`);
+
+            // Check if we have actual meal data
+            const mealsWithData = existingDay.meals.filter(
+              (m: any) => m.ingredients && m.ingredients.length > 0
             );
-            if (existingDay) {
-              return {
-                ...existingDay,
-                meals: mealNames.map((mealName: string) => {
-                  const existingMeal = existingDay.meals.find(
-                    (m: any) => m.name === mealName
-                  );
-                  return (
-                    existingMeal || {
-                      name: mealName,
-                      customName: '',
-                      ingredients: [],
-                      totalCalories: null,
-                      totalProtein: null,
-                      totalCarbs: null,
-                      totalFat: null,
-                    }
-                  );
-                }),
-              };
-            }
+            console.log(
+              `${dayName} meals with ingredients:`,
+              mealsWithData.length
+            );
+
             return {
-              dayOfWeek: dayName,
-              meals: mealNames.map((mealName: string) => ({
-                name: mealName,
-                customName: '',
-                ingredients: [],
-                totalCalories: null,
-                totalProtein: null,
-                totalCarbs: null,
-                totalFat: null,
-              })),
+              dayOfWeek: existingDay.dayOfWeek, // Use the existing dayOfWeek
+              meals: mealNames.map((mealName: string) => {
+                const existingMeal = existingDay.meals.find(
+                  (m: any) => m.name === mealName
+                );
+
+                if (existingMeal) {
+                  console.log(`Found ${dayName} - ${mealName}:`, {
+                    hasIngredients: existingMeal.ingredients?.length > 0,
+                    totalCalories: existingMeal.totalCalories,
+                    customName: existingMeal.customName || 'No custom name',
+                  });
+
+                  // Return the existing meal data as-is
+                  return {
+                    name: existingMeal.name,
+                    customName: existingMeal.customName || '',
+                    ingredients: existingMeal.ingredients || [],
+                    totalCalories: existingMeal.totalCalories,
+                    totalProtein: existingMeal.totalProtein,
+                    totalCarbs: existingMeal.totalCarbs,
+                    totalFat: existingMeal.totalFat,
+                    // Include any other properties that might exist
+                    ...(existingMeal.id !== undefined && {
+                      id: existingMeal.id,
+                    }),
+                  };
+                }
+
+                // Return default meal structure if not found
+                return {
+                  name: mealName,
+                  customName: '',
+                  ingredients: [],
+                  totalCalories: null,
+                  totalProtein: null,
+                  totalCarbs: null,
+                  totalFat: null,
+                };
+              }),
             };
-          }),
-        };
-        return fullPlan;
-      }
+          }
+
+          // Return default day structure if day not found
+          return {
+            dayOfWeek: dayName,
+            meals: mealNames.map((mealName: string) => ({
+              name: mealName,
+              customName: '',
+              ingredients: [],
+              totalCalories: null,
+              totalProtein: null,
+              totalCarbs: null,
+              totalFat: null,
+            })),
+          };
+        }),
+      };
+
+      console.log('Returning full plan with', fullPlan.days.length, 'days');
+      return fullPlan;
     }
   } catch (error) {
     console.error('Error fetching meal plan data from Firestore:', error);
@@ -113,6 +163,16 @@ async function saveMealPlanData(userId: string, planData: WeeklyMealPlan) {
       { currentWeeklyPlan: sanitizedPlanData },
       { merge: true }
     );
+
+    // Verify the write by reading it back
+    const docSnapshot = await getDoc(userProfileRef);
+    if (docSnapshot.exists()) {
+      const savedData = docSnapshot.data().currentWeeklyPlan;
+      console.log('Verified saved data:', savedData);
+      return { success: true, data: savedData };
+    } else {
+      throw new Error('Document was not created');
+    }
   } catch (error) {
     console.error('Error saving meal plan data to Firestore:', error);
     throw error;
@@ -199,8 +259,10 @@ export default function CurrentMealPlanPage() {
       getMealPlanData(user.uid)
         .then((plan) => {
           if (plan) {
+            console.log('✅✅ PLAN IS GETTING FROM USERS DATA SET ✅✅', plan);
             setWeeklyPlan(plan);
           } else {
+            console.log('✅✅ PLAN IS GETTING SET RANDOM ✅✅');
             setWeeklyPlan(generateInitialWeeklyPlan());
           }
         })
@@ -230,7 +292,7 @@ export default function CurrentMealPlanPage() {
       setIsLoadingProfile(false);
       setWeeklyPlan(generateInitialWeeklyPlan());
     }
-  }, [user, toast]);
+  }, [toast]);
 
   const handleEditMeal = (dayIndex: number, mealIndex: number) => {
     const mealToEdit = weeklyPlan.days[dayIndex].meals[mealIndex];
@@ -386,37 +448,36 @@ export default function CurrentMealPlanPage() {
       };
 
       const result = await adjustMealIngredients(aiInput);
-
-      if (result.adjustedMeal && user?.uid) {
-        const newWeeklyPlan = JSON.parse(JSON.stringify(weeklyPlan));
-        const updatedMealData = {
-          ...result.adjustedMeal,
-          id: mealToOptimize.id,
-          totalCalories: Number(result.adjustedMeal.totalCalories) || null,
-          totalProtein: Number(result.adjustedMeal.totalProtein) || null,
-          totalCarbs: Number(result.adjustedMeal.totalCarbs) || null,
-          totalFat: Number(result.adjustedMeal.totalFat) || null,
-          ingredients: result.adjustedMeal.ingredients.map((ing) => ({
-            ...ing,
-            quantity: Number(ing.quantity) || 0,
-            calories: Number(ing.calories) || null,
-            protein: Number(ing.protein) || null,
-            carbs: Number(ing.carbs) || null,
-            fat: Number(ing.fat) || null,
-          })),
-        };
-        newWeeklyPlan.days[dayIndex].meals[mealIndex] = updatedMealData;
-        setWeeklyPlan(newWeeklyPlan);
-        await saveMealPlanData(user.uid, newWeeklyPlan);
-        toast({
-          title: `Meal Optimized: ${mealToOptimize.name}`,
-          description: result.explanation || 'AI has adjusted the ingredients.',
-        });
-      } else {
+      if (!result.adjustedMeal || !user?.uid)
         throw new Error(
           'AI did not return an adjusted meal or an unexpected format was received.'
         );
-      }
+
+      const newWeeklyPlan = JSON.parse(JSON.stringify(weeklyPlan));
+      const updatedMealData = {
+        ...result.adjustedMeal,
+        id: mealToOptimize.id,
+        totalCalories: Number(result.adjustedMeal.totalCalories) || null,
+        totalProtein: Number(result.adjustedMeal.totalProtein) || null,
+        totalCarbs: Number(result.adjustedMeal.totalCarbs) || null,
+        totalFat: Number(result.adjustedMeal.totalFat) || null,
+        ingredients: result.adjustedMeal.ingredients.map((ing) => ({
+          ...ing,
+          quantity: Number(ing.quantity) || 0,
+          calories: Number(ing.calories) || null,
+          protein: Number(ing.protein) || null,
+          carbs: Number(ing.carbs) || null,
+          fat: Number(ing.fat) || null,
+        })),
+      };
+      newWeeklyPlan.days[dayIndex].meals[mealIndex] = updatedMealData;
+      setWeeklyPlan(newWeeklyPlan);
+      await saveMealPlanData(user.uid, newWeeklyPlan);
+
+      toast({
+        title: `Meal Optimized: ${mealToOptimize.name}`,
+        description: result.explanation || 'AI has adjusted the ingredients.',
+      });
     } catch (error: any) {
       console.error('Error optimizing meal:', error);
       console.error('Full AI error object:', error);
