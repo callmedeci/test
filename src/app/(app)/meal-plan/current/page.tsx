@@ -13,226 +13,22 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import EditMealDialog from '@/features/meal-plan/components/EditMealDialog';
 import {
-  daysOfWeek,
-  defaultMacroPercentages,
-  mealNames,
-} from '@/lib/constants';
-import { db } from '@/lib/firebase/clientApp';
+  generateInitialWeeklyPlan,
+  getMealPlanData,
+  getProfileDataForOptimization,
+  saveMealPlanData,
+} from '@/features/meal-plan/lib/data-service';
+import { useToast } from '@/hooks/use-toast';
+import { daysOfWeek, defaultMacroPercentages } from '@/lib/constants';
 import { calculateEstimatedDailyTargets } from '@/lib/nutrition-calculator';
-import type {
-  FullProfileType,
-  Ingredient,
-  Meal,
-  WeeklyMealPlan,
-} from '@/lib/schemas';
-import { preprocessDataForFirestore } from '@/lib/schemas';
-import { doc, getDoc, getDocFromServer, setDoc } from 'firebase/firestore';
-import { Loader2, Pencil, PlusCircle, Trash2, Wand2 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
-
-async function getMealPlanData(userId: string): Promise<WeeklyMealPlan | null> {
-  if (!userId) return null;
-  try {
-    const userProfileRef = doc(db, 'users', userId);
-    const docSnap = await getDocFromServer(userProfileRef);
-    if (!docSnap.exists()) throw new Error('Failed to fetch profile data');
-
-    const profileData = docSnap.data() as any;
-
-    // Debug logging
-    console.log('Profile data exists:', !!profileData.currentWeeklyPlan);
-
-    if (profileData.currentWeeklyPlan) {
-      console.log(
-        'Days in Firebase:',
-        profileData.currentWeeklyPlan.days.length
-      );
-
-      const fullPlan: WeeklyMealPlan = {
-        days: daysOfWeek.map((dayName: string) => {
-          const existingDay = profileData.currentWeeklyPlan.days.find(
-            (d: any) => d.dayOfWeek === dayName
-          );
-
-          console.log(`Processing ${dayName}:`, !!existingDay);
-
-          if (existingDay) {
-            console.log(`${dayName} has ${existingDay.meals.length} meals`);
-
-            // Check if we have actual meal data
-            const mealsWithData = existingDay.meals.filter(
-              (m: any) => m.ingredients && m.ingredients.length > 0
-            );
-            console.log(
-              `${dayName} meals with ingredients:`,
-              mealsWithData.length
-            );
-
-            return {
-              dayOfWeek: existingDay.dayOfWeek, // Use the existing dayOfWeek
-              meals: mealNames.map((mealName: string) => {
-                const existingMeal = existingDay.meals.find(
-                  (m: any) => m.name === mealName
-                );
-
-                if (existingMeal) {
-                  console.log(`Found ${dayName} - ${mealName}:`, {
-                    hasIngredients: existingMeal.ingredients?.length > 0,
-                    totalCalories: existingMeal.totalCalories,
-                    customName: existingMeal.customName || 'No custom name',
-                  });
-
-                  // Return the existing meal data as-is
-                  return {
-                    name: existingMeal.name,
-                    customName: existingMeal.customName || '',
-                    ingredients: existingMeal.ingredients || [],
-                    totalCalories: existingMeal.totalCalories,
-                    totalProtein: existingMeal.totalProtein,
-                    totalCarbs: existingMeal.totalCarbs,
-                    totalFat: existingMeal.totalFat,
-                    // Include any other properties that might exist
-                    ...(existingMeal.id !== undefined && {
-                      id: existingMeal.id,
-                    }),
-                  };
-                }
-
-                // Return default meal structure if not found
-                return {
-                  name: mealName,
-                  customName: '',
-                  ingredients: [],
-                  totalCalories: null,
-                  totalProtein: null,
-                  totalCarbs: null,
-                  totalFat: null,
-                };
-              }),
-            };
-          }
-
-          // Return default day structure if day not found
-          return {
-            dayOfWeek: dayName,
-            meals: mealNames.map((mealName: string) => ({
-              name: mealName,
-              customName: '',
-              ingredients: [],
-              totalCalories: null,
-              totalProtein: null,
-              totalCarbs: null,
-              totalFat: null,
-            })),
-          };
-        }),
-      };
-
-      console.log('Returning full plan with', fullPlan.days.length, 'days');
-      return fullPlan;
-    }
-  } catch (error) {
-    console.error('Error fetching meal plan data from Firestore:', error);
-  }
-  return null;
-}
-
-async function saveMealPlanData(userId: string, planData: WeeklyMealPlan) {
-  if (!userId) throw new Error('User ID required to save meal plan.');
-  try {
-    const userProfileRef = doc(db, 'users', userId);
-    const sanitizedPlanData = preprocessDataForFirestore(planData);
-
-    await setDoc(
-      userProfileRef,
-      { currentWeeklyPlan: sanitizedPlanData },
-      { merge: true }
-    );
-
-    // Verify the write by reading it back
-    const docSnapshot = await getDoc(userProfileRef);
-    if (docSnapshot.exists()) {
-      const savedData = docSnapshot.data().currentWeeklyPlan;
-      console.log('Verified saved data:', savedData);
-      return { success: true, data: savedData };
-    } else {
-      throw new Error('Document was not created');
-    }
-  } catch (error) {
-    console.error('Error saving meal plan data to Firestore:', error);
-    throw error;
-  }
-}
-
-async function getProfileDataForOptimization(
-  userId: string
-): Promise<Partial<FullProfileType>> {
-  if (!userId) return {};
-  try {
-    const userProfileRef = doc(db, 'users', userId);
-    const docSnap = await getDoc(userProfileRef);
-
-    if (docSnap.exists()) {
-      const data = docSnap.data() as FullProfileType;
-
-      const profile: Partial<FullProfileType> = {
-        age: data.smartPlannerData?.formValues?.age,
-        gender: data.smartPlannerData?.formValues?.gender,
-        current_weight: data.smartPlannerData?.formValues?.current_weight,
-        height_cm: data.smartPlannerData?.formValues?.height_cm,
-        activityLevel: data.smartPlannerData?.formValues?.activity_factor_key,
-        dietGoalOnboarding: data.smartPlannerData?.formValues?.dietGoal,
-        preferredDiet: data.preferredDiet,
-        allergies: data.allergies || [],
-        dispreferredIngredients: data.dispreferredIngredients || [],
-        preferredIngredients: data.preferredIngredients || [],
-      };
-      // Ensure undefined top-level optional fields become null for consistency
-      (Object.keys(profile) as Array<keyof typeof profile>).forEach((key) => {
-        if (profile[key] === undefined) {
-          (profile as any)[key] = null;
-        }
-      });
-      return profile;
-    }
-  } catch (error) {
-    console.error(
-      'Error fetching profile data from Firestore for optimization:',
-      error
-    );
-  }
-  return {};
-}
-
-const generateInitialWeeklyPlan = (): WeeklyMealPlan => ({
-  days: daysOfWeek.map((day) => ({
-    dayOfWeek: day,
-    meals: mealNames.map((mealName) => ({
-      name: mealName,
-      customName: '',
-      ingredients: [],
-      totalCalories: null,
-      totalProtein: null,
-      totalCarbs: null,
-      totalFat: null,
-    })),
-  })),
-});
+import type { FullProfileType, Meal, WeeklyMealPlan } from '@/lib/schemas';
+import { Loader2, Pencil, Wand2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function CurrentMealPlanPage() {
   const { user } = useAuth();
@@ -258,13 +54,8 @@ export default function CurrentMealPlanPage() {
       setIsLoadingPlan(true);
       getMealPlanData(user.uid)
         .then((plan) => {
-          if (plan) {
-            console.log('✅✅ PLAN IS GETTING FROM USERS DATA SET ✅✅', plan);
-            setWeeklyPlan(plan);
-          } else {
-            console.log('✅✅ PLAN IS GETTING SET RANDOM ✅✅');
-            setWeeklyPlan(generateInitialWeeklyPlan());
-          }
+          if (plan) setWeeklyPlan(plan);
+          else setWeeklyPlan(generateInitialWeeklyPlan());
         })
         .catch(() => {
           toast({
@@ -457,19 +248,32 @@ export default function CurrentMealPlanPage() {
       const updatedMealData = {
         ...result.adjustedMeal,
         id: mealToOptimize.id,
-        totalCalories: Number(result.adjustedMeal.totalCalories) || null,
-        totalProtein: Number(result.adjustedMeal.totalProtein) || null,
-        totalCarbs: Number(result.adjustedMeal.totalCarbs) || null,
-        totalFat: Number(result.adjustedMeal.totalFat) || null,
+        totalCalories:
+          result.adjustedMeal.totalCalories != null
+            ? Number(result.adjustedMeal.totalCalories)
+            : null,
+        totalProtein:
+          result.adjustedMeal.totalProtein != null
+            ? Number(result.adjustedMeal.totalProtein)
+            : null,
+        totalCarbs:
+          result.adjustedMeal.totalCarbs != null
+            ? Number(result.adjustedMeal.totalCarbs)
+            : null,
+        totalFat:
+          result.adjustedMeal.totalFat != null
+            ? Number(result.adjustedMeal.totalFat)
+            : null,
         ingredients: result.adjustedMeal.ingredients.map((ing) => ({
           ...ing,
-          quantity: Number(ing.quantity) || 0,
-          calories: Number(ing.calories) || null,
-          protein: Number(ing.protein) || null,
-          carbs: Number(ing.carbs) || null,
-          fat: Number(ing.fat) || null,
+          quantity: ing.quantity != null ? Number(ing.quantity) : 0,
+          calories: ing.calories != null ? Number(ing.calories) : null,
+          protein: ing.protein != null ? Number(ing.protein) : null,
+          carbs: ing.carbs != null ? Number(ing.carbs) : null,
+          fat: ing.fat != null ? Number(ing.fat) : null,
         })),
       };
+
       newWeeklyPlan.days[dayIndex].meals[mealIndex] = updatedMealData;
       setWeeklyPlan(newWeeklyPlan);
       await saveMealPlanData(user.uid, newWeeklyPlan);
@@ -621,270 +425,5 @@ export default function CurrentMealPlanPage() {
         />
       )}
     </div>
-  );
-}
-
-interface EditMealDialogProps {
-  meal: Meal;
-  onSave: (updatedMeal: Meal) => void;
-  onClose: () => void;
-}
-
-function EditMealDialog({
-  meal: initialMeal,
-  onSave,
-  onClose,
-}: EditMealDialogProps) {
-  const [meal, setMeal] = useState<Meal>(
-    JSON.parse(JSON.stringify(initialMeal))
-  );
-
-  const handleIngredientChange = (
-    index: number,
-    field: keyof Ingredient,
-    value: string | number
-  ) => {
-    const newIngredients = [...meal.ingredients];
-    const targetIngredient = { ...newIngredients[index] };
-
-    if (
-      field === 'quantity' ||
-      field === 'calories' ||
-      field === 'protein' ||
-      field === 'carbs' ||
-      field === 'fat'
-    ) {
-      const numValue = Number(value);
-      (targetIngredient as any)[field] =
-        value === '' || value === undefined || Number.isNaN(numValue)
-          ? null
-          : numValue;
-    } else {
-      (targetIngredient as any)[field] = value;
-    }
-    newIngredients[index] = targetIngredient;
-    setMeal((prev) => ({ ...prev, ingredients: newIngredients }));
-  };
-
-  const addIngredient = () => {
-    setMeal((prev) => ({
-      ...prev,
-      ingredients: [
-        ...prev.ingredients,
-        {
-          name: '',
-          quantity: null,
-          unit: 'g',
-          calories: null,
-          protein: null,
-          carbs: null,
-          fat: null,
-        },
-      ],
-    }));
-  };
-
-  const removeIngredient = (index: number) => {
-    setMeal((prev) => ({
-      ...prev,
-      ingredients: prev.ingredients.filter((_, i) => i !== index),
-    }));
-  };
-
-  const calculateTotals = useCallback(() => {
-    let totalCalories = 0;
-    let totalProtein = 0;
-    let totalCarbs = 0;
-    let totalFat = 0;
-
-    meal.ingredients.forEach((ing) => {
-      totalCalories += Number(ing.calories) || 0;
-      totalProtein += Number(ing.protein) || 0;
-      totalCarbs += Number(ing.carbs) || 0;
-      totalFat += Number(ing.fat) || 0;
-    });
-    setMeal((prev) => ({
-      ...prev,
-      totalCalories,
-      totalProtein,
-      totalCarbs,
-      totalFat,
-    }));
-  }, [meal.ingredients]);
-
-  useEffect(() => {
-    calculateTotals();
-  }, [meal.ingredients, calculateTotals]);
-
-  const handleSubmit = () => {
-    let finalTotalCalories = 0,
-      finalTotalProtein = 0,
-      finalTotalCarbs = 0,
-      finalTotalFat = 0;
-    meal.ingredients.forEach((ing) => {
-      finalTotalCalories += Number(ing.calories) || 0;
-      finalTotalProtein += Number(ing.protein) || 0;
-      finalTotalCarbs += Number(ing.carbs) || 0;
-      finalTotalFat += Number(ing.fat) || 0;
-    });
-
-    const mealToSave: Meal = {
-      ...meal,
-      totalCalories: finalTotalCalories,
-      totalProtein: finalTotalProtein,
-      totalCarbs: finalTotalCarbs,
-      totalFat: finalTotalFat,
-    };
-    onSave(mealToSave);
-  };
-
-  return (
-    <Dialog open={true} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className='sm:max-w-2xl'>
-        <DialogHeader>
-          <DialogTitle>
-            Edit {initialMeal.name}
-            {initialMeal.customName ? ` - ${initialMeal.customName}` : ''}
-          </DialogTitle>
-        </DialogHeader>
-        <div className='space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2'>
-          <div>
-            <Label htmlFor='customMealName'>
-              Meal Name (e.g., Chicken Salad)
-            </Label>
-            <Input
-              id='customMealName'
-              value={meal.customName || ''}
-              onChange={(e) => setMeal({ ...meal, customName: e.target.value })}
-              placeholder='Optional: e.g., Greek Yogurt with Berries'
-              onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
-            />
-          </div>
-          <Label>Ingredients</Label>
-          {meal.ingredients.map((ing, index) => (
-            <Card key={index} className='p-3 space-y-2'>
-              <div className='flex justify-between items-center gap-2'>
-                <Input
-                  placeholder='Ingredient Name'
-                  value={ing.name}
-                  onChange={(e) =>
-                    handleIngredientChange(index, 'name', e.target.value)
-                  }
-                  className='flex-grow'
-                  onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
-                />
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  onClick={() => removeIngredient(index)}
-                  className='shrink-0'
-                >
-                  {' '}
-                  <Trash2 className='h-4 w-4 text-destructive' />{' '}
-                </Button>
-              </div>
-              <div className='grid grid-cols-2 md:grid-cols-3 gap-2'>
-                <Input
-                  type='number'
-                  placeholder='Qty'
-                  value={ing.quantity ?? ''}
-                  onChange={(e) =>
-                    handleIngredientChange(index, 'quantity', e.target.value)
-                  }
-                  onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
-                />
-                <Input
-                  placeholder='Unit (g, ml, item)'
-                  value={ing.unit}
-                  onChange={(e) =>
-                    handleIngredientChange(index, 'unit', e.target.value)
-                  }
-                  onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
-                />
-                <div className='col-span-2 md:col-span-1 text-xs text-muted-foreground pt-2'>
-                  {' '}
-                  (Total for this quantity){' '}
-                </div>
-              </div>
-              <div className='grid grid-cols-2 md:grid-cols-4 gap-2'>
-                <Input
-                  type='number'
-                  placeholder='Cals'
-                  value={ing.calories ?? ''}
-                  onChange={(e) =>
-                    handleIngredientChange(index, 'calories', e.target.value)
-                  }
-                  onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
-                />
-                <Input
-                  type='number'
-                  placeholder='Protein (g)'
-                  value={ing.protein ?? ''}
-                  onChange={(e) =>
-                    handleIngredientChange(index, 'protein', e.target.value)
-                  }
-                  onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
-                />
-                <Input
-                  type='number'
-                  placeholder='Carbs (g)'
-                  value={ing.carbs ?? ''}
-                  onChange={(e) =>
-                    handleIngredientChange(index, 'carbs', e.target.value)
-                  }
-                  onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
-                />
-                <Input
-                  type='number'
-                  placeholder='Fat (g)'
-                  value={ing.fat ?? ''}
-                  onChange={(e) =>
-                    handleIngredientChange(index, 'fat', e.target.value)
-                  }
-                  onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
-                />
-              </div>
-            </Card>
-          ))}
-          <Button variant='outline' onClick={addIngredient} className='w-full'>
-            {' '}
-            <PlusCircle className='mr-2 h-4 w-4' /> Add Ingredient{' '}
-          </Button>
-          <div className='mt-4 p-3 border rounded-md bg-muted/50'>
-            <h4 className='font-semibold mb-1'>Calculated Totals:</h4>
-            <p className='text-sm'>
-              Calories: {meal.totalCalories?.toFixed(0) ?? '0'}
-            </p>
-            <p className='text-sm'>
-              Protein: {meal.totalProtein?.toFixed(1) ?? '0.0'}g
-            </p>
-            <p className='text-sm'>
-              Carbs: {meal.totalCarbs?.toFixed(1) ?? '0.0'}g
-            </p>
-            <p className='text-sm'>
-              Fat: {meal.totalFat?.toFixed(1) ?? '0.0'}g
-            </p>
-            <Button
-              onClick={calculateTotals}
-              size='sm'
-              variant='ghost'
-              className='mt-1 text-xs'
-            >
-              Recalculate Manually
-            </Button>
-          </div>
-        </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button type='button' variant='outline' onClick={onClose}>
-              Cancel
-            </Button>
-          </DialogClose>
-          <Button type='button' onClick={handleSubmit}>
-            Save Changes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
