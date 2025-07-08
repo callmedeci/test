@@ -63,7 +63,7 @@ export default function CurrentMealPlanPage() {
     }
 
     fetchUserData(getProfileDataForOptimization, handleError);
-  }, [toast]);
+  }, [fetchUserData, toast]);
 
   useEffect(() => {
     function handleError() {
@@ -75,7 +75,7 @@ export default function CurrentMealPlanPage() {
     }
 
     fetchMealPlan(handleError);
-  }, [toast]);
+  }, [fetchMealPlan, toast]);
 
   const handleEditMeal = (dayIndex: number, mealIndex: number) => {
     const mealToEdit = weeklyPlan.days[dayIndex].meals[mealIndex];
@@ -101,7 +101,7 @@ export default function CurrentMealPlanPage() {
           updatedMeal.customName || updatedMeal.name
         } has been updated.`,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Save Error',
         description: 'Could not save meal plan.',
@@ -167,12 +167,14 @@ export default function CurrentMealPlanPage() {
         return;
       }
 
-      const mealDistribution = defaultMacroPercentages[mealToOptimize.name] || {
-        calories_pct: 0,
-        protein_pct: 0,
-        carbs_pct: 0,
-        fat_pct: 0,
-      };
+      let mealDistribution;
+      const userMealDistributions = profileData.mealDistributions;
+      if (!userMealDistributions)
+        mealDistribution = defaultMacroPercentages[mealToOptimize.name];
+      else
+        mealDistribution = userMealDistributions.filter(
+          (meal) => meal.mealName === mealToOptimize.name
+        )[0];
 
       const targetMacrosForMeal = {
         calories: Math.round(
