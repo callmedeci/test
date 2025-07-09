@@ -1,6 +1,10 @@
 import { type GeneratePersonalizedMealPlanInput } from '@/ai/flows/generate-meal-plan';
-import { defaultMacroPercentages } from '@/lib/constants';
-import { BaseProfileData } from '@/lib/schemas';
+import {
+  daysOfWeek,
+  defaultMacroPercentages,
+  mealNames,
+} from '@/lib/constants';
+import { BaseProfileData, WeeklyMealPlan } from '@/lib/schemas';
 import { DailyTargetsTypes, MealToOptimizeTypes } from '../types';
 import { requiredFields } from './config';
 
@@ -83,9 +87,10 @@ export function getAdjustedMealInput(
   const targetMacrosForMeal = {
     calories:
       dailyTargets.targetCalories! * (mealDistribution.calories_pct / 100),
-    protein: dailyTargets.targetProtein! * (mealDistribution.protein_pct / 100),
-    carbs: dailyTargets.targetCarbs! * (mealDistribution.carbs_pct / 100),
-    fat: dailyTargets.targetFat! * (mealDistribution.fat_pct / 100),
+    protein:
+      dailyTargets.targetProtein! * (mealDistribution.calories_pct / 100),
+    carbs: dailyTargets.targetCarbs! * (mealDistribution.calories_pct / 100),
+    fat: dailyTargets.targetFat! * (mealDistribution.calories_pct / 100),
   };
 
   const preparedIngredients = mealToOptimize.ingredients.map((ing) => ({
@@ -126,4 +131,21 @@ export function getMissingProfileFields(
   profile: Partial<BaseProfileData>
 ): (keyof Partial<BaseProfileData>)[] {
   return requiredFields.filter((field) => !profile[field]);
+}
+
+export function generateInitialWeeklyPlan(): WeeklyMealPlan {
+  return {
+    days: daysOfWeek.map((day) => ({
+      dayOfWeek: day,
+      meals: mealNames.map((mealName) => ({
+        name: mealName,
+        customName: '',
+        ingredients: [],
+        totalCalories: null,
+        totalProtein: null,
+        totalCarbs: null,
+        totalFat: null,
+      })),
+    })),
+  };
 }
