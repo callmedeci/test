@@ -17,17 +17,17 @@ export function customMacroSplit(
 ): CalculatedMealMacros[] {
   return mealMacroDistribution.map((mealPct) => ({
     mealName: mealPct.mealName,
-    Calories: Math.round(
-      totalMacros.calories * ((mealPct.calories_pct || 0) / 100)
+    Calories: Number(
+      (totalMacros.calories * ((mealPct.calories_pct || 0) / 100)).toFixed(1)
     ),
-    'Protein (g)': Math.round(
-      totalMacros.protein_g * ((mealPct.calories_pct || 0) / 100)
+    'Protein (g)': Number(
+      (totalMacros.protein_g * ((mealPct.calories_pct || 0) / 100)).toFixed(1)
     ),
-    'Carbs (g)': Math.round(
-      totalMacros.carbs_g * ((mealPct.calories_pct || 0) / 100)
+    'Carbs (g)': Number(
+      (totalMacros.carbs_g * ((mealPct.calories_pct || 0) / 100)).toFixed(1)
     ),
-    'Fat (g)': Math.round(
-      totalMacros.fat_g * ((mealPct.calories_pct || 0) / 100)
+    'Fat (g)': Number(
+      (totalMacros.fat_g * ((mealPct.calories_pct || 0) / 100)).toFixed(1)
     ),
   }));
 }
@@ -86,8 +86,7 @@ export function getExampleTargetsForMeal(mealName: string) {
 
 export function prepareAiMealInput({
   targetMacros,
-  profileData,
-  currentPreferences,
+  profile,
 }: AiMealInputTypes): SuggestMealsForMacrosInput {
   const aiInput = {
     mealName: targetMacros.mealName,
@@ -95,16 +94,16 @@ export function prepareAiMealInput({
     targetProteinGrams: targetMacros.protein,
     targetCarbsGrams: targetMacros.carbs,
     targetFatGrams: targetMacros.fat,
-    age: profileData?.age ?? undefined,
-    gender: profileData?.gender ?? undefined,
-    activityLevel: profileData?.activityLevel ?? undefined,
-    dietGoal: profileData?.dietGoalOnboarding ?? undefined,
-    preferredDiet: currentPreferences.preferredDiet,
-    preferredCuisines: currentPreferences.preferredCuisines,
-    dispreferredCuisines: currentPreferences.dispreferredCuisines,
-    preferredIngredients: currentPreferences.preferredIngredients,
-    dispreferredIngredients: currentPreferences.dispreferredIngredients,
-    allergies: currentPreferences.allergies,
+    age: profile.age ?? undefined,
+    gender: profile.biological_sex ?? undefined,
+    activityLevel: profile.physical_activity_level ?? undefined,
+    dietGoal: profile.primary_diet_goal ?? undefined,
+    preferredDiet: profile.preferred_diet ?? undefined,
+    preferredCuisines: profile.preferred_cuisines ?? undefined,
+    dispreferredCuisines: profile.dispreferrred_cuisines ?? undefined,
+    preferredIngredients: profile.preferred_ingredients ?? undefined,
+    dispreferredIngredients: profile.dispreferrred_ingredients ?? undefined,
+    allergies: profile.allergies ?? undefined,
   };
 
   Object.keys(aiInput).forEach(

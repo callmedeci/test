@@ -45,19 +45,22 @@ function CustomizePlanTable({
             <TableCell className='font-medium'>Protein</TableCell>
             {/* */}
             <TableCell className='text-right'>
-              {plan.proteinTargetPct
-                ? formatNumber(plan.proteinTargetPct)
+              {plan.custom_protein_percentage
+                ? formatNumber(plan.custom_protein_percentage)
                 : 'N/A'}
               %
             </TableCell>
             {/* */}
             <TableCell className='text-right'>
-              {plan.proteinGrams ? formatNumber(plan.proteinGrams) : 'N/A'} g
+              {plan.custom_protein_g
+                ? formatNumber(plan.custom_protein_g)
+                : 'N/A'}{' '}
+              g
             </TableCell>
             {/* */}
             <TableCell className='text-right'>
-              {plan.proteinCalories
-                ? formatNumber(plan.proteinCalories)
+              {plan.protein_calories
+                ? formatNumber(plan.protein_calories)
                 : 'N/A'}{' '}
               kcal
             </TableCell>
@@ -69,15 +72,20 @@ function CustomizePlanTable({
             <TableCell className='font-medium'>Carbohydrates</TableCell>
             {/* */}
             <TableCell className='text-right'>
-              {plan.carbTargetPct ? formatNumber(plan.carbTargetPct) : 'N/A'}%
+              {plan.custom_carbs_percentage
+                ? formatNumber(plan.custom_carbs_percentage)
+                : 'N/A'}
+              %
             </TableCell>
             {/* */}
             <TableCell className='text-right'>
-              {plan.carbGrams ? formatNumber(plan.carbGrams) : 'N/A'} g
+              {plan.custom_carbs_g ? formatNumber(plan.custom_carbs_g) : 'N/A'}{' '}
+              g
             </TableCell>
             {/* */}
             <TableCell className='text-right'>
-              {plan.carbCalories ? formatNumber(plan.carbCalories) : 'N/A'} kcal
+              {plan.carb_calories ? formatNumber(plan.carb_calories) : 'N/A'}{' '}
+              kcal
             </TableCell>
             {/* */}
           </TableRow>
@@ -87,15 +95,18 @@ function CustomizePlanTable({
             <TableCell className='font-medium'>Fat</TableCell>
             {/* */}
             <TableCell className='text-right'>
-              {plan.fatTargetPct ? formatNumber(plan.fatTargetPct) : 'N/A'}%
+              {plan.custom_fat_percentage
+                ? formatNumber(plan.custom_fat_percentage)
+                : 'N/A'}
+              %
             </TableCell>
             {/* */}
             <TableCell className='text-right'>
-              {plan.fatGrams ? formatNumber(plan.fatGrams) : 'N/A'} g
+              {plan.custom_fat_g ? formatNumber(plan.custom_fat_g) : 'N/A'} g
             </TableCell>
             {/* */}
             <TableCell className='text-right'>
-              {plan.fatCalories ? formatNumber(plan.fatCalories) : 'N/A'} kcal
+              {plan.fat_calories ? formatNumber(plan.fat_calories) : 'N/A'} kcal
             </TableCell>
             {/* */}
           </TableRow>
@@ -109,8 +120,8 @@ function CustomizePlanTable({
             <TableCell className='text-right'>-</TableCell>
             {/* */}
             <TableCell className='text-right'>
-              {plan.finalTargetCalories
-                ? formatNumber(plan.finalTargetCalories)
+              {plan.custom_total_calories_final
+                ? formatNumber(plan.custom_total_calories_final)
                 : 'N/A'}{' '}
               kcal
             </TableCell>

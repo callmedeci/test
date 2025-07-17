@@ -13,8 +13,8 @@ import {
   where,
 } from 'firebase/firestore';
 import {
+  BaseProfileData,
   CustomCalculatedTargets,
-  FullProfileType,
   GlobalCalculatedTargets,
   OnboardingFormValues,
   ProfileFormValues,
@@ -70,12 +70,25 @@ export async function getSmartPlannerData(userId: string): Promise<{
   if (!userId) return { formValues: {} };
 
   try {
+    let profile;
+    let isUserExist;
+
     const userDocRef = doc(db, 'users', userId);
     const docSnap = await getDoc(userDocRef);
-    console.log('getSmartPlannerData: docSnap.size=', docSnap.data());
 
     if (docSnap.exists()) {
-      const profile = docSnap.data() as FullProfileType;
+    } else {
+      const userRef = collection(db, 'users');
+      const q = query(userRef, where('uid', '==', userId));
+      const userSnapshot = await getDocs(q);
+
+      profile = userSnapshot.docs[0].data() as BaseProfileData;
+      isUserExist = !userSnapshot.empty;
+    }
+
+    if (isUserExist) {
+      profile = docSnap.data() as BaseProfileData;
+      isUserExist = docSnap.exists();
 
       // Map FullProfileType fields to SmartCaloriePlannerFormValues
       const formValues: Partial<SmartCaloriePlannerFormValues> = {
@@ -173,21 +186,21 @@ export async function getProfileData(
     const docSnap = await getDoc(userDocRef);
 
     if (docSnap.exists()) {
-      const fullProfile = docSnap.data() as FullProfileType;
-      console.log('Fetched Profile from firestore:', fullProfile);
+      const profile = docSnap.data() as BaseProfileData;
+      console.log('Fetched Profile from firestore:', profile);
 
       return {
-        name: fullProfile.name ?? undefined,
-        subscriptionStatus: fullProfile.subscriptionStatus ?? undefined,
-        goalWeight: fullProfile.goalWeight ?? undefined,
-        painMobilityIssues: fullProfile.painMobilityIssues ?? undefined,
-        injuries: fullProfile.injuries || [],
-        surgeries: fullProfile.surgeries || [],
-        exerciseGoals: fullProfile.exerciseGoals || [],
-        exercisePreferences: fullProfile.exercisePreferences || [],
-        exerciseFrequency: fullProfile.exerciseFrequency ?? undefined,
-        exerciseIntensity: fullProfile.exerciseIntensity ?? undefined,
-        equipmentAccess: fullProfile.equipmentAccess || [],
+        name: profile.name ?? undefined,
+        subscriptionStatus: profile.subscriptionStatus ?? undefined,
+        goalWeight: profile.goalWeight ?? undefined,
+        painMobilityIssues: profile.painMobilityIssues ?? undefined,
+        injuries: profile.injuries || [],
+        surgeries: profile.surgeries || [],
+        exerciseGoals: profile.exerciseGoals || [],
+        exercisePreferences: profile.exercisePreferences || [],
+        exerciseFrequency: profile.exerciseFrequency ?? undefined,
+        exerciseIntensity: profile.exerciseIntensity ?? undefined,
+        equipmentAccess: profile.equipmentAccess || [],
       };
     } else {
       console.log('No document found for userId:', userId);
@@ -202,7 +215,7 @@ export async function getProfileData(
 
 export async function getUserProfile(
   userId: string
-): Promise<FullProfileType | null> {
+): Promise<BaseProfileData | null> {
   if (!userId) {
     console.log('getUserProfile called with no userId.');
     return null;
@@ -216,7 +229,7 @@ export async function getUserProfile(
     const userData = docSnap.data();
     console.log('Retrieved user data from Firestore:', userData);
 
-    return userData as FullProfileType;
+    return userData as BaseProfileData;
   } catch (error) {
     console.error('Error in getUserProfile:', error);
     throw new Error('Failed to retrieve user profile.');

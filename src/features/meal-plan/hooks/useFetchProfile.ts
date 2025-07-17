@@ -1,6 +1,6 @@
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 
-import type { BaseProfileData, FullProfileType } from '@/lib/schemas';
+import type { BaseProfileData } from '@/lib/schemas';
 import { useCallback, useState } from 'react';
 import { getFullProfileData } from '../lib/data-service';
 
@@ -8,7 +8,7 @@ export function useFetchProfile() {
   const { user } = useAuth();
 
   const [profileData, setProfileData] =
-    useState<Partial<FullProfileType> | null>(null);
+    useState<Partial<BaseProfileData> | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   const fetchUserData = useCallback(

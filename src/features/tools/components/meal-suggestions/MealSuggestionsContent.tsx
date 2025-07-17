@@ -1,10 +1,6 @@
 'use client';
 
-import {
-  suggestMealsForMacros,
-  type SuggestMealsForMacrosInput,
-  type SuggestMealsForMacrosOutput,
-} from '@/ai/flows/suggest-meals-for-macros';
+import { suggestMealsForMacros } from '@/ai/flows/suggest-meals-for-macros';
 import {
   Accordion,
   AccordionContent,
@@ -19,14 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Label } from '@/components/ui/label';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
@@ -45,20 +33,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { useFetchProfile } from '@/features/meal-plan/hooks/useFetchProfile';
 import { getMissingProfileFields } from '@/features/meal-plan/lib/utils';
+import { useGetPlan } from '@/features/profile/hooks/useGetPlan';
+import { useGetProfile } from '@/features/profile/hooks/useGetProfile';
 import { useToast } from '@/hooks/use-toast';
-import {
-  defaultMacroPercentages,
-  mealNames,
-  preferredDiets,
-} from '@/lib/constants';
-import type { BaseProfileData } from '@/lib/schemas';
-import {
-  MealSuggestionPreferencesSchema,
-  type MealSuggestionPreferencesValues,
-} from '@/lib/schemas';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { defaultMacroPercentages, mealNames } from '@/lib/constants';
 import {
   AlertTriangle,
   ChefHat,
@@ -68,15 +47,15 @@ import {
 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useMealUrlParams } from '../../hooks/useMealUrlParams';
-import { updateMealSuggestion } from '../../lib/data-service';
 import { getExampleTargetsForMeal, prepareAiMealInput } from '../../lib/utils';
-import PreferenceTextarea from './PreferenceTextarea';
+import MealForm from './MealForm';
+import { getUserProfile } from '@/features/profile/lib/data-services';
+import { SuggestMealsForMacrosOutput } from '@/lib/schemas';
 
 function MealSuggestionsContent() {
-  const { user, profileData, isLoadingProfile, fetchUserData } =
-    useFetchProfile();
+  const { userProfile, isLoadingProfile } = useGetProfile();
+  const { userPlan, isLoadingPlan } = useGetPlan();
 
   const { updateUrlWithMeal, getQueryParams, getCurrentMealParams } =
     useMealUrlParams();
@@ -110,21 +89,6 @@ function MealSuggestionsContent() {
     return getQueryParams('demo') === 'true';
   }, [getQueryParams]);
 
-  const preferenceForm = useForm<MealSuggestionPreferencesValues>({
-    resolver: zodResolver(MealSuggestionPreferencesSchema),
-    defaultValues: {
-      preferredDiet: undefined,
-      preferredCuisines: [],
-      dispreferredCuisines: [],
-      preferredIngredients: [],
-      dispreferredIngredients: [],
-      allergies: [],
-      preferredMicronutrients: [],
-      medicalConditions: [],
-      medications: [],
-    },
-  });
-
   // Function to update URL with all target macros
   const updateUrlWithTargets = useCallback(
     (targets: typeof targetMacros, isDemo: boolean = false) => {
@@ -147,71 +111,28 @@ function MealSuggestionsContent() {
     [pathname, router, searchParams]
   );
 
-  useEffect(() => {
-    function onSuccess(data: Partial<BaseProfileData>) {
-      if (!preferenceForm.formState.isDirty) {
-        preferenceForm.reset({
-          preferredDiet: data.preferredDiet || undefined,
-          preferredCuisines: data.preferredCuisines || [],
-          dispreferredCuisines: data.dispreferredCuisines || [],
-          preferredIngredients: data.preferredIngredients || [],
-          dispreferredIngredients: data.dispreferredIngredients || [],
-          allergies: data.allergies || [],
-          preferredMicronutrients: data.preferredMicronutrients || [],
-          medicalConditions: data.medicalConditions || [],
-          medications: data.medications || [],
-        });
-      }
-    }
-
-    function onFallBack() {
-      if (!preferenceForm.formState.isDirty) {
-        preferenceForm.reset({
-          preferredDiet: undefined,
-          preferredCuisines: [],
-          dispreferredCuisines: [],
-          preferredIngredients: [],
-          dispreferredIngredients: [],
-          allergies: [],
-          preferredMicronutrients: [],
-          medicalConditions: [],
-          medications: [],
-        });
-      }
-    }
-
-    function onError() {
-      toast({
-        title: 'Error',
-        description: 'Could not load profile data.',
-        variant: 'destructive',
-      });
-    }
-
-    fetchUserData(onError, onSuccess, onFallBack);
-  }, [fetchUserData, toast, preferenceForm]);
-
   const calculateTargetsForSelectedMeal = useCallback(() => {
     if (!selectedMealName) return;
+    if (!userProfile) return;
+    if (!userPlan) return;
 
     // Clear previous suggestions and errors when calculating new targets
     setSuggestions([]);
     setError(null);
 
-    const profileToUse = profileData;
-    const missingFields = getMissingProfileFields(profileToUse!);
+    const missingFields = getMissingProfileFields(userProfile);
 
-    if (missingFields.length === 0 && profileToUse) {
+    if (missingFields.length === 0 && userProfile) {
       const dailyTotals = {
         targetCalories:
-          profileData.smartPlannerData?.formValues?.custom_total_calories,
-        targetProtein: profileData.smartPlannerData?.formValues?.proteinGrams,
-        targetCarbs: profileData.smartPlannerData?.formValues?.carbGrams,
-        targetFat: profileData.smartPlannerData?.formValues?.fatGrams,
+          userPlan?.custom_total_calories ?? userPlan?.target_daily_calories,
+        targetProtein: userPlan?.custom_protein_g ?? userPlan?.target_protein_g,
+        targetCarbs: userPlan?.custom_carbs_g ?? userPlan?.target_carbs_g,
+        targetFat: userPlan?.custom_fat_g ?? userPlan?.target_fat_g,
       };
 
       let mealDistribution;
-      const userMealDistributions = profileData.mealDistributions;
+      const userMealDistributions = userProfile.mealDistributions;
       if (!userMealDistributions)
         mealDistribution = defaultMacroPercentages[selectedMealName];
       else
@@ -261,7 +182,7 @@ function MealSuggestionsContent() {
         variant: 'default',
       });
     }
-  }, [selectedMealName, profileData, updateUrlWithTargets, toast]);
+  }, [selectedMealName, userProfile, userPlan, updateUrlWithTargets, toast]);
 
   useEffect(() => {
     if (selectedMealName && !isLoadingProfile) {
@@ -269,16 +190,15 @@ function MealSuggestionsContent() {
     }
   }, [selectedMealName, isLoadingProfile, calculateTargetsForSelectedMeal]);
 
-  const handleMealSelectionChange = (mealValue: string) => {
-    // Clear suggestions and errors when changing meal
+  function handleMealSelectionChange(mealValue: string) {
     setSuggestions([]);
     setError(null);
 
-    // Update URL with selected meal (this will trigger recalculation)
     updateUrlWithMeal(mealValue);
-  };
+  }
 
-  const handleGetSuggestions = async () => {
+  async function handleGetSuggestions() {
+    if (!userProfile) return;
     if (!targetMacros) {
       toast({
         title: 'Error',
@@ -287,63 +207,36 @@ function MealSuggestionsContent() {
       });
       return;
     }
-    if (
-      isLoadingProfile &&
-      !isDemoModeFromUrl &&
-      (!profileData || Object.keys(profileData).length === 0)
-    ) {
-      toast({
-        title: 'Please wait',
-        description: 'User profile is still loading.',
-        variant: 'default',
-      });
-      return;
-    }
 
+    setError(null);
     setIsLoadingAiSuggestions(true);
     setSuggestions([]);
-    setError(null);
-
-    const currentPreferences = preferenceForm.getValues();
 
     try {
-      if (!user?.uid || !profileData) return;
-      const aiInput = prepareAiMealInput({
-        targetMacros,
-        profileData,
-        currentPreferences,
-      });
+      const profile = await getUserProfile();
+      const aiInput = prepareAiMealInput({ targetMacros, profile });
+      const { error, data } = await suggestMealsForMacros(aiInput);
 
-      await updateMealSuggestion(user?.uid, currentPreferences);
-
-      const result = await suggestMealsForMacros(aiInput);
-      if (result && result.suggestions) {
-        setSuggestions(result.suggestions);
-      } else {
-        setError('AI did not return valid suggestions.');
+      if (data) setSuggestions(data.suggestions);
+      else {
+        setError(error);
         toast({
           title: 'AI Response Error',
-          description: 'Received an unexpected response from the AI.',
+          description: error,
           variant: 'destructive',
         });
       }
     } catch (err: any) {
-      console.error('Error getting meal suggestions:', err);
-      console.error('Full AI error object (MealSuggestionsPage):', err);
-      const errorMessage = err.message || 'An unknown error occurred';
-      setError(
-        `Failed to fetch meal suggestions: ${errorMessage}. Please try again.`
-      );
+      setError(err?.message || 'Failed to fetch profile or suggestions.');
       toast({
-        title: 'AI Error',
-        description: `Could not get meal suggestions from AI: ${errorMessage}`,
+        title: 'Error',
+        description: err?.message || 'Failed to fetch profile or suggestions.',
         variant: 'destructive',
-        duration: 7000,
       });
     } finally {
       setIsLoadingAiSuggestions(false);
     }
-  };
+  }
 
   const showContentBelowSelection =
     selectedMealName && targetMacros && !isLoadingProfile;
@@ -377,105 +270,9 @@ function MealSuggestionsContent() {
                   </span>
                 </div>
               </AccordionTrigger>
+
               <AccordionContent>
-                <Form {...preferenceForm}>
-                  <form className='space-y-6 pt-4'>
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className='text-xl'>
-                          Dietary Preferences & Restrictions
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className='grid md:grid-cols-2 gap-x-6 gap-y-4'>
-                        <FormField
-                          control={preferenceForm.control}
-                          name='preferredDiet'
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Preferred Diet</FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                value={field.value ?? undefined}
-                              >
-                                <FormControl>
-                                  <div>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder='Select preferred diet' />
-                                    </SelectTrigger>
-                                  </div>
-                                </FormControl>
-                                <SelectContent>
-                                  {preferredDiets.map((pd) => (
-                                    <SelectItem key={pd.value} value={pd.value}>
-                                      {pd.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <PreferenceTextarea
-                          fieldName='allergies'
-                          label='Allergies (comma-separated)'
-                          placeholder='e.g., Peanuts, Shellfish'
-                          control={preferenceForm.control}
-                        />
-
-                        <PreferenceTextarea
-                          fieldName='preferredCuisines'
-                          label='Preferred Cuisines'
-                          placeholder='e.g., Italian, Mexican'
-                          control={preferenceForm.control}
-                        />
-
-                        <PreferenceTextarea
-                          fieldName='dispreferredCuisines'
-                          label='Dispreferred Cuisines'
-                          placeholder='e.g., Thai, French'
-                          control={preferenceForm.control}
-                        />
-
-                        <PreferenceTextarea
-                          fieldName='preferredIngredients'
-                          label='Preferred Ingredients'
-                          placeholder='e.g., Chicken, Broccoli'
-                          control={preferenceForm.control}
-                        />
-
-                        <PreferenceTextarea
-                          fieldName='dispreferredIngredients'
-                          label='Dispreferred Ingredients'
-                          placeholder='e.g., Tofu, Mushrooms'
-                          control={preferenceForm.control}
-                        />
-
-                        <PreferenceTextarea
-                          fieldName='preferredMicronutrients'
-                          label='Targeted Micronutrients (Optional)'
-                          placeholder='e.g., Vitamin D, Iron'
-                          control={preferenceForm.control}
-                        />
-
-                        <PreferenceTextarea
-                          fieldName='medicalConditions'
-                          label='Medical Conditions (Optional)'
-                          placeholder='e.g., Diabetes, Hypertension'
-                          control={preferenceForm.control}
-                        />
-
-                        <PreferenceTextarea
-                          fieldName='medications'
-                          label='Medications (Optional)'
-                          placeholder='e.g., Metformin, Lisinopril'
-                          control={preferenceForm.control}
-                        />
-                      </CardContent>
-                    </Card>
-                  </form>
-                </Form>
+                <MealForm />
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -507,22 +304,25 @@ function MealSuggestionsContent() {
             </Select>
           </div>
 
-          {isLoadingProfile && !selectedMealName && (
+          {isLoadingProfile && isLoadingPlan && !selectedMealName && (
             <div className='flex justify-center items-center py-4'>
               <Loader2 className='h-6 w-6 animate-spin text-primary' />
               <p className='ml-2'>Loading profile data...</p>
             </div>
           )}
 
-          {selectedMealName && !targetMacros && isLoadingProfile && (
-            <div className='flex justify-center items-center py-4'>
-              <Loader2 className='h-6 w-6 animate-spin text-primary' />
-              <p className='ml-2'>
-                Loading profile and calculating targets for {selectedMealName}
-                ...
-              </p>
-            </div>
-          )}
+          {selectedMealName &&
+            isLoadingPlan &&
+            !targetMacros &&
+            isLoadingProfile && (
+              <div className='flex justify-center items-center py-4'>
+                <Loader2 className='h-6 w-6 animate-spin text-primary' />
+                <p className='ml-2'>
+                  Loading profile and calculating targets for {selectedMealName}
+                  ...
+                </p>
+              </div>
+            )}
 
           {showContentBelowSelection && (
             <>
@@ -560,7 +360,7 @@ function MealSuggestionsContent() {
               <Button
                 onClick={handleGetSuggestions}
                 disabled={
-                  targetMacros.calories === 0 ||
+                  targetMacros.calories <= 0 ||
                   isLoadingAiSuggestions ||
                   (isLoadingProfile && !isDemoModeFromUrl)
                 }
@@ -578,7 +378,7 @@ function MealSuggestionsContent() {
                   ? 'Loading Profile...'
                   : isLoadingAiSuggestions
                   ? 'Getting Suggestions...'
-                  : targetMacros.calories !== 0
+                  : targetMacros.calories > 0
                   ? 'Get AI Meal Suggestions'
                   : 'Meals must contains a certain amount of calories'}
               </Button>
@@ -610,7 +410,7 @@ function MealSuggestionsContent() {
         </div>
       )}
 
-      {suggestions.length > 0 && !isLoadingAiSuggestions && (
+      {suggestions && suggestions.length > 0 && !isLoadingAiSuggestions && (
         <div className='space-y-4'>
           <h2 className='text-2xl font-semibold text-primary mt-8 mb-4'>
             Here are some ideas for your {targetMacros?.mealName || 'meal'}:

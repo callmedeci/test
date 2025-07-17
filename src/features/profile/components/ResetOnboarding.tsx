@@ -8,47 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { db } from '@/lib/firebase/clientApp';
-import { User } from '@/types/globalTypes';
-import { doc, setDoc } from 'firebase/firestore';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
+import { useResetProfile } from '../hooks/useResetProfile';
 
-function ResetOnboarding({ user }: { user: User | null }) {
-  const { toast } = useToast();
-
-  async function handleResetOnboarding() {
-    if (!user?.uid) {
-      toast({
-        title: 'Error',
-        description: 'User not found.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    try {
-      const userProfileRef = doc(db, 'users', user.uid);
-      await setDoc(
-        userProfileRef,
-        { onboardingComplete: false },
-        { merge: true }
-      );
-      toast({
-        title: 'Onboarding Reset',
-        description:
-          'Your onboarding status has been reset. The app will now reload.',
-      });
-
-      window.location.reload();
-    } catch (error) {
-      console.error('Error resetting onboarding status:', error);
-      toast({
-        title: 'Reset Failed',
-        description: 'Could not reset onboarding status.',
-        variant: 'destructive',
-      });
-    }
-  }
+function ResetOnboarding() {
+  const { resetProfile, isReseting } = useResetProfile();
 
   return (
     <Card className='mt-12 border-destructive/50'>
@@ -62,8 +26,9 @@ function ResetOnboarding({ user }: { user: User | null }) {
       </CardHeader>
       <CardContent>
         <Button
+          disabled={isReseting}
           variant='destructive'
-          onClick={handleResetOnboarding}
+          onClick={async () => await resetProfile()}
           className='w-full'
         >
           <RefreshCcw className='mr-2 h-4 w-4' /> Reset Onboarding Status

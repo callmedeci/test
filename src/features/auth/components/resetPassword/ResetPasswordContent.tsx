@@ -9,17 +9,13 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import PasswordResetError from '@/features/auth/components/resetPassword/PasswordResetError';
-import PasswordResetVerifying from '@/features/auth/components/resetPassword/PasswordResetVerifying';
 import ResetPasswordForn from '@/features/auth/components/resetPassword/ResetPasswordForn';
 import { ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { usePasswordResetVerification } from '../../hooks/usePasswordResetVerification';
 
 function ResetPasswordContent() {
-  const { isValidCode, isVerifying, verificationError } =
-    usePasswordResetVerification();
-
-  if (isVerifying) return <PasswordResetVerifying />;
+  const { isValidCode, verificationError } = usePasswordResetVerification();
 
   if (!isValidCode || verificationError)
     return <PasswordResetError errorMessage={verificationError} />;

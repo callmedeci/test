@@ -11,7 +11,11 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
+import Spinner from '@/components/ui/Spinner';
+import SubmitButton from '@/components/ui/SubmitButton';
+import { editPlan } from '@/features/profile/actions/apiUserPlan';
+import { useGetPlan } from '@/features/profile/hooks/useGetPlan';
+import { useGetProfile } from '@/features/profile/hooks/useGetProfile';
 import { useToast } from '@/hooks/use-toast';
 import { GlobalCalculatedTargets } from '@/lib/schemas';
 import { formatNumber } from '@/lib/utils';
@@ -19,25 +23,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { RefreshCcw, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { saveSmartPlannerData } from '../../lib/data-service';
 import { customizePlanFormSchema } from '../../lib/schema';
 import { customizePlanFormValues } from '../../types/toolsGlobalTypes';
-import CustomizeToolTip from './CustomizeToolTip';
 import CustomizePlanTable from './CustomizePlanTable';
-import SubmitButton from '@/components/ui/SubmitButton';
+import CustomizeToolTip from './CustomizeToolTip';
 
-type CustomizePlanFormProps = {
-  results: GlobalCalculatedTargets;
-  weight: number;
-  planData: any;
-};
-
-function CustomizePlanForm({
-  results,
-  weight,
-  planData,
-}: CustomizePlanFormProps) {
-  const { user } = useAuth();
+function CustomizePlanForm() {
+  const { userPlan, isLoadingPlan } = useGetPlan();
+  const { userProfile, isLoadingProfile } = useGetProfile();
   const { toast } = useToast();
 
   const form = useForm<customizePlanFormValues>({
@@ -45,7 +38,7 @@ function CustomizePlanForm({
     defaultValues: {
       custom_total_calories: undefined,
       custom_protein_per_kg: undefined,
-      remaining_calories_carb_pct: 50,
+      remaining_calories_carbs_percentage: 50,
     },
   });
 
@@ -56,77 +49,107 @@ function CustomizePlanForm({
   const watchedCustomInputs = form.watch([
     'custom_total_calories',
     'custom_protein_per_kg',
-    'remaining_calories_carb_pct',
+    'remaining_calories_carbs_percentage',
   ]);
 
-  function handleResetForm() {
+  async function handleResetForm() {
     form.reset({
       ...form.getValues(),
-      custom_total_calories: undefined,
-      custom_protein_per_kg: undefined,
-      remaining_calories_carb_pct: 50,
+      custom_total_calories: null,
+      custom_protein_per_kg: null,
+      remaining_calories_carbs_percentage: 50,
     });
     setCustomPlanResults(null);
-    toast({
-      title: 'Custom Plan Reset',
-      description: 'Custom plan inputs have been reset.',
-    });
+
+    const { isSuccess, error } = await editPlan(form.getValues());
+
+    if (!isSuccess)
+      toast({
+        title: 'Reset Error',
+        description: error,
+        variant: 'destructive',
+      });
+
+    if (isSuccess)
+      toast({
+        title: 'Custom Plan Reset',
+        description: 'Custom plan inputs have been reset.',
+      });
   }
 
   async function onSubmit(formData: customizePlanFormValues) {
-    if (user?.uid) {
-      try {
-        await saveSmartPlannerData(user.uid, {
-          formValues: formData,
-          results,
-        });
-        toast({
-          title: 'Calculation Complete',
-          description: 'Your smart calorie plan has been generated and saved.',
-        });
-      } catch {
-        toast({
-          title: 'Save Error',
-          description: 'Could not save calculation results.',
-          variant: 'destructive',
-        });
-      }
-    }
+    if (!customPlanResults) return;
+
+    const updateObj: GlobalCalculatedTargets = {};
+    const excludedKeys = [
+      'estimated_weekly_weight_change_kg',
+      'carb_calories',
+      'protein_calories',
+      'fat_calories',
+      'current_weight_for_custom_calc',
+    ];
+    (
+      Object.keys(customPlanResults) as (keyof GlobalCalculatedTargets)[]
+    ).forEach((key) => {
+      if (!excludedKeys.includes(key as string))
+        updateObj[key] = customPlanResults[key];
+    });
+
+    const { isSuccess, error } = await editPlan({
+      ...formData,
+      ...updateObj,
+    });
+
+    if (isSuccess)
+      toast({
+        title: 'Plan Saved',
+        description: 'Your custom plan has been saved successfully.',
+      });
+
+    if (!isSuccess)
+      toast({
+        title: 'Save Error',
+        description: error,
+        variant: 'destructive',
+      });
   }
 
   useEffect(
     function () {
-      if (planData) form.reset(planData);
+      if (userPlan) form.reset(userPlan);
     },
-    [form, planData]
+    [form, userPlan, userProfile]
   );
 
   useEffect(() => {
+    if (isLoadingPlan || isLoadingProfile || !userPlan || !userProfile) return;
+
     const [customTotalCalories, customProteinPerKg, remainingCarbPct] =
       watchedCustomInputs;
 
     const effectiveTotalCalories =
-      customTotalCalories !== undefined && customTotalCalories > 0
+      customTotalCalories && customTotalCalories > 0
         ? customTotalCalories
-        : results.finalTargetCalories || 0;
+        : userPlan.target_daily_calories || 0;
 
     const defaultProteinPerKg =
-      results.proteinGrams &&
-      results.current_weight_for_custom_calc &&
-      results.current_weight_for_custom_calc > 0
-        ? results.proteinGrams / results.current_weight_for_custom_calc
+      userPlan.target_protein_g &&
+      userPlan.current_weight_for_custom_calc &&
+      userPlan.current_weight_for_custom_calc > 0
+        ? userPlan.target_protein_g / userPlan.current_weight_for_custom_calc
         : 1.6;
 
     const effectiveProteinPerKg =
-      customProteinPerKg !== undefined && customProteinPerKg >= 0
+      customProteinPerKg && customProteinPerKg >= 0
         ? customProteinPerKg
         : defaultProteinPerKg;
 
-    const calculatedProteinGrams = weight * effectiveProteinPerKg;
+    const calculatedProteinGrams =
+      userProfile.current_weight_kg! * effectiveProteinPerKg;
     const calculatedProteinCalories = calculatedProteinGrams * 4;
+
     let remainingCaloriesForCustom =
       effectiveTotalCalories - calculatedProteinCalories;
-
     let calculatedCarbGrams = 0;
     let calculatedFatGrams = 0;
     let calculatedCarbCalories = 0;
@@ -156,10 +179,9 @@ function CustomizePlanForm({
       calculatedFatCalories;
 
     const newCustomPlan: GlobalCalculatedTargets = {
-      finalTargetCalories: Math.round(finalCustomTotalCalories),
-      proteinGrams: Math.round(calculatedProteinGrams),
-      proteinCalories: Math.round(calculatedProteinCalories),
-      proteinTargetPct:
+      custom_total_calories_final: Math.round(finalCustomTotalCalories),
+      custom_protein_g: Math.round(calculatedProteinGrams),
+      custom_protein_percentage:
         finalCustomTotalCalories > 0
           ? Math.round(
               (calculatedProteinCalories / finalCustomTotalCalories) * 100
@@ -167,32 +189,52 @@ function CustomizePlanForm({
           : calculatedProteinGrams > 0
           ? 100
           : 0,
-      carbGrams: Math.round(calculatedCarbGrams),
-      carbCalories: Math.round(calculatedCarbCalories),
-      carbTargetPct:
+      custom_carbs_g: Math.round(calculatedCarbGrams),
+      custom_carbs_percentage:
         finalCustomTotalCalories > 0
           ? Math.round(
               (calculatedCarbCalories / finalCustomTotalCalories) * 100
             )
           : 0,
-      fatGrams: Math.round(calculatedFatGrams),
-      fatCalories: Math.round(calculatedFatCalories),
-      fatTargetPct:
+      custom_fat_g: Math.round(calculatedFatGrams),
+      custom_fat_percentage:
         finalCustomTotalCalories > 0
           ? Math.round((calculatedFatCalories / finalCustomTotalCalories) * 100)
           : 0,
-      bmr: results?.bmr,
-      tdee: results?.tdee,
-      current_weight_for_custom_calc: weight,
-      estimatedWeeklyWeightChangeKg:
-        results?.tdee && finalCustomTotalCalories
-          ? ((results.tdee - finalCustomTotalCalories) * 7) / 7700
+      bmr_kcal: userPlan.bmr_kcal,
+      maintenance_calories_tdee: userPlan.maintenance_calories_tdee,
+
+      current_weight_for_custom_calc: userProfile.current_weight_kg,
+      estimated_weekly_weight_change_kg:
+        userPlan.maintenance_calories_tdee && finalCustomTotalCalories
+          ? ((userPlan.maintenance_calories_tdee - finalCustomTotalCalories) *
+              7) /
+            7700
           : undefined,
+
+      carb_calories: Math.round(calculatedCarbCalories),
+      protein_calories: Math.round(calculatedProteinCalories),
+      fat_calories: Math.round(calculatedFatCalories),
     };
 
     if (JSON.stringify(customPlanResults) !== JSON.stringify(newCustomPlan))
       setCustomPlanResults(newCustomPlan);
-  }, [watchedCustomInputs, results, customPlanResults, weight]);
+  }, [
+    watchedCustomInputs,
+    customPlanResults,
+    userPlan,
+    isLoadingPlan,
+    userProfile,
+    isLoadingProfile,
+  ]);
+
+  if (isLoadingPlan || isLoadingProfile)
+    return (
+      <div className='w-full my-10 flex gap-1 items-center justify-center'>
+        <Spinner />
+        <span>Loading your plan...</span>
+      </div>
+    );
 
   return (
     <Form {...form}>
@@ -207,13 +249,13 @@ function CustomizePlanForm({
                   Custom Total Calories
                   <CustomizeToolTip
                     message={`Override the system-calculated total daily calories. Leave blank to use the original estimate:
-                            ${
-                              results.finalTargetCalories
-                                ? formatNumber(results.finalTargetCalories, {
-                                    maximumFractionDigits: 0,
-                                  })
-                                : 'N/A'
-                            } kcal.`}
+                          ${
+                            userPlan?.target_daily_calories
+                              ? formatNumber(userPlan.target_daily_calories, {
+                                  maximumFractionDigits: 0,
+                                })
+                              : 'N/A'
+                          } kcal.`}
                   />
                 </FormLabel>
                 <FormControl>
@@ -221,8 +263,8 @@ function CustomizePlanForm({
                     <Input
                       type='number'
                       placeholder={`e.g., ${
-                        results.finalTargetCalories
-                          ? formatNumber(results.finalTargetCalories, {
+                        userPlan?.target_daily_calories
+                          ? formatNumber(userPlan.target_daily_calories, {
                               maximumFractionDigits: 0,
                             })
                           : '2000'
@@ -256,32 +298,32 @@ function CustomizePlanForm({
                   Custom Protein (g/kg)
                   <CustomizeToolTip
                     message={` Set your desired protein intake in grams per kg of your current body weight (
-                        ${
-                          results.current_weight_for_custom_calc
-                            ? formatNumber(
-                                results.current_weight_for_custom_calc,
-                                {
-                                  maximumFractionDigits: 1,
-                                }
-                              )
-                            : weight
-                            ? formatNumber(weight, {
+                      ${
+                        userPlan?.current_weight_for_custom_calc
+                          ? formatNumber(
+                              userPlan.current_weight_for_custom_calc,
+                              {
                                 maximumFractionDigits: 1,
-                              })
-                            : 'N/A'
-                        } kg). Affects protein, carbs, and fat distribution.
-                        Original estimate:
-                        ${
-                          results.current_weight_for_custom_calc &&
-                          results.current_weight_for_custom_calc > 0 &&
-                          results.proteinGrams
-                            ? formatNumber(
-                                results.proteinGrams /
-                                  results.current_weight_for_custom_calc,
-                                { maximumFractionDigits: 1 }
-                              )
-                            : 'N/A'
-                        } g/kg.`}
+                              }
+                            )
+                          : userProfile?.current_weight_kg
+                          ? formatNumber(userProfile.current_weight_kg, {
+                              maximumFractionDigits: 1,
+                            })
+                          : 'N/A'
+                      } kg). Affects protein, carbs, and fat distribution.
+                      Original estimate:
+                      ${
+                        userPlan?.current_weight_for_custom_calc &&
+                        userPlan?.current_weight_for_custom_calc > 0 &&
+                        userPlan?.target_protein_g
+                          ? formatNumber(
+                              userPlan.target_protein_g /
+                                userPlan.current_weight_for_custom_calc,
+                              { maximumFractionDigits: 1 }
+                            )
+                          : 'N/A'
+                      } g/kg.`}
                   />
                 </FormLabel>
                 <FormControl>
@@ -289,12 +331,12 @@ function CustomizePlanForm({
                     <Input
                       type='number'
                       placeholder={`e.g., ${
-                        results.current_weight_for_custom_calc &&
-                        results.current_weight_for_custom_calc > 0 &&
-                        results.proteinGrams
+                        userPlan?.current_weight_for_custom_calc &&
+                        userPlan?.current_weight_for_custom_calc > 0 &&
+                        userPlan?.target_protein_g
                           ? formatNumber(
-                              results.proteinGrams /
-                                results.current_weight_for_custom_calc,
+                              userPlan.target_protein_g /
+                                userPlan.current_weight_for_custom_calc,
                               { maximumFractionDigits: 1 }
                             )
                           : '1.6'
@@ -321,7 +363,7 @@ function CustomizePlanForm({
           />
           <FormField
             control={form.control}
-            name='remaining_calories_carb_pct'
+            name='remaining_calories_carbs_percentage'
             render={({ field }) => {
               const currentCarbPct = field.value ?? 50;
               const currentFatPct = 100 - currentCarbPct;

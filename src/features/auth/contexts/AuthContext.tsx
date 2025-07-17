@@ -141,67 +141,72 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [user?.uid]
   );
 
-  useEffect(() => {
-    if (isInitialLoad) {
-      setIsInitialLoad(false);
-      return;
-    }
+  // useEffect(() => {
+  //   if (isInitialLoad) {
+  //     setIsInitialLoad(false);
+  //     return;
+  //   }
 
-    if (isLoading) return;
+  //   if (isLoading) return;
 
-    // Handle unauthenticated users
-    if (!user) {
-      if (!route.isAuthPage() && route.isDashboardPage()) {
-        console.log('Redirecting unauthenticated user to login');
-        router.push('/login');
-      }
-      return;
-    }
+  //   // Handle unauthenticated users
+  //   if (!user) {
+  //     if (
+  //       !isOnboarded &&
+  //       !route.isAuthPage() &&
+  //       route.isDashboardPage() &&
+  //       route.isOnboardingPage()
+  //     ) {
+  //       console.log('Redirecting unauthenticated user to login');
+  //       router.push('/login');
+  //     }
+  //     return;
+  //   }
 
-    if (user) {
-      if (
-        !user.emailVerified &&
-        !route.isAuthPage() &&
-        !route.isOnboardingPage()
-      ) {
-        toast({
-          title: 'Email Not Verified',
-          description: 'Please verify your email address to continue.',
-          variant: 'destructive',
-          duration: 7000,
-        });
-        return;
-      }
+  //   if (user) {
+  //     if (
+  //       !user.emailVerified &&
+  //       !route.isAuthPage() &&
+  //       !route.isOnboardingPage()
+  //     ) {
+  //       toast({
+  //         title: 'Email Not Verified',
+  //         description: 'Please verify your email address to continue.',
+  //         variant: 'destructive',
+  //         duration: 7000,
+  //       });
+  //       return;
+  //     }
 
-      if (!isOnboarded) {
-        if (!route.isOnboardingPage()) {
-          console.log('Redirecting to onboarding');
-          router.push('/onboarding');
-        }
-        return;
-      }
+  //     if (!isOnboarded) {
+  //       if (!route.isOnboardingPage()) {
+  //         console.log('Redirecting to onboarding');
+  //         router.push('/onboarding');
+  //       }
+  //       return;
+  //     }
 
-      if (route.isAuthPage() || route.isOnboardingPage()) {
-        console.log('Redirecting authenticated user to dashboard');
-        router.push('/dashboard');
-      }
-    }
-  }, [
-    user,
-    rawUser,
-    isLoading,
-    pathname,
-    isOnboarded,
-    isInitialLoad,
-    router,
-    toast,
-    route,
-  ]);
+  //     if (route.isAuthPage() || route.isOnboardingPage()) {
+  //       console.log('Redirecting authenticated user to dashboard');
+  //       router.push('/dashboard');
+  //     }
+  //   }
+  // }, [
+  //   user,
+  //   rawUser,
+  //   isLoading,
+  //   pathname,
+  //   isOnboarded,
+  //   isInitialLoad,
+  //   router,
+  //   toast,
+  //   route,
+  // ]);
 
   // Refresh onboarding status when user changes
-  useEffect(() => {
-    if (user?.uid && !isOnboarded) refreshOnboardingStatus();
-  }, [user, isOnboarded, refreshOnboardingStatus]);
+  // useEffect(() => {
+  //   if (!isOnboarded) refreshOnboardingStatus();
+  // }, [user, isOnboarded, refreshOnboardingStatus]);
 
   const contextValue: AuthContextType = {
     user,

@@ -1,11 +1,11 @@
 import { db } from '@/lib/firebase/clientApp';
-import { doc, getDocFromServer, setDoc } from 'firebase/firestore';
 import {
-  FullProfileType,
+  BaseProfileData,
   GlobalCalculatedTargets,
   preprocessDataForFirestore,
   SmartCaloriePlannerFormValues,
 } from '@/lib/schemas';
+import { doc, getDocFromServer, setDoc } from 'firebase/firestore';
 import {
   customizePlanFormValues,
   MealInputTypes,
@@ -29,7 +29,7 @@ export async function updateMealSuggestion(
 
 export async function getProfileDataForSuggestions(
   userId: string
-): Promise<Partial<FullProfileType>> {
+): Promise<Partial<BaseProfileData>> {
   if (!userId) return {};
 
   try {

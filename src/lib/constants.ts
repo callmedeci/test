@@ -58,16 +58,6 @@ export const preferredDiets = [
   { value: 'high_protein', label: 'High Protein' },
 ];
 
-// mealsPerDayOptions is removed as the field is removed from onboarding
-// export const mealsPerDayOptions = [
-//   { value: 2, label: "2 meals per day" },
-//   { value: 3, label: "3 meals per day" },
-//   { value: 4, label: "4 meals per day" },
-//   { value: 5, label: "5 meals per day" },
-//   { value: 6, label: "6 meals per day" },
-//   { value: 7, label: "7 meals per day" },
-// ];
-
 export const genders = [
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },

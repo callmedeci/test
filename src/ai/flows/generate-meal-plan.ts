@@ -5,13 +5,13 @@ import { ai, geminiModel } from '@/ai/genkit';
 // Types
 export interface GeneratePersonalizedMealPlanInput {
   age: number;
-  gender: string;
+  biological_sex: string;
   height_cm: number;
-  current_weight: number;
-  goal_weight_1m: number;
-  activityLevel: string;
-  dietGoalOnboarding: string;
-  ideal_goal_weight?: number;
+  current_weight_kg: number;
+  target_weight_1month_kg: number;
+  physical_activity_level: string;
+  primary_diet_goal: string;
+  long_term_goal_weight_kg?: number;
   bf_current?: number;
   bf_target?: number;
   bf_ideal?: number;
@@ -39,16 +39,16 @@ export interface GeneratePersonalizedMealPlanInput {
   left_arm_current?: number;
   left_arm_goal_1m?: number;
   left_arm_ideal?: number;
-  preferredDiet?: string;
+  preferred_diet?: string;
   allergies?: string[];
-  preferredCuisines?: string[];
-  dispreferredCuisines?: string[];
-  preferredIngredients?: string[];
-  dispreferredIngredients?: string[];
-  preferredMicronutrients?: string[];
-  medicalConditions?: string[];
+  preferred_cuisines?: string[];
+  dispreferrred_cuisines?: string[];
+  preferred_ingredients?: string[];
+  dispreferrred_ingredients?: string[];
+  preferred_micronutrients?: string[];
+  medical_conditions?: string[];
   medications?: string[];
-  typicalMealsDescription?: string;
+  typicalMealsDescription?: string; // This field doesn't exist in BaseProfileData - consider removing
 }
 
 export interface Meal {

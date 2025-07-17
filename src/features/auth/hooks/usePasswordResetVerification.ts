@@ -1,43 +1,30 @@
-import { verifyOob } from '@/lib/firebase/auth';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { isNotValidURL } from '../lib/authUtils';
 
 export function usePasswordResetVerification() {
   const searchParams = useSearchParams();
-  const oobCode = searchParams.get('oobCode');
 
-  const [isVerifying, setIsVerifying] = useState(true);
   const [isValidCode, setIsValidCode] = useState(false);
   const [verificationError, setVerificationError] = useState<string | null>(
     null
   );
 
+  const token = searchParams.get('token_hash') ?? null;
+  const type = searchParams.get('type') ?? null;
+  const next = searchParams.get('next') ?? null;
+
   useEffect(() => {
-    if (!oobCode) {
+    if (isNotValidURL(next, token, type)) {
+      setIsValidCode(false);
       setVerificationError(
-        'Invalid or missing password reset code. Please request a new link.'
+        'Invalid or expired password reset link. Please request a new one.'
       );
-      setIsVerifying(false);
-      return setIsValidCode(false);
+    } else {
+      setIsValidCode(true);
+      setVerificationError(null);
     }
+  }, [next, token, type]);
 
-    const verifyCode = async () => {
-      setIsVerifying(true);
-      try {
-        await verifyOob(oobCode);
-        setIsValidCode(true);
-      } catch (error: any) {
-        console.error('Error verifying reset code:', error);
-        setVerificationError(
-          'Invalid or expired password reset link. Please request a new one.'
-        );
-        setIsValidCode(false);
-      } finally {
-        setIsVerifying(false);
-      }
-    };
-    verifyCode();
-  }, [oobCode]);
-
-  return { isVerifying, isValidCode, verificationError };
+  return { isValidCode, verificationError };
 }

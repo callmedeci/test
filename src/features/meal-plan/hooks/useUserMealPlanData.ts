@@ -1,8 +1,8 @@
 import { getMealPlanData } from '@/features/meal-plan/lib/data-service';
-import type { FullProfileType, WeeklyMealPlan } from '@/lib/schemas';
+import type { BaseProfileData, WeeklyMealPlan } from '@/lib/schemas';
 import { useCallback, useState } from 'react';
-import { useFetchProfile } from './useFetchProfile';
 import { generateInitialWeeklyPlan } from '../lib/utils';
+import { useFetchProfile } from './useFetchProfile';
 
 export function useUserMealPlanData() {
   const { user, fetchUserData, isLoadingProfile, profileData } =
@@ -11,7 +11,7 @@ export function useUserMealPlanData() {
     generateInitialWeeklyPlan()
   );
   const [isLoadingPlan, setIsLoadingPlan] = useState(true);
-  useState<Partial<FullProfileType> | null>(null);
+  useState<Partial<BaseProfileData> | null>(null);
 
   const fetchMealPlan = useCallback(
     function (onError: () => void) {

@@ -1,6 +1,5 @@
 'use client';
 
-import { getSmartPlannerData } from '@/app/api/user/database';
 import {
   Accordion,
   AccordionContent,
@@ -42,9 +41,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { editPlan } from '@/features/profile/actions/apiUserPlan';
+import { editProfile } from '@/features/profile/actions/apiUserProfile';
+import { useGetPlan } from '@/features/profile/hooks/useGetPlan';
+import { useGetProfile } from '@/features/profile/hooks/useGetProfile';
 import CustomizePlanForm from '@/features/tools/components/calorie-planner/CustomizePlanForm';
-import { saveSmartPlannerData } from '@/features/tools/lib/data-service';
 import { useToast } from '@/hooks/use-toast';
 import {
   activityLevels,
@@ -70,26 +71,23 @@ import { useEffect, useState } from 'react';
 import { FieldPath, useForm } from 'react-hook-form';
 
 export default function SmartCaloriePlannerPage() {
-  const { user } = useAuth();
   const { toast } = useToast();
+  const { userPlan, isLoadingPlan } = useGetPlan();
+  const { userProfile, isLoadingProfile } = useGetProfile();
 
   const [results, setResults] = useState<GlobalCalculatedTargets | null>(null);
-  const [customPlanResults, setCustomPlanResults] =
-    useState<GlobalCalculatedTargets | null>(null);
-  const [isLoadingData, setIsLoadingData] = useState(true);
-  const [smartPlannerData, setSmartPlannerData] = useState<any>();
 
-  const smartPlannerForm = useForm<SmartCaloriePlannerFormValues>({
+  const form = useForm<SmartCaloriePlannerFormValues>({
     resolver: zodResolver(SmartCaloriePlannerFormSchema),
     defaultValues: {
       age: undefined,
-      gender: undefined,
+      biological_sex: undefined,
       height_cm: undefined,
-      current_weight: undefined,
-      goal_weight_1m: undefined,
-      ideal_goal_weight: undefined,
-      activity_factor_key: 'moderate',
-      dietGoal: 'fat_loss',
+      current_weight_kg: undefined,
+      target_weight_1month_kg: undefined,
+      long_term_goal_weight_kg: undefined,
+      physical_activity_level: 'sedentary',
+      primary_diet_goal: 'muscle_gain',
       bf_current: undefined,
       bf_target: undefined,
       bf_ideal: undefined,
@@ -124,72 +122,94 @@ export default function SmartCaloriePlannerPage() {
   });
 
   async function handleSmartPlannerReset() {
-    smartPlannerForm.reset({
-      age: undefined,
-      gender: undefined,
-      height_cm: undefined,
-      current_weight: undefined,
-      goal_weight_1m: undefined,
-      ideal_goal_weight: undefined,
-      activity_factor_key: 'moderate',
-      dietGoal: 'fat_loss',
-      bf_current: undefined,
-      bf_target: undefined,
-      bf_ideal: undefined,
-      mm_current: undefined,
-      mm_target: undefined,
-      mm_ideal: undefined,
-      bw_current: undefined,
-      bw_target: undefined,
-      bw_ideal: undefined,
-      waist_current: undefined,
-      waist_goal_1m: undefined,
-      waist_ideal: undefined,
-      hips_current: undefined,
-      hips_goal_1m: undefined,
-      hips_ideal: undefined,
-      right_leg_current: undefined,
-      right_leg_goal_1m: undefined,
-      right_leg_ideal: undefined,
-      left_leg_current: undefined,
-      left_leg_goal_1m: undefined,
-      left_leg_ideal: undefined,
-      right_arm_current: undefined,
-      right_arm_goal_1m: undefined,
-      right_arm_ideal: undefined,
-      left_arm_current: undefined,
-      left_arm_goal_1m: undefined,
-      left_arm_ideal: undefined,
-      custom_total_calories: undefined,
-      custom_protein_per_kg: undefined,
+    form.reset({
+      age: null,
+      biological_sex: null,
+      height_cm: null,
+      current_weight_kg: null,
+      target_weight_1month_kg: null,
+      long_term_goal_weight_kg: null,
+      physical_activity_level: 'moderate',
+      primary_diet_goal: 'fat_loss',
+      bf_current: null,
+      bf_target: null,
+      bf_ideal: null,
+      mm_current: null,
+      mm_target: null,
+      mm_ideal: null,
+      bw_current: null,
+      bw_target: null,
+      bw_ideal: null,
+      waist_current: null,
+      waist_goal_1m: null,
+      waist_ideal: null,
+      hips_current: null,
+      hips_goal_1m: null,
+      hips_ideal: null,
+      right_leg_current: null,
+      right_leg_goal_1m: null,
+      right_leg_ideal: null,
+      left_leg_current: null,
+      left_leg_goal_1m: null,
+      left_leg_ideal: null,
+      right_arm_current: null,
+      right_arm_goal_1m: null,
+      right_arm_ideal: null,
+      left_arm_current: null,
+      left_arm_goal_1m: null,
+      left_arm_ideal: null,
+      custom_total_calories: null,
+      custom_protein_per_kg: null,
       remaining_calories_carb_pct: 50,
     });
+
     setResults(null);
-    setCustomPlanResults(null);
-    if (user?.uid) {
-      await saveSmartPlannerData(user.uid, {
-        formValues: smartPlannerForm.getValues(),
-        results: null,
+
+    const {
+      custom_protein_per_kg,
+      custom_total_calories,
+      remaining_calories_carb_pct,
+      ...newProfile
+    } = form.getValues();
+
+    const { isSuccess: isPlanSuccess, error: planError } = await editPlan({
+      custom_protein_per_kg,
+      custom_total_calories,
+      remaining_calories_carb_pct,
+    });
+
+    const { isSuccess: isProfileSuccess, error: profileError } =
+      await editProfile(newProfile);
+
+    if (planError || profileError) {
+      toast({
+        title: 'Save Error',
+        description: planError || profileError,
+        variant: 'destructive',
       });
     }
-    toast({
-      title: 'Smart Planner Reset',
-      description: 'All smart planner inputs and results cleared.',
-    });
+
+    if (isPlanSuccess && isProfileSuccess) {
+      toast({
+        title: 'Smart Planner Reset',
+        description: 'All smart planner inputs and results cleared.',
+      });
+    }
   }
 
   async function onSubmit(data: SmartCaloriePlannerFormValues) {
     const activity = activityLevels.find(
-      (al) => al.value === data.activity_factor_key
+      (al) => al.value === data.physical_activity_level
     );
     if (
       !activity ||
-      !data.gender ||
-      !data.current_weight ||
+      !data.physical_activity_level ||
+      !data.current_weight_kg ||
       !data.height_cm ||
       !data.age ||
-      !data.goal_weight_1m ||
-      !data.dietGoal
+      !data.target_weight_1month_kg ||
+      !data.primary_diet_goal ||
+      !data.biological_sex
     ) {
       toast({
         title: 'Missing Information',
@@ -200,24 +220,25 @@ export default function SmartCaloriePlannerPage() {
     }
 
     const bmr = calculateBMR(
-      data.gender,
-      data.current_weight,
+      data.biological_sex,
+      data.current_weight_kg,
       data.height_cm,
       data.age
     );
-    const tdee = calculateTDEE(bmr, data.activity_factor_key!);
+    const tdee = calculateTDEE(bmr, data.physical_activity_level);
 
     let targetCaloriesS1: number;
-    const weightDeltaKg1M = data.current_weight - data.goal_weight_1m;
+    const weightDeltaKg1M =
+      data.current_weight_kg - data.target_weight_1month_kg;
     const calorieAdjustmentS1 = (7700 * weightDeltaKg1M) / 30;
     targetCaloriesS1 = tdee - calorieAdjustmentS1;
 
-    if (data.dietGoal === 'fat_loss') {
+    if (data.primary_diet_goal === 'fat_loss') {
       targetCaloriesS1 = Math.min(targetCaloriesS1, tdee - 200);
       targetCaloriesS1 = Math.max(targetCaloriesS1, bmr + 200, 1200);
-    } else if (data.dietGoal === 'muscle_gain') {
+    } else if (data.primary_diet_goal === 'muscle_gain') {
       targetCaloriesS1 = Math.max(targetCaloriesS1, tdee + 150);
-    } else if (data.dietGoal === 'recomp') {
+    } else if (data.primary_diet_goal === 'recomp') {
       targetCaloriesS1 = Math.min(
         Math.max(targetCaloriesS1, tdee - 300),
         tdee + 100
@@ -230,24 +251,24 @@ export default function SmartCaloriePlannerPage() {
     let targetCaloriesS3: number | undefined = undefined;
 
     if (
-      data.bf_current !== undefined &&
-      data.bf_target !== undefined &&
-      data.current_weight &&
+      data.bf_current &&
+      data.bf_target &&
+      data.current_weight_kg &&
       data.bf_current > 0 &&
       data.bf_target > 0 &&
       data.bf_current > data.bf_target
     ) {
       const fatMassLossKg =
-        data.current_weight * ((data.bf_current - data.bf_target) / 100);
+        data.current_weight_kg * ((data.bf_current - data.bf_target) / 100);
       const calorieAdjustmentS2 = (7700 * fatMassLossKg) / 30;
       targetCaloriesS2 = tdee - calorieAdjustmentS2;
       finalTargetCalories = (finalTargetCalories + targetCaloriesS2) / 2;
     }
 
     if (
-      data.waist_current !== undefined &&
-      data.waist_goal_1m !== undefined &&
-      data.current_weight &&
+      data.waist_current &&
+      data.waist_goal_1m &&
+      data.current_weight_kg &&
       data.waist_current > 0 &&
       data.waist_goal_1m > 0 &&
       data.waist_current > data.waist_goal_1m
@@ -264,7 +285,7 @@ export default function SmartCaloriePlannerPage() {
       }
       const estimatedFatLossPercent = waistChangeCm * 0.5;
       const estimatedFatLossKg =
-        (estimatedFatLossPercent / 100) * data.current_weight;
+        (estimatedFatLossPercent / 100) * data.current_weight_kg;
       const calorieAdjustmentS3 = (7700 * estimatedFatLossKg) / 30;
       targetCaloriesS3 = tdee - calorieAdjustmentS3;
       console.log(targetCaloriesS3);
@@ -278,15 +299,15 @@ export default function SmartCaloriePlannerPage() {
     let proteinTargetPct = 0,
       carbTargetPct = 0,
       fatTargetPct = 0;
-    if (data.dietGoal === 'fat_loss') {
+    if (data.primary_diet_goal === 'fat_loss') {
       proteinTargetPct = 0.35;
       carbTargetPct = 0.35;
       fatTargetPct = 0.3;
-    } else if (data.dietGoal === 'muscle_gain') {
+    } else if (data.primary_diet_goal === 'muscle_gain') {
       proteinTargetPct = 0.3;
       carbTargetPct = 0.5;
       fatTargetPct = 0.2;
-    } else if (data.dietGoal === 'recomp') {
+    } else if (data.primary_diet_goal === 'recomp') {
       proteinTargetPct = 0.4;
       carbTargetPct = 0.35;
       fatTargetPct = 0.25;
@@ -299,91 +320,100 @@ export default function SmartCaloriePlannerPage() {
     const fatCalories = finalTargetCalories * fatTargetPct;
     const fatGrams = fatCalories / 9;
 
-    const newResults: GlobalCalculatedTargets = {
-      bmr: Math.round(bmr),
-      tdee: Math.round(tdee),
-      finalTargetCalories: Math.round(finalTargetCalories),
-      estimatedWeeklyWeightChangeKg: estimatedWeeklyWeightChangeKg,
-      proteinTargetPct: proteinTargetPct,
-      proteinGrams: proteinGrams,
-      proteinCalories: proteinCalories,
-      carbTargetPct: carbTargetPct,
-      carbGrams: carbGrams,
-      carbCalories: carbCalories,
-      fatTargetPct: fatTargetPct,
-      fatGrams: fatGrams,
-      fatCalories: fatCalories,
-      current_weight_for_custom_calc: data.current_weight,
-    };
-    setResults(newResults);
-    if (user?.uid) {
-      try {
-        const newFormData = {
-          ...data,
-          carbCalories: customPlanResults?.carbCalories ?? 0,
-          carbGrams: customPlanResults?.carbGrams ?? 0,
-          carbTargetPct: customPlanResults?.carbTargetPct ?? 0,
-          fatCalories: customPlanResults?.fatCalories ?? 0,
-          fatGrams: customPlanResults?.fatGrams ?? 0,
-          fatTargetPct: customPlanResults?.fatTargetPct ?? 0,
-          proteinCalories: customPlanResults?.proteinCalories ?? 0,
-          proteinGrams: customPlanResults?.proteinGrams ?? 0,
-          proteinTargetPct: customPlanResults?.proteinTargetPct ?? 0,
-        };
+    const {
+      protein_calories,
+      carb_calories,
+      fat_calories,
+      current_weight_for_custom_calc,
+      estimated_weekly_weight_change_kg,
+      ...newPlan
+    }: GlobalCalculatedTargets = {
+      bmr_kcal: Math.round(bmr),
+      maintenance_calories_tdee: Math.round(tdee),
+      target_daily_calories: Math.round(finalTargetCalories),
+      target_protein_percentage: proteinTargetPct,
+      target_protein_g: proteinGrams,
+      target_carbs_percentage: carbTargetPct,
+      target_carbs_g: carbGrams,
+      target_fat_percentage: fatTargetPct,
+      target_fat_g: fatGrams,
 
-        await saveSmartPlannerData(user.uid, {
-          formValues: newFormData,
-          results: newResults,
-        });
-        toast({
-          title: 'Calculation Complete',
-          description: 'Your smart calorie plan has been generated and saved.',
-        });
-      } catch {
-        toast({
-          title: 'Save Error',
-          description: 'Could not save calculation results.',
-          variant: 'destructive',
-        });
-      }
+      estimated_weekly_weight_change_kg: estimatedWeeklyWeightChangeKg,
+      protein_calories: proteinCalories,
+      carb_calories: carbCalories,
+      fat_calories: fatCalories,
+      current_weight_for_custom_calc: data.current_weight_kg,
+    };
+
+    const { remaining_calories_carb_pct, ...newProfile } = data;
+
+    const { isSuccess: isPlanSuccess, error: planError } = await editPlan({
+      ...newPlan,
+      remaining_calories_carb_pct,
+    });
+
+    const { isSuccess: isProfileSuccess, error: profileError } =
+      await editProfile(newProfile);
+
+    if (planError || profileError) {
+      toast({
+        title: 'Save Error',
+        description: planError || profileError,
+        variant: 'destructive',
+      });
+    }
+
+    if (isPlanSuccess && isProfileSuccess) {
+      setResults({
+        estimated_weekly_weight_change_kg,
+        protein_calories,
+        carb_calories,
+        fat_calories,
+        current_weight_for_custom_calc,
+        ...newPlan,
+      });
+      toast({
+        title: 'Calculation Complete',
+        description: 'Your smart calorie plan has been generated and saved.',
+      });
     }
   }
 
   useEffect(() => {
-    if (user?.uid) {
-      setIsLoadingData(true);
+    if (userProfile && !form.formState.isDirty) form.reset(userProfile);
+  }, [userProfile, form]);
 
-      getSmartPlannerData(user.uid)
-        .then((data) => {
-          if (data.formValues) {
-            setSmartPlannerData(data.formValues);
-            smartPlannerForm.reset(data.formValues);
-          }
-          if (
-            data.results &&
-            typeof data.results.tdee === 'number' &&
-            typeof data.results.bmr === 'number'
-          ) {
-            setResults(data.results);
-          } else {
-            setResults(null);
-          }
-          setIsLoadingData(false);
-        })
-        .catch(() => {
-          toast({
-            title: 'Error',
-            description: 'Could not load saved planner data.',
-            variant: 'destructive',
-          });
-          setIsLoadingData(false);
-        });
-    } else {
-      setIsLoadingData(false);
-    }
-  }, [smartPlannerForm, toast, user?.uid]);
+  useEffect(
+    function () {
+      if (!userPlan) return;
 
-  if (isLoadingData) return <LoadingScreen />;
+      const estimated_weekly_weight_change_kg =
+        ((userPlan.maintenance_calories_tdee! -
+          userPlan.target_daily_calories) *
+          7) /
+        7700;
+
+      const proteinCalories =
+        (userPlan.target_protein_percentage * userPlan.target_daily_calories) /
+        100;
+      const carbCalories =
+        (userPlan.target_carbs_percentage * userPlan.target_daily_calories) /
+        100;
+      const fatCalories =
+        (userPlan.target_fat_percentage * userPlan.target_daily_calories) / 100;
+
+      setResults({
+        ...userPlan,
+        estimated_weekly_weight_change_kg,
+        proteinCalories,
+        carbCalories,
+        fatCalories,
+      });
+    },
+    [userPlan]
+  );
+
+  if (isLoadingProfile || isLoadingPlan) return <LoadingScreen />;
 
   return (
     <TooltipProvider>
@@ -401,9 +431,9 @@ export default function SmartCaloriePlannerPage() {
           </CardHeader>
 
           <CardContent>
-            <Form {...smartPlannerForm}>
+            <Form {...form}>
               <form
-                onSubmit={smartPlannerForm.handleSubmit(onSubmit)}
+                onSubmit={form.handleSubmit(onSubmit)}
                 className='space-y-8'
               >
                 <Accordion
@@ -417,7 +447,7 @@ export default function SmartCaloriePlannerPage() {
                     </AccordionTrigger>
                     <AccordionContent className='grid md:grid-cols-2 gap-x-6 gap-y-4 pt-4 px-1'>
                       <FormField
-                        control={smartPlannerForm.control}
+                        control={form.control}
                         name='age'
                         render={({ field }) => (
                           <FormItem>
@@ -432,7 +462,7 @@ export default function SmartCaloriePlannerPage() {
                                   onChange={(e) =>
                                     field.onChange(
                                       e.target.value === ''
-                                        ? undefined
+                                        ? ''
                                         : parseInt(e.target.value, 10)
                                     )
                                   }
@@ -448,14 +478,16 @@ export default function SmartCaloriePlannerPage() {
                         )}
                       />
                       <FormField
-                        control={smartPlannerForm.control}
-                        name='gender'
+                        control={form.control}
+                        name='biological_sex'
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Biological Sex</FormLabel>
                             <Select
-                              onValueChange={field.onChange}
-                              value={field.value}
+                              value={field.value ?? ''}
+                              onValueChange={(value) =>
+                                value && field.onChange(value)
+                              }
                             >
                               <FormControl>
                                 <div>
@@ -477,7 +509,7 @@ export default function SmartCaloriePlannerPage() {
                         )}
                       />
                       <FormField
-                        control={smartPlannerForm.control}
+                        control={form.control}
                         name='height_cm'
                         render={({ field }) => (
                           <FormItem>
@@ -492,7 +524,7 @@ export default function SmartCaloriePlannerPage() {
                                   onChange={(e) =>
                                     field.onChange(
                                       e.target.value === ''
-                                        ? undefined
+                                        ? ''
                                         : parseFloat(e.target.value)
                                     )
                                   }
@@ -508,8 +540,8 @@ export default function SmartCaloriePlannerPage() {
                         )}
                       />
                       <FormField
-                        control={smartPlannerForm.control}
-                        name='current_weight'
+                        control={form.control}
+                        name='current_weight_kg'
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Current Weight (kg)</FormLabel>
@@ -523,7 +555,7 @@ export default function SmartCaloriePlannerPage() {
                                   onChange={(e) =>
                                     field.onChange(
                                       e.target.value === ''
-                                        ? undefined
+                                        ? ''
                                         : parseFloat(e.target.value)
                                     )
                                   }
@@ -539,8 +571,8 @@ export default function SmartCaloriePlannerPage() {
                         )}
                       />
                       <FormField
-                        control={smartPlannerForm.control}
-                        name='goal_weight_1m'
+                        control={form.control}
+                        name='target_weight_1month_kg'
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>
@@ -556,7 +588,7 @@ export default function SmartCaloriePlannerPage() {
                                   onChange={(e) =>
                                     field.onChange(
                                       e.target.value === ''
-                                        ? undefined
+                                        ? ''
                                         : parseFloat(e.target.value)
                                     )
                                   }
@@ -572,8 +604,8 @@ export default function SmartCaloriePlannerPage() {
                         )}
                       />
                       <FormField
-                        control={smartPlannerForm.control}
-                        name='ideal_goal_weight'
+                        control={form.control}
+                        name='long_term_goal_weight_kg'
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>
@@ -592,7 +624,7 @@ export default function SmartCaloriePlannerPage() {
                                   onChange={(e) =>
                                     field.onChange(
                                       e.target.value === ''
-                                        ? undefined
+                                        ? ''
                                         : parseFloat(e.target.value)
                                     )
                                   }
@@ -608,14 +640,16 @@ export default function SmartCaloriePlannerPage() {
                         )}
                       />
                       <FormField
-                        control={smartPlannerForm.control}
-                        name='activity_factor_key'
+                        control={form.control}
+                        name='physical_activity_level'
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Physical Activity Level</FormLabel>
                             <Select
-                              onValueChange={field.onChange}
-                              value={field.value}
+                              value={field.value ?? ''}
+                              onValueChange={(value) =>
+                                value && field.onChange(value)
+                              }
                             >
                               <FormControl>
                                 <div>
@@ -637,14 +671,14 @@ export default function SmartCaloriePlannerPage() {
                         )}
                       />
                       <FormField
-                        control={smartPlannerForm.control}
-                        name='dietGoal'
+                        control={form.control}
+                        name='primary_diet_goal'
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Diet Goal</FormLabel>
                             <Select
                               onValueChange={field.onChange}
-                              value={field.value}
+                              value={field.value ?? ''}
                             >
                               <FormControl>
                                 <div>
@@ -713,7 +747,7 @@ export default function SmartCaloriePlannerPage() {
                               {keys.map((key) => (
                                 <FormField
                                   key={key}
-                                  control={smartPlannerForm.control}
+                                  control={form.control}
                                   name={key}
                                   render={({ field }) => (
                                     <FormItem className='text-center'>
@@ -727,7 +761,7 @@ export default function SmartCaloriePlannerPage() {
                                             onChange={(e) =>
                                               field.onChange(
                                                 e.target.value === ''
-                                                  ? undefined
+                                                  ? ''
                                                   : parseFloat(e.target.value)
                                               )
                                             }
@@ -823,7 +857,7 @@ export default function SmartCaloriePlannerPage() {
                             {keys.map((key) => (
                               <FormField
                                 key={key}
-                                control={smartPlannerForm.control}
+                                control={form.control}
                                 name={key}
                                 render={({ field }) => (
                                   <FormItem className='text-center'>
@@ -837,7 +871,7 @@ export default function SmartCaloriePlannerPage() {
                                           onChange={(e) =>
                                             field.onChange(
                                               e.target.value === ''
-                                                ? undefined
+                                                ? ''
                                                 : parseFloat(e.target.value)
                                             )
                                           }
@@ -981,11 +1015,11 @@ export default function SmartCaloriePlannerPage() {
                   <Button
                     type='submit'
                     className='flex-1 text-lg py-3'
-                    disabled={smartPlannerForm.formState.isSubmitting}
+                    disabled={form.formState.isSubmitting}
                   >
                     {' '}
                     <Calculator className='mr-2 h-5 w-5' />{' '}
-                    {smartPlannerForm.formState.isSubmitting
+                    {form.formState.isSubmitting
                       ? 'Calculating...'
                       : 'Calculate Smart Target'}{' '}
                   </Button>
@@ -1016,11 +1050,17 @@ export default function SmartCaloriePlannerPage() {
                   <div className='grid md:grid-cols-2 gap-4 text-base'>
                     <p>
                       <strong>Maintenance Calories (TDEE):</strong>{' '}
-                      {results.tdee ? formatNumber(results.tdee) : 'N/A'} kcal
+                      {results.maintenance_calories_tdee
+                        ? formatNumber(results.maintenance_calories_tdee)
+                        : 'N/A'}{' '}
+                      kcal
                     </p>
                     <p>
                       <strong>Basal Metabolic Rate (BMR):</strong>{' '}
-                      {results.bmr ? formatNumber(results.bmr) : 'N/A'} kcal
+                      {results.bmr_kcal
+                        ? formatNumber(results.bmr_kcal)
+                        : 'N/A'}{' '}
+                      kcal
                     </p>
                   </div>
                   <hr />
@@ -1028,8 +1068,8 @@ export default function SmartCaloriePlannerPage() {
                     <strong>
                       Primary Target Daily Calories:{' '}
                       <span className='text-primary'>
-                        {results.finalTargetCalories
-                          ? formatNumber(results.finalTargetCalories)
+                        {results.target_daily_calories
+                          ? formatNumber(results.target_daily_calories)
                           : 'N/A'}{' '}
                         kcal
                       </span>
@@ -1043,14 +1083,16 @@ export default function SmartCaloriePlannerPage() {
 
                   <p>
                     <strong>Estimated Weekly Progress:</strong>{' '}
-                    {results.estimatedWeeklyWeightChangeKg &&
-                    results.estimatedWeeklyWeightChangeKg >= 0
+                    {results.estimated_weekly_weight_change_kg &&
+                    results.estimated_weekly_weight_change_kg >= 0
                       ? `${formatNumber(
-                          results.estimatedWeeklyWeightChangeKg ?? 0,
+                          results.estimated_weekly_weight_change_kg ?? 0,
                           { maximumFractionDigits: 2 }
                         )} kg surplus/week (Potential Gain)`
                       : `${formatNumber(
-                          Math.abs(results.estimatedWeeklyWeightChangeKg ?? 0),
+                          Math.abs(
+                            results.estimated_weekly_weight_change_kg ?? 0
+                          ),
                           { maximumFractionDigits: 2 }
                         )} kg deficit/week (Potential Loss)`}
                   </p>
@@ -1084,16 +1126,19 @@ export default function SmartCaloriePlannerPage() {
                         <TableRow>
                           <TableCell className='font-medium'>Protein</TableCell>
                           <TableCell className='text-right'>
-                            {results.proteinTargetPct
-                              ? formatNumber(results.proteinTargetPct * 100, {
-                                  maximumFractionDigits: 0,
-                                })
+                            {results.target_protein_percentage
+                              ? formatNumber(
+                                  results.target_protein_percentage,
+                                  {
+                                    maximumFractionDigits: 0,
+                                  }
+                                )
                               : 'N/A'}
                             %
                           </TableCell>
                           <TableCell className='text-right'>
-                            {results.proteinGrams
-                              ? formatNumber(results.proteinGrams, {
+                            {results.target_protein_g
+                              ? formatNumber(results.target_protein_g, {
                                   maximumFractionDigits: 1,
                                 })
                               : 'N/A'}{' '}
@@ -1113,16 +1158,16 @@ export default function SmartCaloriePlannerPage() {
                             Carbohydrates
                           </TableCell>
                           <TableCell className='text-right'>
-                            {results.carbTargetPct
-                              ? formatNumber(results.carbTargetPct * 100, {
+                            {results.target_carbs_percentage
+                              ? formatNumber(results.target_carbs_percentage, {
                                   maximumFractionDigits: 0,
                                 })
                               : 'N/A'}
                             %
                           </TableCell>
                           <TableCell className='text-right'>
-                            {results.carbGrams
-                              ? formatNumber(results.carbGrams, {
+                            {results.target_carbs_g
+                              ? formatNumber(results.target_carbs_g, {
                                   maximumFractionDigits: 1,
                                 })
                               : 'N/A'}{' '}
@@ -1140,16 +1185,16 @@ export default function SmartCaloriePlannerPage() {
                         <TableRow>
                           <TableCell className='font-medium'>Fat</TableCell>
                           <TableCell className='text-right'>
-                            {results.fatTargetPct
-                              ? formatNumber(results.fatTargetPct * 100, {
+                            {results.target_fat_percentage
+                              ? formatNumber(results.target_fat_percentage, {
                                   maximumFractionDigits: 0,
                                 })
                               : 'N/A'}
                             %
                           </TableCell>
                           <TableCell className='text-right'>
-                            {results.fatGrams
-                              ? formatNumber(results.fatGrams, {
+                            {results.target_fat_g
+                              ? formatNumber(results.target_fat_g, {
                                   maximumFractionDigits: 1,
                                 })
                               : 'N/A'}{' '}
@@ -1176,26 +1221,20 @@ export default function SmartCaloriePlannerPage() {
               </Card>
             )}
 
-            {results && (
-              <Card className='mt-8'>
-                <CardHeader>
-                  <CardTitle className='text-2xl font-semibold flex items-center'>
-                    <Edit3 className='mr-2 h-6 w-6 text-primary' />
-                    Customize Your Plan
-                  </CardTitle>
-                  <CardDescription>
-                    Adjust the system-generated plan with your preferences.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <CustomizePlanForm
-                    results={results}
-                    weight={smartPlannerForm.getValues('current_weight')}
-                    planData={smartPlannerData}
-                  />
-                </CardContent>
-              </Card>
-            )}
+            <Card className='mt-8'>
+              <CardHeader>
+                <CardTitle className='text-2xl font-semibold flex items-center'>
+                  <Edit3 className='mr-2 h-6 w-6 text-primary' />
+                  Customize Your Plan
+                </CardTitle>
+                <CardDescription>
+                  Adjust the system-generated plan with your preferences.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CustomizePlanForm />
+              </CardContent>
+            </Card>
           </CardContent>
         </Card>
       </div>

@@ -13,15 +13,15 @@ export function mapProfileToMealPlanInput(
 ): GeneratePersonalizedMealPlanInput {
   const input: GeneratePersonalizedMealPlanInput = {
     age: profile.age!,
-    gender: profile.gender!,
+    biological_sex: profile.biological_sex!,
     height_cm: profile.height_cm!,
-    current_weight: profile.current_weight!,
-    goal_weight_1m: profile.goal_weight_1m!,
-    activityLevel: profile.activityLevel!,
-    dietGoalOnboarding: profile.dietGoalOnboarding!,
+    current_weight_kg: profile.current_weight_kg!,
+    target_weight_1month_kg: profile.target_weight_1month_kg!,
+    physical_activity_level: profile.physical_activity_level!,
+    primary_diet_goal: profile.primary_diet_goal!,
 
     // Optional fields
-    ideal_goal_weight: profile.ideal_goal_weight ?? undefined,
+    long_term_goal_weight_kg: profile.long_term_goal_weight_kg ?? undefined,
     bf_current: profile.bf_current ?? undefined,
     bf_target: profile.bf_target ?? undefined,
     bf_ideal: profile.bf_ideal ?? undefined,
@@ -49,16 +49,15 @@ export function mapProfileToMealPlanInput(
     left_arm_current: profile.left_arm_current ?? undefined,
     left_arm_goal_1m: profile.left_arm_goal_1m ?? undefined,
     left_arm_ideal: profile.left_arm_ideal ?? undefined,
-    preferredDiet: profile.preferredDiet ?? undefined,
+    preferred_diet: profile.preferred_diet ?? undefined,
     allergies: profile.allergies ?? undefined,
-    preferredCuisines: profile.preferredCuisines ?? undefined,
-    dispreferredCuisines: profile.dispreferredCuisines ?? undefined,
-    preferredIngredients: profile.preferredIngredients ?? undefined,
-    dispreferredIngredients: profile.dispreferredIngredients ?? undefined,
-    preferredMicronutrients: profile.preferredMicronutrients ?? undefined,
-    medicalConditions: profile.medicalConditions ?? undefined,
+    preferred_cuisines: profile.preferred_cuisines ?? undefined,
+    dispreferrred_cuisines: profile.dispreferrred_cuisines ?? undefined,
+    preferred_ingredients: profile.preferred_ingredients ?? undefined,
+    dispreferrred_ingredients: profile.dispreferrred_ingredients ?? undefined,
+    preferred_micronutrients: profile.preferred_micronutrients ?? undefined,
+    medical_conditions: profile.medical_conditions ?? undefined,
     medications: profile.medications ?? undefined,
-    typicalMealsDescription: profile.typicalMealsDescription ?? undefined,
   };
 
   Object.keys(input).forEach(
@@ -106,27 +105,26 @@ export function getAdjustedMealInput(
   return {
     originalMeal: {
       name: mealToOptimize.name,
-      customName: mealToOptimize.customName || '',
+      customName: mealToOptimize.custom_name || '',
       ingredients: preparedIngredients,
-      totalCalories: Number(mealToOptimize.totalCalories) || 0,
-      totalProtein: Number(mealToOptimize.totalProtein) || 0,
-      totalCarbs: Number(mealToOptimize.totalCarbs) || 0,
-      totalFat: Number(mealToOptimize.totalFat) || 0,
+      total_calories: Number(mealToOptimize.total_calories) || 0,
+      total_protein: Number(mealToOptimize.total_protein) || 0,
+      total_carbs: Number(mealToOptimize.total_carbs) || 0,
+      total_fat: Number(mealToOptimize.total_fat) || 0,
     },
     targetMacros: targetMacrosForMeal,
     userProfile: {
-      age: profileData.age,
-      gender: profileData.gender,
-      activityLevel: profileData.activityLevel,
-      dietGoal: profileData.dietGoalOnboarding,
-      preferredDiet: profileData.preferredDiet,
+      age: profileData.age ?? undefined,
+      biological_sex: profileData.biological_sex ?? undefined,
+      physical_activity_level: profileData.physical_activity_level ?? undefined,
+      primary_diet_goal: profileData.primary_diet_goal ?? undefined,
+      preferred_diet: profileData.preferred_diet ?? undefined,
       allergies: profileData.allergies ?? [],
-      dispreferredIngredients: profileData.dispreferredIngredients ?? [],
-      preferredIngredients: profileData.preferredIngredients ?? [],
+      dispreferrred_ingredients: profileData.dispreferrred_ingredients ?? [],
+      preferred_ingredients: profileData.preferred_ingredients ?? [],
     },
   };
 }
-
 export function getMissingProfileFields(
   profile: Partial<BaseProfileData>
 ): (keyof Partial<BaseProfileData>)[] {
@@ -136,15 +134,15 @@ export function getMissingProfileFields(
 export function generateInitialWeeklyPlan(): WeeklyMealPlan {
   return {
     days: daysOfWeek.map((day) => ({
-      dayOfWeek: day,
+      day_of_week: day,
       meals: mealNames.map((mealName) => ({
         name: mealName,
-        customName: '',
+        custom_name: '',
         ingredients: [],
-        totalCalories: null,
-        totalProtein: null,
-        totalCarbs: null,
-        totalFat: null,
+        total_calories: null,
+        total_protein: null,
+        total_carbs: null,
+        total_fat: null,
       })),
     })),
   };

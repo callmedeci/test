@@ -1,18 +1,16 @@
 'use client';
 
 import { CardContent } from '@/components/ui/card';
+import Spinner from '@/components/ui/Spinner';
+import { useGetPlan } from '@/features/profile/hooks/useGetPlan';
 import { formatNumber } from '@/lib/utils';
 import { Info } from 'lucide-react';
 import Link from 'next/link';
-import { TotalMacros } from '../../types/toolsGlobalTypes';
 
-type DailyMacroSummaryProps = {
-  targets: TotalMacros | null;
-  message: string | null;
-};
+function DailyMacroSummary() {
+  const { isLoadingPlan, userPlan, planError } = useGetPlan();
 
-function DailyMacroSummary({ targets, message }: DailyMacroSummaryProps) {
-  if (!targets)
+  if (planError)
     return (
       <CardContent>
         <div className='text-destructive text-center p-4 border border-destructive/50 rounded-md bg-destructive/10'>
@@ -33,6 +31,26 @@ function DailyMacroSummary({ targets, message }: DailyMacroSummaryProps) {
       </CardContent>
     );
 
+  if (isLoadingPlan)
+    return (
+      <CardContent>
+        <div className='w-full flex items-center justify-center gap-1 p-4 border rounded-md bg-muted/50'>
+          <Spinner />
+          <p>Loading your data...</p>
+        </div>
+      </CardContent>
+    );
+
+  const hasCustomMacros =
+    userPlan.custom_total_calories ||
+    userPlan.custom_protein_g ||
+    userPlan.custom_carbs_g ||
+    userPlan.custom_fat_g;
+
+  const message = hasCustomMacros
+    ? 'Daily totals are based on your manual macro breakdown from the Smart Planner.'
+    : 'Daily totals are calculated from your profile targets. Use the Smart Planner to set custom macros.';
+
   return (
     <CardContent>
       <h3 className='text-xl font-semibold mb-1 text-primary'>
@@ -41,22 +59,23 @@ function DailyMacroSummary({ targets, message }: DailyMacroSummaryProps) {
       <div className='grid grid-cols-2 md:grid-cols-4 gap-4 p-4 border rounded-md bg-muted/50 mb-3'>
         <p>
           <span className='font-medium'>Calories:</span>{' '}
-          {formatNumber(targets.calories, {
-            maximumFractionDigits: 0,
-          })}{' '}
+          {formatNumber(
+            userPlan.custom_total_calories ?? userPlan.target_daily_calories,
+            { maximumFractionDigits: 0 }
+          )}{' '}
           kcal
         </p>
         <p>
           <span className='font-medium'>Protein:</span>{' '}
-          {formatNumber(targets.protein_g, {
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1,
-          })}{' '}
+          {formatNumber(
+            userPlan.custom_protein_g ?? userPlan.target_protein_g,
+            { minimumFractionDigits: 1, maximumFractionDigits: 1 }
+          )}{' '}
           g
         </p>
         <p>
           <span className='font-medium'>Carbs:</span>{' '}
-          {formatNumber(targets.carbs_g, {
+          {formatNumber(userPlan.custom_carbs_g ?? userPlan.target_carbs_g, {
             minimumFractionDigits: 1,
             maximumFractionDigits: 1,
           })}{' '}
@@ -64,7 +83,7 @@ function DailyMacroSummary({ targets, message }: DailyMacroSummaryProps) {
         </p>
         <p>
           <span className='font-medium'>Fat:</span>{' '}
-          {formatNumber(targets.fat_g, {
+          {formatNumber(userPlan.custom_fat_g ?? userPlan.target_fat_g, {
             minimumFractionDigits: 1,
             maximumFractionDigits: 1,
           })}{' '}

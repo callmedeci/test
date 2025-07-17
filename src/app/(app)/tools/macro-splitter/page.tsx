@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import LoadingScreen from '@/components/ui/LoadingScreen';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'; // Added ScrollBar
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import SectionHeader from '@/components/ui/SectionHeader';
 import {
   Table,
@@ -16,9 +15,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { editProfile } from '@/features/profile/actions/apiUserProfile';
+import { useGetPlan } from '@/features/profile/hooks/useGetPlan';
 import DailyMacroSummary from '@/features/tools/components/macro-splitter/DailyMacroSummary';
 import FinalMacrosOverview from '@/features/tools/components/macro-splitter/FinalMacrosOverview';
-import { useLoadDataForMacro } from '@/features/tools/hooks/useLoadDataForMacro';
 import { headerLabels, macroPctKeys } from '@/features/tools/lib/config';
 import {
   customMacroSplit,
@@ -30,15 +30,12 @@ import {
   defaultMacroPercentages,
   mealNames as defaultMealNames,
 } from '@/lib/constants';
-import { db } from '@/lib/firebase/clientApp';
 import {
   MacroSplitterFormSchema,
-  preprocessDataForFirestore,
   type MacroSplitterFormValues,
 } from '@/lib/schemas';
 import { cn, formatNumber } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { doc, setDoc } from 'firebase/firestore';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -51,6 +48,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 
 export default function MacroSplitterPage() {
   const { toast } = useToast();
+  const { isLoadingPlan, userPlan } = useGetPlan();
   const [calculatedSplit, setCalculatedSplit] = useState<
     CalculatedMealMacros[] | null
   >(null);
@@ -64,66 +62,13 @@ export default function MacroSplitterPage() {
       })),
     },
   });
-  const { dailyTargets, dataSourceMessage, isLoading, user } =
-    useLoadDataForMacro(form);
-
+  const { columnSums, watchedMealDistributions } = getMealMacroStats(form);
   const { fields } = useFieldArray({
     control: form.control,
     name: 'mealDistributions',
   });
 
-  const { columnSums, watchedMealDistributions } = getMealMacroStats(form);
-
-  const onSubmit = async (data: MacroSplitterFormValues) => {
-    if (!dailyTargets) {
-      toast({
-        title: 'Error',
-        description:
-          'Daily macro totals not available. Please ensure your profile is complete or use the Smart Calorie Planner.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    if (!user?.uid) {
-      toast({
-        title: 'Error',
-        description: 'User not authenticated.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const result = customMacroSplit(dailyTargets, data.mealDistributions);
-    setCalculatedSplit(result);
-
-    try {
-      const userProfileRef = doc(db, 'users', user.uid);
-      const distributionsToSave = preprocessDataForFirestore(
-        data.mealDistributions
-      );
-
-      await setDoc(
-        userProfileRef,
-        { mealDistributions: distributionsToSave },
-        { merge: true }
-      );
-
-      toast({
-        title: 'Split Calculated & Saved',
-        description:
-          'Macro split calculated and your percentages have been saved.',
-      });
-    } catch (error) {
-      toast({
-        title: 'Calculation Complete (Save Failed)',
-        description: 'Macro split calculated, but failed to save percentages.',
-        variant: 'destructive',
-      });
-      console.error('Error saving meal distributions:', error);
-    }
-  };
-
-  const handleReset = async () => {
+  async function handleReset() {
     const defaultValues = defaultMealNames.map((name) => ({
       mealName: name,
       calories_pct: defaultMacroPercentages[name]?.calories_pct || 0,
@@ -133,39 +78,65 @@ export default function MacroSplitterPage() {
     }));
     form.reset({ mealDistributions: defaultValues });
     setCalculatedSplit(null);
-    if (user?.uid) {
-      try {
-        const userProfileRef = doc(db, 'users', user.uid);
-        await setDoc(
-          userProfileRef,
-          { mealDistributions: null },
-          { merge: true }
-        );
-        toast({
-          title: 'Reset Complete',
-          description: 'Percentages reset to defaults and saved.',
-        });
-      } catch (error) {
-        toast({
-          title: 'Reset Warning',
-          description:
-            'Percentages reset locally, but failed to save defaults to cloud.',
-          variant: 'destructive',
-        });
-        console.error(
-          'Error saving default meal distributions to Firestore:',
-          error
-        );
-      }
-    } else {
+
+    const { isSuccess, error } = await editProfile({
+      meal_distributions: defaultValues,
+    });
+
+    if (!isSuccess) {
       toast({
-        title: 'Reset Complete',
-        description: 'Percentages reset to defaults.',
+        title: 'Error',
+        description: error,
+        variant: 'destructive',
       });
     }
-  };
 
-  if (isLoading) return <LoadingScreen />;
+    if (isSuccess) {
+      toast({
+        title: 'Success',
+        description: 'Meal distributions reset successfully.',
+      });
+    }
+  }
+
+  async function onSubmit(data: MacroSplitterFormValues) {
+    const totalCalories =
+      userPlan.custom_total_calories ?? userPlan.target_daily_calories;
+    const protein = userPlan.custom_protein_g ?? userPlan.target_protein_g;
+    const carbs = userPlan.custom_carbs_g ?? userPlan.target_carbs_g;
+    const fat = userPlan.custom_fat_g ?? userPlan.target_fat_g;
+
+    const macroTargets = {
+      calories: totalCalories,
+      protein_g: protein,
+      carbs_g: carbs,
+      fat_g: fat,
+    };
+
+    const result = customMacroSplit(macroTargets, data.mealDistributions);
+
+    setCalculatedSplit(result);
+    const { isSuccess, error } = await editProfile({
+      meal_distributions: data.mealDistributions,
+    });
+
+    if (!isSuccess) {
+      toast({
+        title: 'Error',
+        description: error,
+        variant: 'destructive',
+      });
+    }
+
+    if (isSuccess) {
+      toast({
+        title: 'Success',
+        description: 'Meal distributions saved successfully.',
+      });
+    }
+  }
+
+  if (isLoadingPlan) return null;
 
   return (
     <div className='container mx-auto py-8 space-y-6'>
@@ -177,7 +148,7 @@ export default function MacroSplitterPage() {
           icon={<SplitSquareHorizontal className='mr-3 h-8 w-8 text-primary' />}
         />
 
-        <DailyMacroSummary targets={dailyTargets} message={dataSourceMessage} />
+        <DailyMacroSummary />
       </Card>
 
       <Form {...form}>
@@ -216,19 +187,33 @@ export default function MacroSplitterPage() {
                         mealCarbsGrams = NaN,
                         mealFatGrams = NaN;
 
-                      if (dailyTargets && currentPercentages) {
+                      if (currentPercentages) {
+                        const calories =
+                          userPlan.custom_total_calories ??
+                          userPlan.target_daily_calories ??
+                          0;
+                        const protein =
+                          userPlan.custom_protein_g ??
+                          userPlan.target_protein_g ??
+                          0;
+                        const carbs =
+                          userPlan.custom_carbs_g ??
+                          userPlan.target_carbs_g ??
+                          0;
+                        const fat =
+                          userPlan.custom_fat_g ?? userPlan.target_fat_g ?? 0;
+
                         mealCalories =
-                          dailyTargets.calories *
+                          calories *
                           ((currentPercentages.calories_pct || 0) / 100);
                         mealProteinGrams =
-                          dailyTargets.protein_g *
+                          protein *
                           ((currentPercentages.calories_pct || 0) / 100);
                         mealCarbsGrams =
-                          dailyTargets.carbs_g *
+                          carbs *
                           ((currentPercentages.calories_pct || 0) / 100);
                         mealFatGrams =
-                          dailyTargets.fat_g *
-                          ((currentPercentages.calories_pct || 0) / 100);
+                          fat * ((currentPercentages.calories_pct || 0) / 100);
                       }
 
                       return (
@@ -262,15 +247,12 @@ export default function MacroSplitterPage() {
                                           value={itemField.value ?? ''}
                                           onChange={(e) => {
                                             const val = e.target.value;
-                                            // Allow empty string for temporary state, Zod will validate on blur/submit
                                             if (val === '') {
-                                              itemField.onChange(undefined); // Or null, depending on how Zod handles empty string for numbers
+                                              itemField.onChange(null);
                                             } else {
                                               const numVal = parseFloat(val);
                                               itemField.onChange(
-                                                isNaN(numVal)
-                                                  ? undefined
-                                                  : numVal
+                                                isNaN(numVal) ? null : numVal
                                               );
                                             }
                                           }}
@@ -358,71 +340,71 @@ export default function MacroSplitterPage() {
                         );
                       })}
 
-                      {dailyTargets ? (
-                        <>
-                          <TableCell className='px-2 py-1 text-right tabular-nums'>
-                            {formatNumber(
-                              watchedMealDistributions.reduce(
-                                (sum, meal) =>
-                                  sum +
-                                  dailyTargets.calories *
-                                    ((meal.calories_pct || 0) / 100),
-                                0
-                              ),
-                              { maximumFractionDigits: 0 }
-                            )}
-                          </TableCell>
-                          <TableCell className='px-2 py-1 text-right tabular-nums'>
-                            {formatNumber(
-                              watchedMealDistributions.reduce(
-                                (sum, meal) =>
-                                  sum +
-                                  dailyTargets.protein_g *
-                                    ((meal.calories_pct || 0) / 100),
-                                0
-                              ),
-                              {
-                                minimumFractionDigits: 1,
-                                maximumFractionDigits: 1,
-                              }
-                            )}
-                          </TableCell>
-                          <TableCell className='px-2 py-1 text-right tabular-nums'>
-                            {formatNumber(
-                              watchedMealDistributions.reduce(
-                                (sum, meal) =>
-                                  sum +
-                                  dailyTargets.carbs_g *
-                                    ((meal.calories_pct || 0) / 100),
-                                0
-                              ),
-                              {
-                                minimumFractionDigits: 1,
-                                maximumFractionDigits: 1,
-                              }
-                            )}
-                          </TableCell>
-                          <TableCell className='px-2 py-1 text-right tabular-nums'>
-                            {formatNumber(
-                              watchedMealDistributions.reduce(
-                                (sum, meal) =>
-                                  sum +
-                                  dailyTargets.fat_g *
-                                    ((meal.calories_pct || 0) / 100),
-                                0
-                              ),
-                              {
-                                minimumFractionDigits: 1,
-                                maximumFractionDigits: 1,
-                              }
-                            )}
-                          </TableCell>
-                        </>
-                      ) : (
-                        <TableCell colSpan={4} className='px-2 py-1 text-right'>
-                          N/A
-                        </TableCell>
-                      )}
+                      <TableCell className='px-2 py-1 text-right tabular-nums'>
+                        {formatNumber(
+                          watchedMealDistributions.reduce(
+                            (sum, meal) =>
+                              sum +
+                              (userPlan.custom_total_calories ??
+                                userPlan.target_daily_calories ??
+                                0) *
+                                ((meal.calories_pct || 0) / 100),
+                            0
+                          ),
+                          { maximumFractionDigits: 0 }
+                        )}
+                      </TableCell>
+                      <TableCell className='px-2 py-1 text-right tabular-nums'>
+                        {formatNumber(
+                          watchedMealDistributions.reduce(
+                            (sum, meal) =>
+                              sum +
+                              (userPlan.custom_protein_g ??
+                                userPlan.target_protein_g ??
+                                0) *
+                                ((meal.calories_pct || 0) / 100),
+                            0
+                          ),
+                          {
+                            minimumFractionDigits: 1,
+                            maximumFractionDigits: 1,
+                          }
+                        )}
+                      </TableCell>
+                      <TableCell className='px-2 py-1 text-right tabular-nums'>
+                        {formatNumber(
+                          watchedMealDistributions.reduce(
+                            (sum, meal) =>
+                              sum +
+                              (userPlan.custom_carbs_g ??
+                                userPlan.target_carbs_g ??
+                                0) *
+                                ((meal.calories_pct || 0) / 100),
+                            0
+                          ),
+                          {
+                            minimumFractionDigits: 1,
+                            maximumFractionDigits: 1,
+                          }
+                        )}
+                      </TableCell>
+                      <TableCell className='px-2 py-1 text-right tabular-nums'>
+                        {formatNumber(
+                          watchedMealDistributions.reduce(
+                            (sum, meal) =>
+                              sum +
+                              (userPlan.custom_fat_g ??
+                                userPlan.target_fat_g ??
+                                0) *
+                                ((meal.calories_pct || 0) / 100),
+                            0
+                          ),
+                          {
+                            minimumFractionDigits: 1,
+                            maximumFractionDigits: 1,
+                          }
+                        )}
+                      </TableCell>
                     </TableRow>
                   </TableFooter>
                 </Table>
@@ -471,9 +453,7 @@ export default function MacroSplitterPage() {
             <Button
               type='submit'
               className='flex-1 text-lg py-3'
-              disabled={
-                !dailyTargets || form.formState.isSubmitting || isLoading
-              }
+              disabled={form.formState.isSubmitting}
             >
               <SplitSquareHorizontal className='mr-2 h-5 w-5' />
               {form.formState.isSubmitting ? (
@@ -485,9 +465,11 @@ export default function MacroSplitterPage() {
               type='button'
               variant='outline'
               onClick={handleReset}
+              disabled={form.formState.isSubmitting}
               className='flex-1 text-lg py-3'
             >
-              <RefreshCw className='mr-2 h-5 w-5' /> Reset
+              <RefreshCw className='mr-2 h-5 w-5' />
+              Reset
             </Button>
           </div>
         </form>
