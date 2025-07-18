@@ -1,88 +1,18 @@
 'use server';
 
-import { ai, geminiModel } from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
+import {
+  GeneratePersonalizedMealPlanInputSchema,
+  GeneratePersonalizedMealPlanOutputSchema,
+  type GeneratePersonalizedMealPlanOutput,
+  type AIGeneratedMeal,
+  type GeneratePersonalizedMealPlanInput,
+  type DayPlan,
+} from '@/lib/schemas';
+import { daysOfWeek } from '@/lib/constants';
+import { z } from 'zod';
 
-// Types
-export interface GeneratePersonalizedMealPlanInput {
-  age: number;
-  biological_sex: string;
-  height_cm: number;
-  current_weight_kg: number;
-  target_weight_1month_kg: number;
-  physical_activity_level: string;
-  primary_diet_goal: string;
-  long_term_goal_weight_kg?: number;
-  bf_current?: number;
-  bf_target?: number;
-  bf_ideal?: number;
-  mm_current?: number;
-  mm_target?: number;
-  mm_ideal?: number;
-  bw_current?: number;
-  bw_target?: number;
-  bw_ideal?: number;
-  waist_current?: number;
-  waist_goal_1m?: number;
-  waist_ideal?: number;
-  hips_current?: number;
-  hips_goal_1m?: number;
-  hips_ideal?: number;
-  right_leg_current?: number;
-  right_leg_goal_1m?: number;
-  right_leg_ideal?: number;
-  left_leg_current?: number;
-  left_leg_goal_1m?: number;
-  left_leg_ideal?: number;
-  right_arm_current?: number;
-  right_arm_goal_1m?: number;
-  right_arm_ideal?: number;
-  left_arm_current?: number;
-  left_arm_goal_1m?: number;
-  left_arm_ideal?: number;
-  preferred_diet?: string;
-  allergies?: string[];
-  preferred_cuisines?: string[];
-  dispreferrred_cuisines?: string[];
-  preferred_ingredients?: string[];
-  dispreferrred_ingredients?: string[];
-  preferred_micronutrients?: string[];
-  medical_conditions?: string[];
-  medications?: string[];
-  typicalMealsDescription?: string; // This field doesn't exist in BaseProfileData - consider removing
-}
-
-export interface Meal {
-  meal_name: string;
-  ingredients: {
-    ingredient_name: string;
-    quantity_g: number;
-    macros_per_100g: {
-      calories: number;
-      protein_g: number;
-      fat_g: number;
-    };
-  }[];
-  total_calories: number;
-  total_protein_g: number;
-  total_fat_g: number;
-}
-
-export interface DayPlan {
-  day: string;
-  meals: Meal[];
-}
-
-export interface GeneratePersonalizedMealPlanOutput {
-  weeklyMealPlan: DayPlan[];
-  weeklySummary: {
-    totalCalories: number;
-    totalProtein: number;
-    totalCarbs: number;
-    totalFat: number;
-  };
-}
-
-// Main entry function
+export type { GeneratePersonalizedMealPlanOutput };
 
 export async function generatePersonalizedMealPlan(
   input: GeneratePersonalizedMealPlanInput
@@ -90,105 +20,218 @@ export async function generatePersonalizedMealPlan(
   return generatePersonalizedMealPlanFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  model: geminiModel,
-  name: 'generatePersonalizedMealPlanPrompt',
-  input: { type: 'json' },
-  output: { type: 'json' },
-  prompt: `You are a professional AI nutritionist creating a HIGHLY PERSONALIZED weekly meal plan. You MUST carefully analyze and incorporate ALL the user's specific requirements below.
+// This schema is for the internal daily prompt, containing only necessary info.
+// REMOVED general profile data to force focus on targets and preferences.
+const DailyPromptInputSchema = z.object({
+  dayOfWeek: z.string(),
+  mealTargets: z.array(
+    z.object({
+      meal_name: z.string(),
+      calories: z.number(),
+      protein: z.number(),
+      carbs: z.number(),
+      fat: z.number(),
+    })
+  ),
+  preferred_diet: z.string().optional(),
+  allergies: z.array(z.string()).optional(),
+  dispreferrred_ingredients: z.array(z.string()).optional(),
+  preferred_ingredients: z.array(z.string()).optional(),
+  preferred_cuisines: z.array(z.string()).optional(),
+  dispreferrred_cuisines: z.array(z.string()).optional(),
+  medical_conditions: z.array(z.string()).optional(),
+  medications: z.array(z.string()).optional(),
+});
+type DailyPromptInput = z.infer<typeof DailyPromptInputSchema>;
 
-USER PROFILE DATA:
-{{{input}}}
-
-CRITICAL PERSONALIZATION REQUIREMENTS:
-1. DIETARY RESTRICTIONS: The user follows a {{preferredDiet}} diet - ONLY include ingredients that align with this diet type
-2. ALLERGIES: NEVER include these ingredients: {{allergies}} - this is a safety requirement
-3. PREFERRED CUISINES: Prioritize meals from: {{preferredCuisines}}
-4. AVOID THESE CUISINES: Do not create meals from: {{dispreferredCuisines}}
-5. PREFERRED INGREDIENTS: Frequently use: {{preferredIngredients}}
-6. AVOID THESE INGREDIENTS: Never use: {{dispreferredIngredients}}
-7. MEDICAL CONDITIONS: Account for {{medicalConditions}} - adjust sodium, sugar, etc. accordingly
-8. GOAL: This user wants {{dietGoalOnboarding}} - adjust portions and macro ratios accordingly
-9. ACTIVITY LEVEL: {{activityLevel}} - adjust total calorie needs
-10. MICRONUTRIENT FOCUS: Emphasize {{preferredMicronutrients}} in ingredient selection
-
-CALORIE CALCULATION REQUIREMENTS:
-- Age: {{age}}, Gender: {{gender}}, Height: {{height_cm}}cm, Current Weight: {{current_weight}}kg
-- Activity Level: {{activityLevel}}
-- Goal: {{dietGoalOnboarding}}
-- Calculate appropriate daily calories based on these factors
-- For muscle gain: typically 300-500 calories above maintenance
-- For weight loss: typically 300-500 calories below maintenance
-- For maintenance: use calculated BMR × activity multiplier
-
-MEAL PLAN STRUCTURE:
-You must return a JSON object with exactly two top-level properties:
-
-1. "weeklyMealPlan" — an array with 7 objects (Monday-Sunday)
-2. "weeklySummary" — nutritional totals for the entire week
-
-DETAILED JSON STRUCTURE:
-
-"weeklyMealPlan":
-- Array of 7 day objects
-- Each day object has:
-  - "day": string (e.g., "Monday")
-  - "meals": array of exactly 5 meal objects
-  
-Each meal object must have:
-- "meal_name": string ("Breakfast", "Snack 1", "Lunch", "Snack 2", "Dinner")
-- "ingredients": array of ingredient objects
-- "total_calories": number
-- "total_protein_g": number  
-- "total_fat_g": number
-
-Each ingredient object must have:
-- "ingredient_name": string
-- "quantity_g": number
-- "macros_per_100g": object with:
-  - "calories": number
-  - "protein_g": number
-  - "fat_g": number
-
-"weeklySummary":
-Must contain ONLY these four fields:
-- "totalCalories": number
-- "totalProtein": number
-- "totalCarbs": number
-- "totalFat": number
-
-VALIDATION CHECKLIST - Before responding, verify:
-✓ All meals use only {{preferredDiet}}-compatible ingredients
-✓ No ingredients from allergies list: {{allergies}}
-✓ No ingredients from dispreferred list: {{dispreferredIngredients}}
-✓ Cuisines match preferences: {{preferredCuisines}}
-✓ Frequent use of preferred ingredients: {{preferredIngredients}}
-✓ Appropriate calories for {{dietGoalOnboarding}} goal
-✓ All calculations are mathematically correct
-✓ JSON structure matches exactly as specified
-
-IMPORTANT RULES:
-- Use EXACT field names provided
-- NO extra fields in weeklySummary
-- NO markdown formatting or code blocks
-- ALL numerical values must be realistic and properly calculated
-- Ensure totalCarbs is calculated and included in weeklySummary
-
-Respond with pure JSON only.`,
+// Updated schema for AI daily output to match the expected structure
+const AIDailyPlanOutputSchema = z.object({
+  meals: z.array(
+    z.object({
+      name: z.string(),
+      custom_name: z.string().optional(),
+      ingredients: z.array(
+        z.object({
+          name: z.string(),
+          quantity: z.number().optional(),
+          unit: z.string().optional(),
+          calories: z.number(),
+          protein: z.number(),
+          carbs: z.number(),
+          fat: z.number(),
+        })
+      ),
+      total_calories: z.number().optional(),
+      total_protein: z.number().optional(),
+      total_carbs: z.number().optional(),
+      total_fat: z.number().optional(),
+    })
+  ),
 });
 
+// A prompt specifically for generating a SINGLE DAY's meal plan.
+// REMOVED the user profile section to make the prompt more focused.
+const dailyPrompt = ai.definePrompt({
+  name: 'generateDailyMealPlanPrompt',
+  input: { schema: DailyPromptInputSchema },
+  output: { schema: AIDailyPlanOutputSchema },
+  prompt: `You are a highly precise nutritional data generation service. Your ONLY task is to create a list of meals for a single day, {{dayOfWeek}}, that strictly matches the provided macronutrient targets for each meal, while adhering to the user's dietary preferences.
+
+**USER DIETARY PREFERENCES & RESTRICTIONS (FOR CONTEXT ONLY):**
+{{#if preferred_diet}}- Dietary Preference: {{preferred_diet}}{{/if}}
+{{#if allergies.length}}- Allergies to Avoid: {{#each allergies}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
+{{#if dispreferrred_ingredients.length}}- Disliked Ingredients: {{#each dispreferrred_ingredients}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
+{{#if preferred_ingredients.length}}- Favorite Ingredients: {{#each preferred_ingredients}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
+{{#if preferred_cuisines.length}}- Favorite Cuisines: {{#each preferred_cuisines}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
+{{#if dispreferrred_cuisines.length}}- Cuisines to Avoid: {{#each dispreferrred_cuisines}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
+{{#if medical_conditions.length}}- Medical Conditions: {{#each medical_conditions}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
+{{#if medications.length}}- Medications: {{#each medications}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
+
+
+**ABSOLUTE REQUIREMENTS FOR MEAL GENERATION:**
+
+For each meal listed below, you MUST generate a corresponding meal object. The total macros for the ingredients you list for each meal MUST fall within a 5% tolerance of the targets.
+
+**EXAMPLE CALCULATION:**
+- If Target Calories = 500, a 5% tolerance means the sum of your ingredient calories must be between 475 and 525.
+- If Target Protein = 30g, a 5% tolerance means the sum of your ingredient protein must be between 28.5g and 31.5g.
+- **YOU MUST PERFORM THIS CHECK FOR EVERY MEAL AND EVERY MACRONUTRIENT (CALORIES, PROTEIN, CARBS, FAT).**
+
+**MEAL TARGETS FOR {{dayOfWeek}} (FROM USER'S MACRO SPLITTER):**
+You are being provided with specific macronutrient targets for each meal. These targets were set by the user in the "Macro Splitter" tool. It is absolutely critical that you respect these targets.
+
+{{#each mealTargets}}
+- **Meal: {{this.meal_name}}**
+  - **TARGET Calories:** {{this.calories}} kcal
+  - **TARGET Protein:** {{this.protein}}g
+  - **TARGET Carbohydrates:** {{this.carbs}}g
+  - **TARGET Fat:** {{this.fat}}g
+{{/each}}
+
+**CRITICAL OUTPUT INSTRUCTIONS:**
+1.  Respond with ONLY a valid JSON object matching the provided schema. Do NOT include any text, notes, greetings, or markdown like \`\`\`json outside the JSON object.
+2.  For each meal in the targets, create a corresponding meal object in the "meals" array.
+3.  Each meal object MUST have a "name" (a short, appetizing name) and a non-empty "ingredients" array.
+4.  For each ingredient object MUST have a "name", and the precise "calories", "protein", "carbs", and "fat" values for the portion used in the meal. All values must be numbers.
+5.  **Before finalizing your output, you MUST double-check your math.** Sum the macros for each ingredient list to ensure the totals for each meal are within the 5% tolerance of the targets provided above. If they are not, you must adjust the ingredients and recalculate until they are. ONLY output the final, correct version.
+`,
+});
+
+// The flow takes the pre-calculated targets and user context and iterates to generate a plan.
 const generatePersonalizedMealPlanFlow = ai.defineFlow(
   {
     name: 'generatePersonalizedMealPlanFlow',
-    inputSchema: undefined,
-    outputSchema: undefined,
+    inputSchema: GeneratePersonalizedMealPlanInputSchema,
+    outputSchema: GeneratePersonalizedMealPlanOutputSchema,
   },
   async (
     input: GeneratePersonalizedMealPlanInput
   ): Promise<GeneratePersonalizedMealPlanOutput> => {
-    const { output } = await prompt(input);
-    if (!output) throw new Error('AI did not return output.');
+    const processedWeeklyPlan: DayPlan[] = [];
+    const weeklySummary = {
+      total_calories: 0,
+      total_protein: 0,
+      total_carbs: 0,
+      total_fat: 0,
+    };
 
-    return output as GeneratePersonalizedMealPlanOutput;
+    for (const dayOfWeek of daysOfWeek) {
+      try {
+        // Construct the simpler input for the daily prompt
+        const dailyPromptInput: DailyPromptInput = {
+          dayOfWeek,
+          mealTargets: input.meal_targets,
+          preferred_diet: input.preferred_diet,
+          allergies: input.allergies,
+          dispreferrred_ingredients: input.dispreferrred_ingredients,
+          preferred_ingredients: input.preferred_ingredients,
+          preferred_cuisines: input.preferred_cuisines,
+          dispreferrred_cuisines: input.dispreferrred_cuisines,
+          medical_conditions: input.medical_conditions,
+          medications: input.medications,
+        };
+
+        const { output: dailyOutput } = await dailyPrompt(dailyPromptInput);
+
+        if (
+          !dailyOutput ||
+          !dailyOutput.meals ||
+          dailyOutput.meals.length === 0
+        ) {
+          console.warn(`AI returned no meals for ${dayOfWeek}. Skipping.`);
+          continue;
+        }
+
+        const processedMeals: AIGeneratedMeal[] = dailyOutput.meals
+          .map((meal, index) => {
+            // Return null for invalid meals to filter out later
+            if (
+              meal === null ||
+              !meal.ingredients ||
+              meal.ingredients.length === 0
+            ) {
+              return null;
+            }
+
+            const sanitizedIngredients = meal.ingredients.map((ing) => ({
+              name: ing.name ?? 'Unknown Ingredient',
+              quantity: ing.quantity,
+              unit: ing.unit,
+              calories: Number(ing.calories) || 0,
+              protein: Number(ing.protein) || 0,
+              carbs: Number(ing.carbs) || 0,
+              fat: Number(ing.fat) || 0,
+            }));
+
+            const mealTotals = sanitizedIngredients.reduce(
+              (totals, ing) => {
+                totals.calories += ing.calories;
+                totals.protein += ing.protein;
+                totals.carbs += ing.carbs;
+                totals.fat += ing.fat;
+                return totals;
+              },
+              { calories: 0, protein: 0, carbs: 0, fat: 0 }
+            );
+
+            weeklySummary.total_calories += mealTotals.calories;
+            weeklySummary.total_protein += mealTotals.protein;
+            weeklySummary.total_carbs += mealTotals.carbs;
+            weeklySummary.total_fat += mealTotals.fat;
+
+            return {
+              name: meal.name || `Meal ${index + 1}`,
+              custom_name: meal.custom_name,
+              ingredients: sanitizedIngredients,
+              total_calories: mealTotals.calories,
+              total_protein: mealTotals.protein,
+              total_carbs: mealTotals.carbs,
+              total_fat: mealTotals.fat,
+            } as AIGeneratedMeal;
+          })
+          .filter((meal): meal is AIGeneratedMeal => meal !== null);
+
+        if (processedMeals.length > 0) {
+          processedWeeklyPlan.push({
+            day_of_week: dayOfWeek,
+            meals: processedMeals,
+          });
+        }
+      } catch (e) {
+        console.error(`Failed to generate meal plan for ${dayOfWeek}:`, e);
+      }
+    }
+
+    if (processedWeeklyPlan.length === 0)
+      throw new Error(
+        'The AI failed to generate a valid meal plan for any day of the week. Please try again.'
+      );
+
+    const finalOutput: GeneratePersonalizedMealPlanOutput = {
+      days: processedWeeklyPlan,
+      weekly_summary: weeklySummary,
+    };
+
+    return finalOutput;
   }
 );

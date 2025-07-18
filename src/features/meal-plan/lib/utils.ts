@@ -1,10 +1,13 @@
-import { type GeneratePersonalizedMealPlanInput } from '@/ai/flows/generate-meal-plan';
 import {
   daysOfWeek,
   defaultMacroPercentages,
   mealNames,
 } from '@/lib/constants';
-import { BaseProfileData, WeeklyMealPlan } from '@/lib/schemas';
+import {
+  BaseProfileData,
+  GeneratePersonalizedMealPlanInput,
+  WeeklyMealPlan,
+} from '@/lib/schemas';
 import { DailyTargetsTypes, MealToOptimizeTypes } from '../types';
 import { requiredFields } from './config';
 
@@ -58,6 +61,16 @@ export function mapProfileToMealPlanInput(
     preferred_micronutrients: profile.preferred_micronutrients ?? undefined,
     medical_conditions: profile.medical_conditions ?? undefined,
     medications: profile.medications ?? undefined,
+
+    // Assigning the values properly
+    equipment_access: profile.equipment_access ?? undefined,
+    exercise_frequency: profile.exercise_frequency ?? undefined,
+    exercise_goals: profile.exercise_goals ?? undefined,
+    injuries: profile.injuries ?? undefined,
+    pain_mobility_issues: profile.pain_mobility_issues ?? undefined,
+    preferred_exercise_types: profile.preferred_exercise_types ?? undefined,
+    surgeries: profile.surgeries ?? undefined,
+    typical_exercise_intensity: profile.typical_exercise_intensity ?? undefined,
   };
 
   Object.keys(input).forEach(

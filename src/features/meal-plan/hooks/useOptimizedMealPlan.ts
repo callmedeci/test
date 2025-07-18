@@ -1,53 +1,31 @@
-import {
-  generatePersonalizedMealPlan,
-  type GeneratePersonalizedMealPlanOutput,
-} from '@/ai/flows/generate-meal-plan';
-import { saveOptimizedMealPlan } from '@/features/meal-plan/lib/data-service';
+import { generatePersonalizedMealPlan } from '@/ai/flows/generate-meal-plan';
+import { editAiPlan } from '@/features/meal-plan/lib/data-service';
+import { useGetProfile } from '@/features/profile/hooks/useGetProfile';
 import { useToast } from '@/hooks/use-toast';
+import { GeneratePersonalizedMealPlanOutput } from '@/lib/schemas';
 import { useEffect, useState } from 'react';
 import { mapProfileToMealPlanInput } from '../lib/utils';
-import { useFetchProfile } from './useFetchProfile';
+import { useGetMealPlan } from './useGetMealPlan';
 
 export function useOptimizedMealPlan() {
-  const { user, profileData, isLoadingProfile, fetchUserData } =
-    useFetchProfile();
+  const { userProfile, isLoadingProfile } = useGetProfile();
+  const { mealPlan } = useGetMealPlan();
 
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [mealPlan, setMealPlan] =
+  const [mealPlanState, setMealPlanState] =
     useState<GeneratePersonalizedMealPlanOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    function setMeal(data: any) {
-      if (data.aiGeneratedMealPlan)
-        setMealPlan(
-          data.aiGeneratedMealPlan as GeneratePersonalizedMealPlanOutput
-        );
-    }
+    if (!mealPlan) return;
 
-    function toastError() {
-      toast({
-        title: 'Error',
-        description: 'Could not load your profile data.',
-        variant: 'destructive',
-      });
-    }
+    setMealPlanState(mealPlan.ai_plan);
+  }, [toast, userProfile, mealPlan]);
 
-    fetchUserData(toastError, setMeal);
-  }, [user, toast, fetchUserData]);
-
-  const handleGeneratePlan = async () => {
-    if (!user?.uid) {
-      toast({
-        title: 'Authentication Error',
-        description: 'You must be logged in to generate a meal plan.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    if (!profileData || Object.keys(profileData).length === 0) {
+  async function handleGeneratePlan() {
+    if (!userProfile || Object.keys(userProfile).length === 0) {
       toast({
         title: 'Profile Incomplete',
         description:
@@ -58,14 +36,15 @@ export function useOptimizedMealPlan() {
     }
 
     // Map FullProfileType to GeneratePersonalizedMealPlanInput
-    const input = mapProfileToMealPlanInput(profileData);
+    const input = mapProfileToMealPlanInput(userProfile);
 
     setIsLoading(true);
     setError(null);
     try {
       const result = await generatePersonalizedMealPlan(input);
-      setMealPlan(result);
-      await saveOptimizedMealPlan(user.uid, result);
+      setMealPlanState(result);
+      if (!result) return;
+      await editAiPlan({ ai_plan: result });
       toast({
         title: 'Meal Plan Generated!',
         description: 'Your AI-optimized weekly meal plan is ready.',
@@ -83,7 +62,13 @@ export function useOptimizedMealPlan() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
-  return { handleGeneratePlan, isLoading, isLoadingProfile, mealPlan, error };
+  return {
+    handleGeneratePlan,
+    isLoadingProfile,
+    isLoading,
+    mealPlan: mealPlanState,
+    error,
+  };
 }

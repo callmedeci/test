@@ -15,10 +15,10 @@ import { useOptimizedMealPlan } from '@/features/meal-plan/hooks/useOptimizedMea
 import { Loader2, Wand2 } from 'lucide-react';
 
 export default function OptimizedMealPlanPage() {
-  const { isLoadingProfile, handleGeneratePlan, isLoading, mealPlan, error } =
+  const { handleGeneratePlan, isLoadingProfile, isLoading, mealPlan, error } =
     useOptimizedMealPlan();
 
-  if (isLoadingProfile)
+  if (isLoading)
     return <LoadingScreen loadingLabel='Loading profile data...' />;
 
   return (

@@ -96,10 +96,10 @@ function MealSuggestionsContent() {
 
       const urlSearchParams = new URLSearchParams(searchParams);
       urlSearchParams.set('mealName', targets.mealName);
-      urlSearchParams.set('calories', targets.calories.toString());
-      urlSearchParams.set('protein', targets.protein.toString());
-      urlSearchParams.set('carbs', targets.carbs.toString());
-      urlSearchParams.set('fat', targets.fat.toString());
+      urlSearchParams.set('calories', targets.calories.toFixed(2).toString());
+      urlSearchParams.set('protein', targets.protein.toFixed(2).toString());
+      urlSearchParams.set('carbs', targets.carbs.toFixed(2).toString());
+      urlSearchParams.set('fat', targets.fat.toFixed(2).toString());
 
       if (isDemo) urlSearchParams.set('demo', 'true');
       else urlSearchParams.delete('demo');
@@ -191,6 +191,7 @@ function MealSuggestionsContent() {
   }, [selectedMealName, isLoadingProfile, calculateTargetsForSelectedMeal]);
 
   function handleMealSelectionChange(mealValue: string) {
+    console.log('CLICK', mealValue);
     setSuggestions([]);
     setError(null);
 
