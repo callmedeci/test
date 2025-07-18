@@ -74,8 +74,6 @@ export default async function AppLayout({
     error,
   } = await supabase.auth.getUser();
 
-  // console.log();
-
   if (!user) redirect('/login');
   if (error) redirect('/error');
 

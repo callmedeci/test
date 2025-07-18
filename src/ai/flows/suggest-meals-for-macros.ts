@@ -16,16 +16,16 @@ export interface SuggestMealsResult {
 export async function suggestMealsForMacros(
   input: SuggestMealsForMacrosInput
 ): Promise<SuggestMealsResult> {
-  try {
-    const data = await suggestMealsForMacrosFlow(input);
-    return { data, error: null };
-  } catch {
-    return {
-      data: null,
-      error:
-        'Sorry, we were unable to generate meal suggestions at this time. Please check your input and try again.',
-    };
-  }
+  // try {
+  const data = await suggestMealsForMacrosFlow(input);
+  return { data, error: null };
+  // } catch {
+  //   return {
+  //     data: null,
+  //     error:
+  //       'Sorry, we were unable to generate meal suggestions at this time. Please check your input and try again.',
+  //   };
+  // }
 }
 
 const prompt = ai.definePrompt({
@@ -104,11 +104,12 @@ const suggestMealsForMacrosFlow = ai.defineFlow(
   ): Promise<SuggestMealsForMacrosOutput> => {
     try {
       const { output } = await prompt(input);
+
       if (!output) throw new Error('AI did not return output.');
 
       return output as SuggestMealsForMacrosOutput;
     } catch (error) {
-      console.log(error);
+      console.error('⛔⛔', error, '⛔⛔');
       throw error;
     }
   }

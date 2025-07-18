@@ -31,7 +31,7 @@ function DailyMacroSummary() {
       </CardContent>
     );
 
-  if (isLoadingPlan)
+  if (isLoadingPlan || !userPlan)
     return (
       <CardContent>
         <div className='w-full flex items-center justify-center gap-1 p-4 border rounded-md bg-muted/50'>

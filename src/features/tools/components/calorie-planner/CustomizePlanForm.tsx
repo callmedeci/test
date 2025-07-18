@@ -61,7 +61,19 @@ function CustomizePlanForm() {
     });
     setCustomPlanResults(null);
 
-    const { isSuccess, error } = await editPlan(form.getValues());
+    const planToResest = {
+      ...form.getValues(),
+
+      custom_carbs_g: null,
+      custom_carbs_percentage: null,
+      custom_fat_g: null,
+      custom_fat_percentage: null,
+      custom_protein_g: null,
+      custom_protein_percentage: null,
+      custom_total_calories_final: null,
+    };
+
+    const { isSuccess, error } = await editPlan(planToResest);
 
     if (!isSuccess)
       toast({

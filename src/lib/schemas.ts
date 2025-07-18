@@ -138,69 +138,69 @@ export interface GlobalCalculatedTargets {
 // Base fields for onboarding/profile data used by tools
 export interface BaseProfileData extends User {
   name: string;
-  age?: number | null;
-  biological_sex?: string | null;
-  height_cm?: number | null;
-  current_weight_kg?: number | null;
-  target_weight_1month_kg?: number | null;
-  long_term_goal_weight_kg?: number | null;
-  physical_activity_level?: string | null;
-  primary_diet_goal?: string | null;
+  age?: number;
+  biological_sex?: string;
+  height_cm?: number;
+  current_weight_kg?: number;
+  target_weight_1month_kg?: number;
+  long_term_goal_weight_kg?: number;
+  physical_activity_level?: string;
+  primary_diet_goal?: string;
 
   // Body Composition
-  bf_current?: number | null;
-  bf_target?: number | null;
-  bf_ideal?: number | null;
-  mm_current?: number | null;
-  mm_target?: number | null;
-  mm_ideal?: number | null;
-  bw_current?: number | null;
-  bw_target?: number | null;
-  bw_ideal?: number | null;
+  bf_current?: number;
+  bf_target?: number;
+  bf_ideal?: number;
+  mm_current?: number;
+  mm_target?: number;
+  mm_ideal?: number;
+  bw_current?: number;
+  bw_target?: number;
+  bw_ideal?: number;
 
   // Measurements
-  waist_current?: number | null;
-  waist_goal_1m?: number | null;
-  waist_ideal?: number | null;
-  hips_current?: number | null;
-  hips_goal_1m?: number | null;
-  hips_ideal?: number | null;
-  right_leg_current?: number | null;
-  right_leg_goal_1m?: number | null;
-  right_leg_ideal?: number | null;
-  left_leg_current?: number | null;
-  left_leg_goal_1m?: number | null;
-  left_leg_ideal?: number | null;
-  right_arm_current?: number | null;
-  right_arm_goal_1m?: number | null;
-  right_arm_ideal?: number | null;
-  left_arm_current?: number | null;
-  left_arm_goal_1m?: number | null;
-  left_arm_ideal?: number | null;
+  waist_current?: number;
+  waist_goal_1m?: number;
+  waist_ideal?: number;
+  hips_current?: number;
+  hips_goal_1m?: number;
+  hips_ideal?: number;
+  right_leg_current?: number;
+  right_leg_goal_1m?: number;
+  right_leg_ideal?: number;
+  left_leg_current?: number;
+  left_leg_goal_1m?: number;
+  left_leg_ideal?: number;
+  right_arm_current?: number;
+  right_arm_goal_1m?: number;
+  right_arm_ideal?: number;
+  left_arm_current?: number;
+  left_arm_goal_1m?: number;
+  left_arm_ideal?: number;
 
   is_onboarding_complete?: boolean;
-  subscription_status?: string | null;
+  subscription_status?: string;
 
   // Exercise related
-  pain_mobility_issues?: string[] | null;
-  injuries?: string[] | null;
-  surgeries?: string[] | null;
-  exercise_goals?: string[] | null;
-  preferred_exercise_types?: string[] | null;
-  exercise_frequency?: string | null;
-  typical_exercise_intensity?: string | null;
-  equipment_access?: string[] | null;
+  pain_mobility_issues?: string[];
+  injuries?: string[];
+  surgeries?: string[];
+  exercise_goals?: string[];
+  preferred_exercise_types?: string[];
+  exercise_frequency?: string;
+  typical_exercise_intensity?: string;
+  equipment_access?: string[];
 
   // Diet preferences
-  preferred_diet?: string | null;
-  allergies?: string[] | null;
-  preferred_cuisines?: string[] | null;
-  dispreferrred_cuisines?: string[] | null;
-  preferred_ingredients?: string[] | null;
-  dispreferrred_ingredients?: string[] | null;
-  preferred_micronutrients?: string[] | null;
-  medical_conditions?: string[] | null;
-  medications?: string[] | null;
+  preferred_diet?: string;
+  allergies?: string[];
+  preferred_cuisines?: string[];
+  dispreferrred_cuisines?: string[];
+  preferred_ingredients?: string[];
+  dispreferrred_ingredients?: string[];
+  preferred_micronutrients?: string[];
+  medical_conditions?: string[];
+  medications?: string[];
 
   mealDistributions?: MealMacroDistribution[] | null;
 }

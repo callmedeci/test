@@ -20,7 +20,7 @@ function SectionHeader({
 }: SectionHeaderProps) {
   return (
     <CardHeader>
-      <div className='flex items-center gap-3 mb-2'>
+      <div className='flex items-center gap-2'>
         {icon && icon}
         <CardTitle className={className}>{title}</CardTitle>
       </div>

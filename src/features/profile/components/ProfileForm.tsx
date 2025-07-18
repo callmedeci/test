@@ -66,8 +66,8 @@ function ProfileForm() {
 
   useEffect(
     function () {
-      if (userProfile)
-        form.reset({ ...userProfile, name: user?.user_metadata.name });
+      if (userProfile && user)
+        form.reset({ ...userProfile!, name: user.user_metadata.name });
 
       if (profileError || userError)
         toast({
@@ -78,6 +78,7 @@ function ProfileForm() {
     },
     [
       form,
+      user,
       profileError,
       toast,
       user?.user_metadata.name,
@@ -161,9 +162,8 @@ function ProfileForm() {
                   <FormItem>
                     <FormLabel>Subscription Status</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
                       value={field.value ?? undefined}
-                      defaultValue={userProfile.subscription_status}
+                      onValueChange={(value) => value && field.onChange(value)}
                     >
                       <FormControl>
                         <div>
@@ -285,8 +285,8 @@ function ProfileForm() {
                 <FormItem>
                   <FormLabel>Typical Exercise Intensity (Optional)</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
                     value={field.value ?? undefined}
+                    onValueChange={(value) => value && field.onChange(value)}
                   >
                     <FormControl>
                       <div>

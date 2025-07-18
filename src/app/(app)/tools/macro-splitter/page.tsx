@@ -100,6 +100,8 @@ export default function MacroSplitterPage() {
   }
 
   async function onSubmit(data: MacroSplitterFormValues) {
+    if (!userPlan) return;
+
     const totalCalories =
       userPlan.custom_total_calories ?? userPlan.target_daily_calories;
     const protein = userPlan.custom_protein_g ?? userPlan.target_protein_g;
@@ -187,7 +189,7 @@ export default function MacroSplitterPage() {
                         mealCarbsGrams = NaN,
                         mealFatGrams = NaN;
 
-                      if (currentPercentages) {
+                      if (currentPercentages && userPlan) {
                         const calories =
                           userPlan.custom_total_calories ??
                           userPlan.target_daily_calories ??
@@ -345,8 +347,8 @@ export default function MacroSplitterPage() {
                           watchedMealDistributions.reduce(
                             (sum, meal) =>
                               sum +
-                              (userPlan.custom_total_calories ??
-                                userPlan.target_daily_calories ??
+                              (userPlan?.custom_total_calories ??
+                                userPlan?.target_daily_calories ??
                                 0) *
                                 ((meal.calories_pct || 0) / 100),
                             0
@@ -359,8 +361,8 @@ export default function MacroSplitterPage() {
                           watchedMealDistributions.reduce(
                             (sum, meal) =>
                               sum +
-                              (userPlan.custom_protein_g ??
-                                userPlan.target_protein_g ??
+                              (userPlan?.custom_protein_g ??
+                                userPlan?.target_protein_g ??
                                 0) *
                                 ((meal.calories_pct || 0) / 100),
                             0
@@ -376,8 +378,8 @@ export default function MacroSplitterPage() {
                           watchedMealDistributions.reduce(
                             (sum, meal) =>
                               sum +
-                              (userPlan.custom_carbs_g ??
-                                userPlan.target_carbs_g ??
+                              (userPlan?.custom_carbs_g ??
+                                userPlan?.target_carbs_g ??
                                 0) *
                                 ((meal.calories_pct || 0) / 100),
                             0
@@ -393,8 +395,8 @@ export default function MacroSplitterPage() {
                           watchedMealDistributions.reduce(
                             (sum, meal) =>
                               sum +
-                              (userPlan.custom_fat_g ??
-                                userPlan.target_fat_g ??
+                              (userPlan?.custom_fat_g ??
+                                userPlan?.target_fat_g ??
                                 0) *
                                 ((meal.calories_pct || 0) / 100),
                             0

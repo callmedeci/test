@@ -23,7 +23,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import LoadingScreen from '@/components/ui/LoadingScreen';
+import SectionHeader from '@/components/ui/SectionHeader';
 import {
   Select,
   SelectContent,
@@ -31,21 +31,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { editPlan } from '@/features/profile/actions/apiUserPlan';
 import { editProfile } from '@/features/profile/actions/apiUserProfile';
 import { useGetPlan } from '@/features/profile/hooks/useGetPlan';
 import { useGetProfile } from '@/features/profile/hooks/useGetProfile';
 import CustomizePlanForm from '@/features/tools/components/calorie-planner/CustomizePlanForm';
+import HelpAccordion from '@/features/tools/components/calorie-planner/HelpAccordion';
+import PlanResult from '@/features/tools/components/calorie-planner/PlanResult';
 import { useToast } from '@/hooks/use-toast';
 import {
   activityLevels,
@@ -58,22 +51,15 @@ import {
   type GlobalCalculatedTargets,
   type SmartCaloriePlannerFormValues,
 } from '@/lib/schemas';
-import { formatNumber } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  BrainCircuit,
-  Calculator,
-  Edit3,
-  HelpCircle,
-  RefreshCcw,
-} from 'lucide-react';
+import { BrainCircuit, Calculator, Edit3, RefreshCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { FieldPath, useForm } from 'react-hook-form';
 
 export default function SmartCaloriePlannerPage() {
   const { toast } = useToast();
-  const { userPlan, isLoadingPlan } = useGetPlan();
-  const { userProfile, isLoadingProfile } = useGetProfile();
+  const { userPlan } = useGetPlan();
+  const { userProfile } = useGetProfile();
 
   const [results, setResults] = useState<GlobalCalculatedTargets | null>(null);
 
@@ -405,30 +391,24 @@ export default function SmartCaloriePlannerPage() {
       setResults({
         ...userPlan,
         estimated_weekly_weight_change_kg,
-        proteinCalories,
-        carbCalories,
-        fatCalories,
+        protein_calories: proteinCalories,
+        carb_calories: carbCalories,
+        fat_calories: fatCalories,
       });
     },
     [userPlan]
   );
 
-  if (isLoadingProfile || isLoadingPlan) return <LoadingScreen />;
-
   return (
     <TooltipProvider>
       <div className='container mx-auto py-4'>
         <Card className='max-w-3xl mx-auto shadow-xl'>
-          <CardHeader>
-            <CardTitle className='text-3xl font-bold flex items-center'>
-              <BrainCircuit className='mr-3 h-8 w-8 text-primary' />
-              Smart Calorie & Macro Planner
-            </CardTitle>
-            <CardDescription>
-              Calculate your daily targets based on your stats and goals. Saved
-              data will be used across other tools.
-            </CardDescription>
-          </CardHeader>
+          <SectionHeader
+            title='Smart Calorie & Macro Planner'
+            description='Calculate your daily targets based on your stats and goals. Saved data will be used across other tools.'
+            className='text-3xl font-bold flex items-center'
+            icon={<BrainCircuit className='mr-3 h-8 w-8 text-primary' />}
+          />
 
           <CardContent>
             <Form {...form}>
@@ -896,119 +876,7 @@ export default function SmartCaloriePlannerPage() {
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value='help-section'>
-                    <AccordionTrigger className='text-xl font-semibold'>
-                      <div className='flex items-center'>
-                        <HelpCircle className='mr-2 h-6 w-6 text-primary' /> How
-                        is this calculated?
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className='text-sm space-y-4 pt-3 max-h-96 overflow-y-auto'>
-                      <div>
-                        <h4 className='font-semibold text-base'>
-                          1. Basal Metabolic Rate (BMR) &amp; Total Daily Energy
-                          Expenditure (TDEE)
-                        </h4>{' '}
-                        <p>
-                          We use the{' '}
-                          <strong className='text-primary'>
-                            Mifflin-St Jeor Equation
-                          </strong>{' '}
-                          for BMR, then multiply by an{' '}
-                          <strong className='text-primary'>
-                            activity factor
-                          </strong>{' '}
-                          (derived from your selected &lsquo;Physical Activity
-                          Level&rsquo;) for TDEE.
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className='font-semibold text-base mt-2'>
-                          2. Target Daily Calories
-                        </h4>
-                        <p>
-                          This is determined based on your goals, selected
-                          &quot;Diet Goal&quot;, and optionally, body
-                          composition changes:
-                        </p>
-                        <ul className='list-disc pl-5 space-y-1 mt-1'>
-                          <li>
-                            <strong>
-                              Primary Goal (Weight &amp; Diet Goal):
-                            </strong>{' '}
-                            Initially calculated from your 1-month weight
-                            target. Your &quot;Diet Goal&quot; (e.g., &quot;Fat
-                            loss,&quot; &quot;Muscle gain&quot;) then refines
-                            this. For example, &quot;Fat loss&quot; aims for a
-                            deficit (e.g., TDEE - 200 to -500 kcal), while
-                            &quot;Muscle gain&quot; aims for a surplus (e.g.,
-                            TDEE + 150 to +300 kcal). &quot;Recomposition&quot;
-                            targets a slight deficit or near-maintenance
-                            calories. These adjustments ensure the calorie
-                            target aligns with your primary objective.
-                          </li>
-                          <li>
-                            <strong>
-                              Body Fat % Goal (Optional Refinement):
-                            </strong>{' '}
-                            If you provide current and target body fat
-                            percentages, the calorie target may be further
-                            refined by averaging the weight-goal-based calories
-                            with calories estimated to achieve your body fat
-                            change.
-                          </li>
-                          <li>
-                            <strong>Waist Goal (Alternative View):</strong> If
-                            waist goals are provided, an alternative calorie
-                            target is estimated for perspective. This is not the
-                            primary target but an additional indicator.
-                          </li>
-                        </ul>
-                      </div>
-                      <div>
-                        <h4 className='font-semibold text-base mt-2'>
-                          3. Suggested Macro Split (Default)
-                        </h4>
-                        <p>
-                          The default suggested protein/carb/fat percentage
-                          split (shown in the &lsquo;Original Plan&rsquo;
-                          results) is based on your selected &quot;Diet
-                          Goal&quot;:
-                        </p>
-                        <ul className='list-disc pl-5 space-y-1 mt-1'>
-                          <li>
-                            <strong>Fat Loss:</strong> Approx. 35% Protein / 35%
-                            Carbs / 30% Fat
-                          </li>
-                          <li>
-                            <strong>Muscle Gain:</strong> Approx. 30% Protein /
-                            50% Carbs / 20% Fat
-                          </li>
-                          <li>
-                            <strong>Recomposition:</strong> Approx. 40% Protein
-                            / 35% Carbs / 25% Fat
-                          </li>
-                        </ul>
-                        <p className='mt-1'>
-                          You can further customize this in the &quot;Customize
-                          Your Plan&quot; section below.
-                        </p>
-                      </div>
-                      <div>
-                        {' '}
-                        <h4 className='font-semibold text-base mt-2'>
-                          4. Safe Pace
-                        </h4>{' '}
-                        <p>
-                          Sustainable weight loss is often around 0.5–1 kg (1–2
-                          lbs) per week. Muscle gain is slower, around 0.25–0.5
-                          kg (0.5–1 lb) per week. Large body composition or
-                          measurement changes in just 1 month may be unrealistic
-                          for many.
-                        </p>{' '}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
+                  <HelpAccordion />
                 </Accordion>
 
                 <div className='flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mt-8'>
@@ -1039,187 +907,7 @@ export default function SmartCaloriePlannerPage() {
               </form>
             </Form>
 
-            {results && (
-              <Card className='mt-8 bg-muted/30 shadow-inner'>
-                <CardHeader>
-                  <CardTitle className='text-2xl font-semibold text-primary'>
-                    Original Plan (System Generated)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className='space-y-4'>
-                  <div className='grid md:grid-cols-2 gap-4 text-base'>
-                    <p>
-                      <strong>Maintenance Calories (TDEE):</strong>{' '}
-                      {results.maintenance_calories_tdee
-                        ? formatNumber(results.maintenance_calories_tdee)
-                        : 'N/A'}{' '}
-                      kcal
-                    </p>
-                    <p>
-                      <strong>Basal Metabolic Rate (BMR):</strong>{' '}
-                      {results.bmr_kcal
-                        ? formatNumber(results.bmr_kcal)
-                        : 'N/A'}{' '}
-                      kcal
-                    </p>
-                  </div>
-                  <hr />
-                  <p className='text-lg font-medium'>
-                    <strong>
-                      Primary Target Daily Calories:{' '}
-                      <span className='text-primary'>
-                        {results.target_daily_calories
-                          ? formatNumber(results.target_daily_calories)
-                          : 'N/A'}{' '}
-                        kcal
-                      </span>
-                    </strong>
-                  </p>
-                  <p className='text-sm text-muted-foreground'>
-                    {' '}
-                    (Based on your weight &amp; diet goals. Optional BF% goal
-                    may refine this.)
-                  </p>
-
-                  <p>
-                    <strong>Estimated Weekly Progress:</strong>{' '}
-                    {results.estimated_weekly_weight_change_kg &&
-                    results.estimated_weekly_weight_change_kg >= 0
-                      ? `${formatNumber(
-                          results.estimated_weekly_weight_change_kg ?? 0,
-                          { maximumFractionDigits: 2 }
-                        )} kg surplus/week (Potential Gain)`
-                      : `${formatNumber(
-                          Math.abs(
-                            results.estimated_weekly_weight_change_kg ?? 0
-                          ),
-                          { maximumFractionDigits: 2 }
-                        )} kg deficit/week (Potential Loss)`}
-                  </p>
-                  <hr />
-                  <div className='pt-4'>
-                    <CardTitle className='text-xl font-semibold mb-3 text-primary'>
-                      Suggested Macronutrient Breakdown
-                    </CardTitle>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          {/* */}
-                          <TableHead>Macronutrient</TableHead>
-                          {/* */}
-                          <TableHead className='text-right'>
-                            % of Daily Calories
-                          </TableHead>
-                          {/* */}
-                          <TableHead className='text-right'>
-                            Grams per Day
-                          </TableHead>
-                          {/* */}
-                          <TableHead className='text-right'>
-                            Calories per Day
-                          </TableHead>
-                          {/* */}
-                        </TableRow>
-                        {/* */}
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className='font-medium'>Protein</TableCell>
-                          <TableCell className='text-right'>
-                            {results.target_protein_percentage
-                              ? formatNumber(
-                                  results.target_protein_percentage,
-                                  {
-                                    maximumFractionDigits: 0,
-                                  }
-                                )
-                              : 'N/A'}
-                            %
-                          </TableCell>
-                          <TableCell className='text-right'>
-                            {results.target_protein_g
-                              ? formatNumber(results.target_protein_g, {
-                                  maximumFractionDigits: 1,
-                                })
-                              : 'N/A'}{' '}
-                            g
-                          </TableCell>
-                          <TableCell className='text-right'>
-                            {results.proteinCalories
-                              ? formatNumber(results.proteinCalories, {
-                                  maximumFractionDigits: 0,
-                                })
-                              : 'N/A'}{' '}
-                            kcal
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className='font-medium'>
-                            Carbohydrates
-                          </TableCell>
-                          <TableCell className='text-right'>
-                            {results.target_carbs_percentage
-                              ? formatNumber(results.target_carbs_percentage, {
-                                  maximumFractionDigits: 0,
-                                })
-                              : 'N/A'}
-                            %
-                          </TableCell>
-                          <TableCell className='text-right'>
-                            {results.target_carbs_g
-                              ? formatNumber(results.target_carbs_g, {
-                                  maximumFractionDigits: 1,
-                                })
-                              : 'N/A'}{' '}
-                            g
-                          </TableCell>
-                          <TableCell className='text-right'>
-                            {results.carbCalories
-                              ? formatNumber(results.carbCalories, {
-                                  maximumFractionDigits: 0,
-                                })
-                              : 'N/A'}{' '}
-                            kcal
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className='font-medium'>Fat</TableCell>
-                          <TableCell className='text-right'>
-                            {results.target_fat_percentage
-                              ? formatNumber(results.target_fat_percentage, {
-                                  maximumFractionDigits: 0,
-                                })
-                              : 'N/A'}
-                            %
-                          </TableCell>
-                          <TableCell className='text-right'>
-                            {results.target_fat_g
-                              ? formatNumber(results.target_fat_g, {
-                                  maximumFractionDigits: 1,
-                                })
-                              : 'N/A'}{' '}
-                            g
-                          </TableCell>
-                          <TableCell className='text-right'>
-                            {results.fatCalories
-                              ? formatNumber(results.fatCalories, {
-                                  maximumFractionDigits: 0,
-                                })
-                              : 'N/A'}{' '}
-                            kcal
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                      <TableCaption className='text-xs mt-2 text-left'>
-                        This breakdown is based on your inputs and calculated
-                        goal. For custom macro adjustments, use the
-                        &lsquo;Customize Your Plan&rsquo; section below.
-                      </TableCaption>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <PlanResult results={results} />
 
             <Card className='mt-8'>
               <CardHeader>

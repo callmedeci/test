@@ -2,6 +2,7 @@
 
 import { adjustMealIngredients } from '@/ai/flows/adjust-meal-ingredients';
 import { Card, CardContent } from '@/components/ui/card';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -137,7 +138,7 @@ export default function CurrentMealPlanPage() {
     }
   }
 
-  if (isLoadingMealPlan) return <div>Loading meal plan...</div>;
+  if (isLoadingMealPlan) return <LoadingScreen />;
 
   return (
     <div className='container mx-auto py-8'>
