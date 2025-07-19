@@ -317,11 +317,13 @@ export default function SmartCaloriePlannerPage() {
       bmr_kcal: Math.round(bmr),
       maintenance_calories_tdee: Math.round(tdee),
       target_daily_calories: Math.round(finalTargetCalories),
-      target_protein_percentage: proteinTargetPct,
+
+      target_protein_percentage: proteinTargetPct * 100,
+      target_fat_percentage: fatTargetPct * 100,
+      target_carbs_percentage: carbTargetPct * 100,
+
       target_protein_g: proteinGrams,
-      target_carbs_percentage: carbTargetPct,
       target_carbs_g: carbGrams,
-      target_fat_percentage: fatTargetPct,
       target_fat_g: fatGrams,
 
       estimated_weekly_weight_change_kg: estimatedWeeklyWeightChangeKg,

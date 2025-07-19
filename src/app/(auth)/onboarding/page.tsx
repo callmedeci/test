@@ -119,24 +119,19 @@ export default function OnboardingPage() {
           target_daily_calories: Math.round(estimated.target_daily_calories),
           target_protein_g: Math.round(estimated.target_protein_g),
           protein_calories: Math.round(proteinCals),
-          target_protein_percentage:
-            estimated.target_protein_g > 0
-              ? Math.round(
-                  (proteinCals / estimated.target_daily_calories) * 100
-                )
-              : undefined,
+          target_protein_percentage: Math.round(
+            (proteinCals / estimated.target_daily_calories) * 100
+          ),
           target_carbs_g: Math.round(estimated.target_carbs_g),
           carb_calories: Math.round(carbCals),
-          target_carbs_percentage:
-            estimated.target_daily_calories > 0
-              ? Math.round((carbCals / estimated.target_daily_calories) * 100)
-              : undefined,
+          target_carbs_percentage: Math.round(
+            (carbCals / estimated.target_daily_calories) * 100
+          ),
           target_fat_g: Math.round(estimated.target_fat_g),
           fat_calories: Math.round(fatCals),
-          target_fat_percentage:
-            estimated.target_daily_calories > 0
-              ? Math.round((fatCals / estimated.target_daily_calories) * 100)
-              : undefined,
+          target_fat_percentage: Math.round(
+            (fatCals / estimated.target_daily_calories) * 100
+          ),
           current_weight_for_custom_calc: data.current_weight_kg,
           estimated_weekly_weight_change_kg: estimated.maintenance_calories_tdee
             ? ((estimated.maintenance_calories_tdee -
@@ -147,11 +142,9 @@ export default function OnboardingPage() {
         };
         setCalculatedTargets(newTargets);
       } else {
-        console.log('NULLLL 🔥🔥');
         setCalculatedTargets(null);
       }
     } else {
-      console.log('FUCCCCCCCk ⛔⛔');
       setCalculatedTargets(null);
     }
   }, [form]);
@@ -185,6 +178,16 @@ export default function OnboardingPage() {
       current_weight_kg,
     ] = watchedCustomInputs;
 
+    const effectiveCustomTotalCalories =
+      custom_total_calories && custom_total_calories > 0
+        ? custom_total_calories
+        : null;
+
+    const effectiveCustomProteinPerKg =
+      custom_protein_per_kg && custom_protein_per_kg >= 0
+        ? custom_protein_per_kg
+        : null;
+
     const baseWeight =
       current_weight_kg || calculatedTargets?.current_weight_for_custom_calc;
 
@@ -194,9 +197,9 @@ export default function OnboardingPage() {
     }
 
     const effectiveTotalCalories =
-      custom_total_calories !== undefined && custom_total_calories > 0
-        ? custom_total_calories
-        : calculatedTargets?.target_daily_calories || 0;
+      effectiveCustomTotalCalories ||
+      calculatedTargets?.target_daily_calories ||
+      0;
 
     const defaultProteinPerKg =
       calculatedTargets?.target_protein_g &&
@@ -207,9 +210,7 @@ export default function OnboardingPage() {
         : 1.6;
 
     const effectiveProteinPerKg =
-      custom_protein_per_kg !== undefined && custom_protein_per_kg >= 0
-        ? custom_protein_per_kg
-        : defaultProteinPerKg;
+      effectiveCustomProteinPerKg || defaultProteinPerKg;
 
     const calculatedProteinGrams = baseWeight * effectiveProteinPerKg;
     const calculatedProteinCalories = calculatedProteinGrams * 4;
@@ -238,35 +239,49 @@ export default function OnboardingPage() {
       Math.max(0, calculatedFatCalories);
 
     const newCustomPlan: GlobalCalculatedTargets = {
-      custom_total_calories_final: Math.round(finalCustomTotalCalories),
-      custom_protein_g: Math.round(calculatedProteinGrams),
-      protein_calories: Math.round(calculatedProteinCalories),
+      custom_total_calories_final: effectiveCustomTotalCalories
+        ? Math.round(finalCustomTotalCalories)
+        : null,
+      custom_protein_g: effectiveCustomProteinPerKg
+        ? Math.round(calculatedProteinGrams)
+        : null,
+      protein_calories: effectiveCustomProteinPerKg
+        ? Math.round(calculatedProteinCalories)
+        : null,
       custom_protein_percentage:
-        finalCustomTotalCalories > 0
+        effectiveCustomProteinPerKg && finalCustomTotalCalories > 0
           ? Math.round(
               (calculatedProteinCalories / finalCustomTotalCalories) * 100
             )
-          : calculatedProteinGrams > 0
+          : effectiveCustomProteinPerKg && calculatedProteinGrams > 0
           ? 100
-          : 0,
-      custom_carbs_g: Math.round(Math.max(0, calculatedCarbGrams)),
-      carb_calories: Math.round(Math.max(0, calculatedCarbCalories)),
+          : null,
+      custom_carbs_g: effectiveCustomTotalCalories
+        ? Math.round(Math.max(0, calculatedCarbGrams))
+        : null,
+      carb_calories: effectiveCustomTotalCalories
+        ? Math.round(Math.max(0, calculatedCarbCalories))
+        : null,
       custom_carbs_percentage:
-        finalCustomTotalCalories > 0
+        effectiveCustomTotalCalories && finalCustomTotalCalories > 0
           ? Math.round(
               (Math.max(0, calculatedCarbCalories) / finalCustomTotalCalories) *
                 100
             )
-          : 0,
-      custom_fat_g: Math.round(Math.max(0, calculatedFatGrams)),
-      fat_calories: Math.round(Math.max(0, calculatedFatCalories)),
+          : null,
+      custom_fat_g: effectiveCustomTotalCalories
+        ? Math.round(Math.max(0, calculatedFatGrams))
+        : null,
+      fat_calories: effectiveCustomTotalCalories
+        ? Math.round(Math.max(0, calculatedFatCalories))
+        : null,
       custom_fat_percentage:
-        finalCustomTotalCalories > 0
+        effectiveCustomTotalCalories && finalCustomTotalCalories > 0
           ? Math.round(
               (Math.max(0, calculatedFatCalories) / finalCustomTotalCalories) *
                 100
             )
-          : 0,
+          : null,
       bmr_kcal: calculatedTargets?.bmr_kcal,
       maintenance_calories_tdee: calculatedTargets?.maintenance_calories_tdee,
       current_weight_for_custom_calc: baseWeight,
@@ -277,8 +292,10 @@ export default function OnboardingPage() {
               7) /
             7700
           : undefined,
-    };
 
+      custom_total_calories: effectiveCustomTotalCalories,
+      custom_protein_per_kg: effectiveCustomProteinPerKg,
+    };
     if (
       JSON.stringify(customCalculatedTargets) !== JSON.stringify(newCustomPlan)
     )
@@ -329,11 +346,6 @@ export default function OnboardingPage() {
       updateCalculatedTargetsForStep3();
     }
 
-    // Set default custom targets when entering step 4
-    if (currentStep === 3 && !customCalculatedTargets && calculatedTargets) {
-      setCustomCalculatedTargets(calculatedTargets);
-    }
-
     // Move to next step if not at the end
     if (currentStep < 5) {
       // Changed from onboardingStepsData.length to 5
@@ -342,18 +354,12 @@ export default function OnboardingPage() {
   };
 
   const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1);
-    }
+    if (currentStep > 1) setCurrentStep((prev) => prev - 1);
   };
 
   const handleSkip = () => {
-    if (
-      activeStepData?.isOptional &&
-      currentStep < 5 // Changed from onboardingStepsData.length to 5
-    ) {
+    if (activeStepData?.isOptional && currentStep < 5)
       setCurrentStep((prev) => prev + 1);
-    }
   };
 
   const processAndSaveData = async (data: OnboardingFormValues) => {
@@ -361,12 +367,12 @@ export default function OnboardingPage() {
 
     const arrayLikeFields: (keyof OnboardingFormValues)[] = [
       'allergies',
-      'preferredCuisines',
-      'dispreferredCuisines',
-      'preferredIngredients',
-      'dispreferredIngredients',
-      'preferredMicronutrients',
-      'medicalConditions',
+      'preferred_cuisines',
+      'dispreferrred_cuisines',
+      'preferred_ingredients',
+      'dispreferrred_ingredients',
+      'preferred_micronutrients',
+      'medical_conditions',
       'medications',
     ];
 

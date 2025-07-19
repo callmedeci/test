@@ -47,6 +47,8 @@ function DailyMacroSummary() {
     userPlan.custom_carbs_g ||
     userPlan.custom_fat_g;
 
+  console.log(userPlan);
+
   const message = hasCustomMacros
     ? 'Daily totals are based on your manual macro breakdown from the Smart Planner.'
     : 'Daily totals are calculated from your profile targets. Use the Smart Planner to set custom macros.';
@@ -60,7 +62,7 @@ function DailyMacroSummary() {
         <p>
           <span className='font-medium'>Calories:</span>{' '}
           {formatNumber(
-            userPlan.custom_total_calories ?? userPlan.target_daily_calories,
+            userPlan.custom_total_calories || userPlan.target_daily_calories,
             { maximumFractionDigits: 0 }
           )}{' '}
           kcal

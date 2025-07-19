@@ -185,7 +185,7 @@ export const onboardingStepsData = [
   },
   {
     stepNumber: 3,
-    title: 'Step 7 – Smart Calculation & Macros',
+    title: 'Step 3 – Smart Calculation & Macros',
     explanation:
       'We’ll generate your personal targets using your data. We estimate your daily calories and macronutrients to support your weight or health goals — whether it’s fat loss, muscle gain, or maintenance.',
     tooltipText:
@@ -195,7 +195,7 @@ export const onboardingStepsData = [
   },
   {
     stepNumber: 4,
-    title: 'Step 8 – Customize Your Targets (Optional)',
+    title: 'Step 4 – Customize Your Targets (Optional)',
     explanation:
       'Want to fine-tune your plan? Adjust your total daily calories, protein intake, and how your remaining calories are split between carbs and fat.',
     tooltipText:
@@ -208,8 +208,8 @@ export const onboardingStepsData = [
     isOptional: true,
   },
   {
-    stepNumber: 5, // Was 12
-    title: 'Step 11 – Ready for Your AI Meal Plan!',
+    stepNumber: 5,
+    title: 'Step 5 – Ready for Your AI Meal Plan!',
     explanation:
       "You're all set! Your profile is complete. Click 'Finish Onboarding' to save your profile and proceed to the dashboard. You can then generate your first AI-powered meal plan.",
     tooltipText:
