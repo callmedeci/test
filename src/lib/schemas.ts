@@ -202,7 +202,7 @@ export interface BaseProfileData extends User {
   medical_conditions?: string[];
   medications?: string[];
 
-  mealDistributions?: MealMacroDistribution[] | null;
+  meal_distributions?: MealMacroDistribution[] | null;
 }
 
 export const MealMacroDistributionSchema = z.object({
@@ -217,7 +217,7 @@ export type MealMacroDistribution = z.infer<typeof MealMacroDistributionSchema>;
 
 export const MacroSplitterFormSchema = z
   .object({
-    mealDistributions: z
+    meal_distributions: z
       .array(MealMacroDistributionSchema)
       .length(6, `Must have 6 meal entries.`),
   })
@@ -226,7 +226,7 @@ export const MacroSplitterFormSchema = z
       macroKey: keyof Omit<MealMacroDistribution, 'mealName'>,
       macroName: string
     ) => {
-      const sum = data.mealDistributions.reduce(
+      const sum = data.meal_distributions.reduce(
         (acc, meal) => acc + (Number(meal[macroKey]) || 0),
         0
       );

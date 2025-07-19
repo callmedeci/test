@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import SectionHeader from '@/components/ui/SectionHeader';
 import {
@@ -17,6 +18,7 @@ import {
 } from '@/components/ui/table';
 import { editProfile } from '@/features/profile/actions/apiUserProfile';
 import { useGetPlan } from '@/features/profile/hooks/useGetPlan';
+import { useGetProfile } from '@/features/profile/hooks/useGetProfile';
 import DailyMacroSummary from '@/features/tools/components/macro-splitter/DailyMacroSummary';
 import FinalMacrosOverview from '@/features/tools/components/macro-splitter/FinalMacrosOverview';
 import { headerLabels, macroPctKeys } from '@/features/tools/lib/config';
@@ -43,12 +45,13 @@ import {
   RefreshCw,
   SplitSquareHorizontal,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 
 export default function MacroSplitterPage() {
   const { toast } = useToast();
   const { isLoadingPlan, userPlan } = useGetPlan();
+  const { userProfile, isLoadingProfile } = useGetProfile();
   const [calculatedSplit, setCalculatedSplit] = useState<
     CalculatedMealMacros[] | null
   >(null);
@@ -56,7 +59,7 @@ export default function MacroSplitterPage() {
   const form = useForm<MacroSplitterFormValues>({
     resolver: zodResolver(MacroSplitterFormSchema),
     defaultValues: {
-      mealDistributions: defaultMealNames.map((name) => ({
+      meal_distributions: defaultMealNames.map((name) => ({
         mealName: name,
         calories_pct: defaultMacroPercentages[name]?.calories_pct || 0,
       })),
@@ -65,7 +68,7 @@ export default function MacroSplitterPage() {
   const { columnSums, watchedMealDistributions } = getMealMacroStats(form);
   const { fields } = useFieldArray({
     control: form.control,
-    name: 'mealDistributions',
+    name: 'meal_distributions',
   });
 
   async function handleReset() {
@@ -76,7 +79,7 @@ export default function MacroSplitterPage() {
       carbs_pct: defaultMacroPercentages[name]?.carbs_pct || 0,
       fat_pct: defaultMacroPercentages[name]?.fat_pct || 0,
     }));
-    form.reset({ mealDistributions: defaultValues });
+    form.reset({ meal_distributions: defaultValues });
     setCalculatedSplit(null);
 
     const { isSuccess, error } = await editProfile({
@@ -115,12 +118,15 @@ export default function MacroSplitterPage() {
       fat_g: fat,
     };
 
-    const result = customMacroSplit(macroTargets, data.mealDistributions);
+    const result = customMacroSplit(macroTargets, data.meal_distributions);
 
     setCalculatedSplit(result);
     const { isSuccess, error } = await editProfile({
-      meal_distributions: data.mealDistributions,
+      meal_distributions: data.meal_distributions,
     });
+
+    console.log(isSuccess);
+    // console.log(object);
 
     if (!isSuccess) {
       toast({
@@ -138,7 +144,17 @@ export default function MacroSplitterPage() {
     }
   }
 
-  if (isLoadingPlan) return null;
+  useEffect(
+    function () {
+      if (userProfile?.meal_distributions)
+        form.reset({
+          meal_distributions: userProfile.meal_distributions,
+        });
+    },
+    [userProfile, form]
+  );
+
+  if (isLoadingPlan || isLoadingProfile) return <LoadingScreen />;
 
   return (
     <div className='container mx-auto py-8 space-y-6'>
@@ -237,7 +253,7 @@ export default function MacroSplitterPage() {
                             >
                               <FormField
                                 control={form.control}
-                                name={`mealDistributions.${index}.${macroKey}`}
+                                name={`meal_distributions.${index}.${macroKey}`}
                                 render={({ field: itemField }) => (
                                   <FormItem className='inline-block'>
                                     <FormControl>
@@ -412,14 +428,14 @@ export default function MacroSplitterPage() {
                 </Table>
                 <ScrollBar orientation='horizontal' />
               </ScrollArea>
-              {form.formState.errors.mealDistributions?.root?.message && (
+              {form.formState.errors.meal_distributions?.root?.message && (
                 <p className='text-sm font-medium text-destructive mt-2'>
-                  {form.formState.errors.mealDistributions.root.message}
+                  {form.formState.errors.meal_distributions.root.message}
                 </p>
               )}
-              {form.formState.errors.mealDistributions &&
-                !form.formState.errors.mealDistributions.root &&
-                Object.values(form.formState.errors.mealDistributions).map(
+              {form.formState.errors.meal_distributions &&
+                !form.formState.errors.meal_distributions.root &&
+                Object.values(form.formState.errors.meal_distributions).map(
                   (errorObj, index) => {
                     if (
                       errorObj &&

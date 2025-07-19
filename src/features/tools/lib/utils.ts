@@ -13,7 +13,7 @@ import { defaultMacroPercentages } from '@/lib/constants';
 
 export function customMacroSplit(
   totalMacros: TotalMacros,
-  mealMacroDistribution: MacroSplitterFormValues['mealDistributions']
+  mealMacroDistribution: MacroSplitterFormValues['meal_distributions']
 ): CalculatedMealMacros[] {
   return mealMacroDistribution.map((mealPct) => ({
     mealName: mealPct.mealName,
@@ -34,13 +34,13 @@ export function customMacroSplit(
 
 export function getMealMacroStats(
   form: UseFormReturn<{
-    mealDistributions: {
+    meal_distributions: {
       mealName: string;
       calories_pct: number;
     }[];
   }>
 ) {
-  const watchedMealDistributions = form.watch('mealDistributions');
+  const watchedMealDistributions = form.watch('meal_distributions');
   const calculateColumnSum = (
     macroKey: keyof Omit<MealMacroDistribution, 'mealName'>
   ) => {
