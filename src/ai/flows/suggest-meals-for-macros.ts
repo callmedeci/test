@@ -2,32 +2,21 @@
 
 import { ai } from '@/ai/genkit';
 import {
-  SuggestMealsForMacrosInput,
   SuggestMealsForMacrosInputSchema,
-  SuggestMealsForMacrosOutput,
   SuggestMealsForMacrosOutputSchema,
+  type SuggestMealsForMacrosInput,
+  type SuggestMealsForMacrosOutput,
 } from '@/lib/schemas';
+import { getAIApiErrorMessage } from '@/lib/utils';
 
-export interface SuggestMealsResult {
-  data: SuggestMealsForMacrosOutput | null;
-  error: string | null;
-}
-
+// Main entry function
 export async function suggestMealsForMacros(
   input: SuggestMealsForMacrosInput
-): Promise<SuggestMealsResult> {
-  // try {
-  const data = await suggestMealsForMacrosFlow(input);
-  return { data, error: null };
-  // } catch {
-  //   return {
-  //     data: null,
-  //     error:
-  //       'Sorry, we were unable to generate meal suggestions at this time. Please check your input and try again.',
-  //   };
-  // }
+): Promise<SuggestMealsForMacrosOutput> {
+  return suggestMealsForMacrosFlow(input);
 }
 
+// AI Prompt
 const prompt = ai.definePrompt({
   name: 'suggestMealsForMacrosPrompt',
   input: { schema: SuggestMealsForMacrosInputSchema },
@@ -89,10 +78,10 @@ Generate 1 to 3 detailed meal suggestions that meet the user's macronutrient tar
 - DO NOT include any introductory text, concluding remarks, markdown formatting (like json), or any other commentary outside of the pure JSON object.
 
 Respond ONLY with the pure JSON object that strictly matches the following TypeScript type:
-{ suggestions: Array<{ mealTitle: string; description: string; ingredients: Array<{ name: string; amount: string; unit: string; calories: number; protein: number; carbs: number; fat: number; macrosString: string; }>; totalCalories: number; totalProtein: number; totalCarbs: number; totalFat: number; instructions?: string; }>; }
-`,
+{ suggestions: Array<{ mealTitle: string; description: string; ingredients: Array<{ name: string; amount: string; unit: string; calories: number; protein: number; carbs: number; fat: number; macrosString: string; }>; totalCalories: number; totalProtein: number; totalCarbs: number; totalFat: number; instructions?: string; }>; }`,
 });
 
+// Genkit Flow
 const suggestMealsForMacrosFlow = ai.defineFlow(
   {
     name: 'suggestMealsForMacrosFlow',
@@ -104,13 +93,26 @@ const suggestMealsForMacrosFlow = ai.defineFlow(
   ): Promise<SuggestMealsForMacrosOutput> => {
     try {
       const { output } = await prompt(input);
+      if (!output) {
+        throw new Error('AI did not return output.');
+      }
 
-      if (!output) throw new Error('AI did not return output.');
+      const validationResult =
+        SuggestMealsForMacrosOutputSchema.safeParse(output);
+      if (!validationResult.success) {
+        console.error(
+          'AI output validation error:',
+          validationResult.error.flatten()
+        );
+        throw new Error(
+          `AI returned data in an unexpected format. Details: ${validationResult.error.message}`
+        );
+      }
 
-      return output as SuggestMealsForMacrosOutput;
-    } catch (error) {
-      console.error('⛔⛔', error, '⛔⛔');
-      throw error;
+      return validationResult.data;
+    } catch (error: any) {
+      console.error('Error in suggestMealsForMacrosFlow:', error);
+      throw new Error(getAIApiErrorMessage(error));
     }
   }
 );

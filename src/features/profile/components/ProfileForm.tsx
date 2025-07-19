@@ -11,7 +11,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import LoadingScreen from '@/components/ui/LoadingScreen';
 import {
   Select,
   SelectContent,
@@ -28,18 +27,25 @@ import {
   exerciseIntensities,
   subscriptionStatuses,
 } from '@/lib/constants';
-import { ProfileFormSchema, type ProfileFormValues } from '@/lib/schemas';
+import {
+  BaseProfileData,
+  ProfileFormSchema,
+  type ProfileFormValues,
+} from '@/lib/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { User } from '@supabase/supabase-js';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { editProfile } from '../actions/apiUserProfile';
-import { useGetProfile } from '../hooks/useGetProfile';
-import { useGetUser } from '../hooks/useGetUser';
 
-function ProfileForm() {
+function ProfileForm({
+  user,
+  profile,
+}: {
+  user: User;
+  profile: BaseProfileData;
+}) {
   const { toast } = useToast();
-  const { user, userError, isLoadingUser } = useGetUser();
-  const { isLoadingProfile, userProfile, profileError } = useGetProfile();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(ProfileFormSchema),
@@ -64,41 +70,17 @@ function ProfileForm() {
     },
   });
 
-  useEffect(
-    function () {
-      if (userProfile && user)
-        form.reset({ ...userProfile!, name: user.user_metadata.name });
-
-      if (profileError || userError)
-        toast({
-          title: 'Error',
-          description: 'Could not load profile data.',
-          variant: 'destructive',
-        });
-    },
-    [
-      form,
-      user,
-      profileError,
-      toast,
-      user?.user_metadata.name,
-      userError,
-      userProfile,
-    ]
-  );
-
   async function onSubmit(data: ProfileFormValues) {
     const { name, ...newProfile } = data;
-    const { error, isSuccess } = await editProfile(newProfile, {
-      data: { name },
-    });
 
-    if (isSuccess)
+    try {
+      await editProfile(newProfile, { data: { name } });
+
       return toast({
         title: 'Profile Updated',
         description: 'Your profile has been successfully updated.',
       });
-    else if (error) {
+    } catch (error: any) {
       return toast({
         title: 'Update Failed',
         description: error,
@@ -107,7 +89,12 @@ function ProfileForm() {
     }
   }
 
-  if (isLoadingProfile || isLoadingUser) return <LoadingScreen />;
+  useEffect(
+    function () {
+      form.reset({ ...profile!, name: user.user_metadata.name });
+    },
+    [form, user.user_metadata, profile]
+  );
 
   return (
     <Form {...form}>

@@ -19,7 +19,6 @@ type MealCardItemProps = {
   dayIndex: number;
   mealIndex: number;
   optimizingKey: string | null;
-  disabled: boolean;
   onOptimizeMeal: (dayIndex: number, mealIndex: number) => Promise<void>;
 };
 
@@ -30,7 +29,6 @@ function MealCardItem({
   mealIndex,
   optimizingKey,
   onOptimizeMeal,
-  disabled,
 }: MealCardItemProps) {
   const { updateQueryParams } = useQueryParams();
 
@@ -85,7 +83,7 @@ function MealCardItem({
           variant='default'
           size='sm'
           onClick={() => onOptimizeMeal(dayIndex, mealIndex)}
-          disabled={isOptimizing || disabled}
+          disabled={isOptimizing}
         >
           {isOptimizing ? (
             <Loader2 className='mr-2 h-4 w-4 animate-spin' />

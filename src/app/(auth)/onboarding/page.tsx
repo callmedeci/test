@@ -442,27 +442,21 @@ export default function OnboardingPage() {
         customCalculatedTargets?.custom_fat_percentage ?? null,
     };
 
-    const { error: planError, isSuccess: isPlanSuccess } = await editPlan(
-      planToEdit
-    );
-    const { error: profileError, isSuccess: isProfileSuccess } =
+    try {
+      await editPlan(planToEdit);
       await editProfile(profileToEdit);
 
-    if (planError || profileError) {
-      toast({
-        title: 'Error Saving Profile',
-        description: planError || profileError,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (isPlanSuccess && isProfileSuccess) {
       toast({
         title: 'Onboarding Complete!',
         description: 'Your profile has been saved. Welcome to NutriPlan!',
       });
       router.push('/dashboard');
+    } catch (error: any) {
+      toast({
+        title: 'Error Saving Profile',
+        description: error,
+        variant: 'destructive',
+      });
     }
   };
 

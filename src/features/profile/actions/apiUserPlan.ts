@@ -4,21 +4,28 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 export async function editPlan(newPlan: any) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-  if (!user) throw new Error('Unauthorized access!');
+    if (authError)
+      throw new Error(`Authentication error: ${authError.message}`);
+    if (!user) throw new Error('Unauthorized access!');
 
-  const { error } = await supabase
-    .from('smart_planner')
-    .update(newPlan)
-    .eq('user_id', user.id)
-    .single();
+    const { error } = await supabase
+      .from('smart_plan')
+      .update(newPlan)
+      .eq('user_id', user.id)
+      .single();
 
-  if (error) return { isSuccess: false, error: error.message };
+    if (error) throw new Error(`Plan update failed: ${error.message}`);
 
-  revalidatePath('/', 'layout');
-  return { isSuccess: true, error: null };
+    revalidatePath('/', 'layout');
+  } catch (error) {
+    console.error('editPlan error:', error);
+    throw new Error('Failed to update plan');
+  }
 }

@@ -53,12 +53,12 @@ export async function updateSession(request: NextRequest) {
     (pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding'))
   ) {
     const { data } = await supabase
-      .from('users')
+      .from('profile')
       .select('is_onboarding_complete')
       .eq('user_id', user.id)
       .single();
 
-    console.log('CHECK');
+    console.log(data);
 
     if (!data) return supabaseRes;
 

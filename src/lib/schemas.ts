@@ -7,7 +7,6 @@ import {
   smartPlannerDietGoals,
 } from './constants';
 
-// Helper for preprocessing optional number fields: empty string, null, or non-numeric becomes undefined
 export const preprocessOptionalNumber = (val: unknown) => {
   if (val === '' || val === null || val === undefined) {
     return undefined;
@@ -16,7 +15,6 @@ export const preprocessOptionalNumber = (val: unknown) => {
   return isNaN(num) ? undefined : num;
 };
 
-// Helper to convert undefined to null for Firestore
 export function preprocessDataForFirestore(
   data: Record<string, any> | null | undefined
 ): Record<string, any> | null | any[] {
@@ -988,7 +986,7 @@ export const AIGeneratedIngredientSchema = z.object({
 export type AIGeneratedIngredient = z.infer<typeof AIGeneratedIngredientSchema>;
 
 export const AIGeneratedMealSchema = z.object({
-  name: z.string(),
+  meal_name: z.string(),
   custom_name: z.string().optional(),
   ingredients: z.array(AIGeneratedIngredientSchema),
   total_calories: z.number().optional(),
@@ -1077,20 +1075,19 @@ export type Meal = z.infer<typeof MealSchema>;
 
 // Schema for a day's meal plan
 export const DailyMealPlanSchema = z.object({
-  day_of_week: z.string(), // e.g. "Monday"
-  meals: z.array(MealSchema), // Array of Meal objects for the day
+  day_of_week: z.string(),
+  meals: z.array(MealSchema),
 });
 export type DailyMealPlan = z.infer<typeof DailyMealPlanSchema>;
 
 // Schema for the entire weekly meal plan (current or optimized)
 export const WeeklyMealPlanSchema = z.object({
-  id: z.string().optional(), // Optional ID for the plan
-  user_id: z.string().optional(), // Optional user ID association
-  start_date: z.date().optional(), // Optional start date for the plan
-  days: z.array(DailyMealPlanSchema), // Array of DailyMealPlan objects for the week
+  id: z.string(),
+  user_id: z.string(),
+  start_date: z.date(),
+  days: z.array(DailyMealPlanSchema),
   weekly_summary: z
     .object({
-      // Optional summary of weekly totals
       total_calories: z.number(),
       total_protein: z.number(),
       total_carbs: z.number(),
@@ -1108,3 +1105,48 @@ export interface MealPlans {
   created_at: number;
   updated_at: number;
 }
+
+export const SupportChatbotInputSchema = z.object({
+  userQuery: z.string(),
+});
+export type SupportChatbotInput = z.infer<typeof SupportChatbotInputSchema>;
+
+export const SupportChatbotOutputSchema = z.object({
+  botResponse: z.string(),
+});
+export type SupportChatbotOutput = z.infer<typeof SupportChatbotOutputSchema>;
+
+export const SuggestIngredientSwapInputSchema = z.object({
+  mealName: z.string(),
+  ingredients: z.array(
+    z.object({
+      name: z.string(),
+      quantity: z.number(),
+      caloriesPer100g: z.number(),
+      proteinPer100g: z.number(),
+      fatPer100g: z.number(),
+    })
+  ),
+  dietaryPreferences: z.string(),
+  dislikedIngredients: z.array(z.string()),
+  allergies: z.array(z.string()),
+  nutrientTargets: z.object({
+    calories: z.number(),
+    protein: z.number(),
+    carbohydrates: z.number(),
+    fat: z.number(),
+  }),
+});
+export type SuggestIngredientSwapInput = z.infer<
+  typeof SuggestIngredientSwapInputSchema
+>;
+
+export const SuggestIngredientSwapOutputSchema = z.array(
+  z.object({
+    ingredientName: z.string(),
+    reason: z.string(),
+  })
+);
+export type SuggestIngredientSwapOutput = z.infer<
+  typeof SuggestIngredientSwapOutputSchema
+>;

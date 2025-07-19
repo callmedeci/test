@@ -12,21 +12,18 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import Spinner from '@/components/ui/Spinner';
+import { useToast } from '@/hooks/use-toast';
 import { useQueryParams } from '@/hooks/useQueryParams';
-import type { Ingredient, Meal } from '@/lib/schemas';
+import type { Ingredient, Meal, MealPlans } from '@/lib/schemas';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { useGetMealPlan } from '../../hooks/useGetMealPlan';
 import { editMealPlan } from '../../lib/data-service';
-import { useToast } from '@/hooks/use-toast';
 
-function EditMealDialog() {
+function EditMealDialog({ mealPlan }: { mealPlan: MealPlans }) {
   const { toast } = useToast();
 
   const { getQueryParams, removeQueryParams } = useQueryParams();
 
-  const { mealPlan, isLoadingMealPlan } = useGetMealPlan();
   const [meal, setMeal] = useState<Meal | null>(null);
 
   function handleIngredientChange(
@@ -84,7 +81,7 @@ function EditMealDialog() {
   }
 
   async function handleSubmit() {
-    if (!meal || !mealPlan) return null;
+    if (!meal) return null;
 
     let finalTotalCalories = 0,
       finalTotalProtein = 0,
@@ -107,7 +104,7 @@ function EditMealDialog() {
 
     const { meal_data } = mealPlan;
 
-    const selectedDay = mealPlan?.meal_data.days
+    const selectedDay = mealPlan.meal_data.days
       .filter((plan) => plan.day_of_week === getQueryParams('selected_day'))
       .at(0);
 
@@ -122,14 +119,13 @@ function EditMealDialog() {
     const newWeeklyPlan = meal_data;
     newWeeklyPlan.days[dayIndex].meals[mealIndex] = mealToSave;
 
-    console.log(newWeeklyPlan);
-
     try {
       await editMealPlan({ meal_data: newWeeklyPlan });
       toast({
         title: 'Meal Saved',
         description: `${meal.custom_name || meal.name} has been updated.`,
       });
+      removeQueryParams(['selected_meal', 'is_edit']);
     } catch {
       toast({
         title: 'Save Error',
@@ -161,9 +157,7 @@ function EditMealDialog() {
   }, [meal?.ingredients]);
 
   useEffect(function () {
-    if (isLoadingMealPlan) return;
-
-    const selectedDay = mealPlan?.meal_data.days
+    const selectedDay = mealPlan.meal_data.days
       .filter((plan) => plan.day_of_week === getQueryParams('selected_day'))
       .at(0);
     const selectedMeal = selectedDay?.meals
@@ -179,15 +173,7 @@ function EditMealDialog() {
     calculateTotals();
   }, [calculateTotals]);
 
-  if (isLoadingMealPlan || !meal)
-    return (
-      <Dialog>
-        <DialogContent>
-          <Spinner />
-          <p>Loading your data...</p>
-        </DialogContent>
-      </Dialog>
-    );
+  if (!meal) return;
 
   return (
     <Dialog
@@ -219,7 +205,7 @@ function EditMealDialog() {
             />
           </div>
           <Label>Ingredients</Label>
-          {meal.ingredients.map((ing, index) => (
+          {meal?.ingredients.map((ing, index) => (
             <Card key={index} className='p-3 space-y-2'>
               <div className='flex justify-between items-center gap-2'>
                 <Input

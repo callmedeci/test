@@ -9,10 +9,36 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
-import { useResetProfile } from '../hooks/useResetProfile';
+import { useTransition } from 'react';
+import { resetProfile } from '../actions/apiUserProfile';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 function ResetOnboarding() {
-  const { resetProfile, isReseting } = useResetProfile();
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const [isLoading, startTransition] = useTransition();
+
+  async function handleReset() {
+    startTransition(async () => {
+      try {
+        await resetProfile();
+        toast({
+          title: 'Profile Reset',
+          description: 'Your profile has been reset successfully.',
+          variant: 'default',
+        });
+        router.push('/onboarding');
+      } catch (error: any) {
+        toast({
+          title: 'Reset Failed',
+          description: error,
+          variant: 'destructive',
+        });
+      }
+    });
+  }
 
   return (
     <Card className='mt-12 border-destructive/50'>
@@ -26,12 +52,15 @@ function ResetOnboarding() {
       </CardHeader>
       <CardContent>
         <Button
-          disabled={isReseting}
+          disabled={isLoading}
           variant='destructive'
-          onClick={async () => await resetProfile()}
+          onClick={handleReset}
           className='w-full'
         >
-          <RefreshCcw className='mr-2 h-4 w-4' /> Reset Onboarding Status
+          <RefreshCcw
+            className={`${isLoading ? 'animate-spin' : ''} mr-2 h-4 w-4`}
+          />
+          {isLoading ? 'Reset...' : 'Reset Onboarding Status'}
         </Button>
         <p className='text-xs text-muted-foreground mt-2'>
           This will set your onboarding status to incomplete, allowing you to go

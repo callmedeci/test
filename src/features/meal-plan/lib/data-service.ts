@@ -6,28 +6,6 @@ import {
 } from '@/lib/schemas';
 import { createClient } from '@/lib/supabase/client';
 
-export async function getMealPlan(): Promise<MealPlans> {
-  const supabase = createClient();
-  const user = await getUser();
-
-  if (!user?.id) throw new Error('User not authenticated');
-
-  const { data, error } = await supabase
-    .from('meal_plans')
-    .select('*')
-    .eq('user_id', user.id)
-    .single();
-
-  if (error) {
-    if (error.code === 'PGRST116')
-      throw new Error('No meal plan found for this user');
-
-    throw new Error(`Failed to fetch meal plan: ${error.message}`);
-  }
-
-  return data as MealPlans;
-}
-
 export async function editMealPlan(mealPlan: {
   meal_data: WeeklyMealPlan;
 }): Promise<MealPlans> {

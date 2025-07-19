@@ -1,5 +1,5 @@
+import { getMealPlan } from '@/lib/supabase/data-service';
 import { useQuery } from '@tanstack/react-query';
-import { getMealPlan } from '../lib/data-service';
 
 export function useGetMealPlan() {
   const {

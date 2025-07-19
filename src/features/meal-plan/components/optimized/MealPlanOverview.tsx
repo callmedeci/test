@@ -1,5 +1,3 @@
-'use client';
-
 import { GeneratePersonalizedMealPlanOutput } from '@/ai/flows/generate-meal-plan';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {

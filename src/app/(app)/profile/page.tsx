@@ -1,7 +1,9 @@
 import { Card, CardContent } from '@/components/ui/card';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 import SectionHeader from '@/components/ui/SectionHeader';
-import ProfileForm from '@/features/profile/components/ProfileForm';
+import ProfileSection from '@/features/profile/components/ProfileSection';
 import ResetOnboarding from '@/features/profile/components/ResetOnboarding';
+import { Suspense } from 'react';
 
 export default function ProfilePage() {
   return (
@@ -13,7 +15,10 @@ export default function ProfilePage() {
       />
 
       <CardContent>
-        <ProfileForm />
+        <Suspense fallback={<LoadingScreen />}>
+          <ProfileSection />
+        </Suspense>
+
         <ResetOnboarding />
       </CardContent>
     </Card>

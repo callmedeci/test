@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
@@ -20,23 +19,21 @@ import {
 
 import SubmitButton from '@/components/ui/SubmitButton';
 import { editProfile } from '@/features/profile/actions/apiUserProfile';
-import { useGetProfile } from '@/features/profile/hooks/useGetProfile';
 import { useToast } from '@/hooks/use-toast';
 import { preferredDiets } from '@/lib/constants';
 import {
+  BaseProfileData,
   MealSuggestionPreferencesSchema,
   type MealSuggestionPreferencesValues,
 } from '@/lib/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RefreshCcw, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import PreferenceTextarea from './PreferenceTextarea';
-import { useEffect } from 'react';
-import LoadingScreen from '@/components/ui/LoadingScreen';
 
-function MealForm() {
+function MealForm({ profile }: { profile: BaseProfileData }) {
   const { toast } = useToast();
-  const { userProfile, isLoadingProfile, profileError } = useGetProfile();
 
   const form = useForm<MealSuggestionPreferencesValues>({
     resolver: zodResolver(MealSuggestionPreferencesSchema),
@@ -54,40 +51,29 @@ function MealForm() {
   });
 
   async function handleSavePreferences() {
-    const { isSuccess, error: apiError } = await editProfile(form.getValues());
+    try {
+      await editProfile(form.getValues());
 
-    if (!isSuccess) {
-      toast({
-        title: 'Save Error',
-        description: apiError || 'Could not save preferences.',
-        variant: 'destructive',
-      });
-    }
-
-    if (isSuccess)
       toast({
         title: 'Preferences Saved',
         description: 'Your preferences have been saved successfully.',
         variant: 'default',
       });
+    } catch (error: any) {
+      toast({
+        title: 'Save Error',
+        description: error,
+        variant: 'destructive',
+      });
+    }
   }
 
   useEffect(
     function () {
-      if (userProfile) form.reset(userProfile);
-
-      if (profileError)
-        toast({
-          title: 'Error',
-          description: 'Could not load profile data.',
-          variant: 'destructive',
-        });
+      form.reset(profile);
     },
-    [toast, form, userProfile, profileError]
+    [form, profile]
   );
-
-  if (isLoadingProfile)
-    return <LoadingScreen loadingLabel='loading your preferences...' />;
 
   return (
     <Form {...form}>
@@ -197,7 +183,8 @@ function MealForm() {
                 loadingLabel='Saving..'
               />
 
-              <Button
+              {/* TODO: ADD THIS BUTTON IN THE FUTURE */}
+              {/* <Button
                 disabled={form.formState.isSubmitting}
                 size='lg'
                 className='flex-1'
@@ -205,7 +192,7 @@ function MealForm() {
               >
                 <RefreshCcw />
                 Reset
-              </Button>
+              </Button> */}
             </div>
           </CardContent>
         </Card>

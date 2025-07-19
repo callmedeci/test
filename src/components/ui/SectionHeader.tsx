@@ -1,5 +1,3 @@
-'use client';
-
 import { CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ReactNode } from 'react';
 

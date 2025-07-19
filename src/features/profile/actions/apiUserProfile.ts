@@ -6,72 +6,99 @@ import { revalidatePath } from 'next/cache';
 import { editPlan } from './apiUserPlan';
 
 export async function editProfile(newProfile: any, newUser?: UserAttributes) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-  if (!user) throw new Error('Unauthorized access!');
+    if (authError)
+      throw new Error(`Authentication error: ${authError.message}`);
+    if (!user) throw new Error('Unauthorized access!');
 
-  const { error } = await supabase
-    .from('users')
-    .update(newProfile)
-    .eq('user_id', user.id)
-    .single();
+    const { error } = await supabase
+      .from('profile')
+      .update(newProfile)
+      .eq('user_id', user.id)
+      .single();
 
-  if (error) return { isSuccess: false, error: error.message };
+    if (error)
+      throw new Error(
+        `Profile update failed: ${error.code} - ${error.message}`
+      );
 
-  if (newUser) {
-    const { error: userError } = await supabase.auth.updateUser({ ...newUser });
-    if (userError) return { isSuccess: false, error: userError.message };
+    if (newUser) {
+      const { error: userError } = await supabase.auth.updateUser({
+        ...newUser,
+      });
+      if (userError)
+        throw new Error(
+          `User update failed: ${userError.code} - ${userError.message}`
+        );
+    }
+
+    revalidatePath('/', 'layout');
+  } catch (error) {
+    console.error('editProfile error:', error);
+    throw new Error('Failed to update profile');
   }
-
-  revalidatePath('/', 'layout');
-  return { isSuccess: true, error: null };
 }
 
 export async function resetProfile() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-  if (!user) throw new Error('Unauthorized access!');
+    if (authError)
+      throw new Error(`Authentication error: ${authError.message}`);
+    if (!user) throw new Error('Unauthorized access!');
 
-  const { data: userProfile, error: userError } = await supabase
-    .from('users')
-    .select('*')
-    .eq('user_id', user.id)
-    .single();
-  if (userError) throw new Error(userError.message);
+    const { data: userProfile, error: userError } = await supabase
+      .from('profile')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
 
-  const { data: plan, error: planError } = await supabase
-    .from('smart_planner')
-    .select('*')
-    .eq('user_id', user.id)
-    .single();
-  if (planError) throw new Error(planError.message);
+    if (userError)
+      throw new Error(`Failed to fetch user profile: ${userError.message}`);
+    if (!userProfile) throw new Error('User profile not found');
 
-  const protectedFields = ['id', 'user_id', 'created_at'];
+    const { data: plan, error: planError } = await supabase
+      .from('smart_plan')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
 
-  const updateProfile: Record<string, any> = {};
-  const updatePlan: Record<string, any> = {};
+    if (planError)
+      throw new Error(`Failed to fetch user plan: ${planError.message}`);
+    if (!plan) throw new Error('User plan not found');
 
-  Object.keys(userProfile).forEach((key) => {
-    if (!protectedFields.includes(key)) updateProfile[key] = null;
-  });
+    const protectedFields = ['id', 'user_id', 'created_at'];
 
-  Object.keys(plan).forEach((key) => {
-    if (!protectedFields.includes(key)) updatePlan[key] = null;
-  });
+    const updateProfile: Record<string, any> = {};
+    const updatePlan: Record<string, any> = {};
 
-  updatePlan.updated_at = new Date().toISOString();
+    Object.keys(userProfile).forEach((key) => {
+      if (!protectedFields.includes(key)) updateProfile[key] = null;
+    });
 
-  const profileResult = await editProfile(updateProfile);
-  if (!profileResult.isSuccess)
-    throw new Error(`Failed to reset profile: ${profileResult.error}`);
+    Object.keys(plan).forEach((key) => {
+      if (!protectedFields.includes(key)) updatePlan[key] = null;
+    });
 
-  const planResult = await editPlan(updatePlan);
-  if (!planResult.isSuccess)
-    throw new Error(`Failed to reset plan: ${planResult.error}`);
+    updatePlan.updated_at = new Date().toISOString();
+
+    // // Reset profile
+    await editProfile({ ...updateProfile, is_onboarding_complete: false });
+
+    // Reset plan
+    await editPlan(updatePlan);
+  } catch (error) {
+    console.error('resetProfile error:', error);
+    throw new Error('Failed to reset profile');
+  }
 }

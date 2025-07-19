@@ -11,13 +11,13 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import Spinner from '@/components/ui/Spinner';
 import SubmitButton from '@/components/ui/SubmitButton';
-import { editPlan } from '@/features/profile/actions/apiUserPlan';
-import { useGetPlan } from '@/features/profile/hooks/useGetPlan';
-import { useGetProfile } from '@/features/profile/hooks/useGetProfile';
 import { useToast } from '@/hooks/use-toast';
-import { GlobalCalculatedTargets } from '@/lib/schemas';
+import {
+  BaseProfileData,
+  GlobalCalculatedTargets,
+  UserPlanType,
+} from '@/lib/schemas';
 import { formatNumber } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RefreshCcw, Save } from 'lucide-react';
@@ -27,10 +27,15 @@ import { customizePlanFormSchema } from '../../lib/schema';
 import { customizePlanFormValues } from '../../types/toolsGlobalTypes';
 import CustomizePlanTable from './CustomizePlanTable';
 import CustomizeToolTip from './CustomizeToolTip';
+import { editPlan } from '@/features/profile/actions/apiUserPlan';
 
-function CustomizePlanForm() {
-  const { userPlan, isLoadingPlan } = useGetPlan();
-  const { userProfile, isLoadingProfile } = useGetProfile();
+function CustomizePlanForm({
+  plan,
+  profile,
+}: {
+  plan: UserPlanType;
+  profile: BaseProfileData;
+}) {
   const { toast } = useToast();
 
   const form = useForm<customizePlanFormValues>({
@@ -73,20 +78,20 @@ function CustomizePlanForm() {
       custom_total_calories_final: null,
     };
 
-    const { isSuccess, error } = await editPlan(planToResest);
+    try {
+      await editPlan(planToResest);
 
-    if (!isSuccess)
+      toast({
+        title: 'Custom Plan Reset',
+        description: 'Custom plan inputs have been reset.',
+      });
+    } catch (error: any) {
       toast({
         title: 'Reset Error',
         description: error,
         variant: 'destructive',
       });
-
-    if (isSuccess)
-      toast({
-        title: 'Custom Plan Reset',
-        description: 'Custom plan inputs have been reset.',
-      });
+    }
   }
 
   async function onSubmit(formData: customizePlanFormValues) {
@@ -107,48 +112,46 @@ function CustomizePlanForm() {
         updateObj[key] = customPlanResults[key];
     });
 
-    const { isSuccess, error } = await editPlan({
-      ...formData,
-      ...updateObj,
-    });
+    try {
+      await editPlan({
+        ...formData,
+        ...updateObj,
+      });
 
-    if (isSuccess)
       toast({
         title: 'Plan Saved',
         description: 'Your custom plan has been saved successfully.',
       });
-
-    if (!isSuccess)
+    } catch (error: any) {
       toast({
         title: 'Save Error',
         description: error,
         variant: 'destructive',
       });
+    }
   }
 
   useEffect(
     function () {
-      if (userPlan) form.reset(userPlan);
+      form.reset(plan);
     },
-    [form, userPlan, userProfile]
+    [form, plan, profile]
   );
 
   useEffect(() => {
-    if (isLoadingPlan || isLoadingProfile || !userPlan || !userProfile) return;
-
     const [customTotalCalories, customProteinPerKg, remainingCarbPct] =
       watchedCustomInputs;
 
     const effectiveTotalCalories =
       customTotalCalories && customTotalCalories > 0
         ? customTotalCalories
-        : userPlan.target_daily_calories || 0;
+        : plan.target_daily_calories || 0;
 
     const defaultProteinPerKg =
-      userPlan.target_protein_g &&
-      userPlan.current_weight_for_custom_calc &&
-      userPlan.current_weight_for_custom_calc > 0
-        ? userPlan.target_protein_g / userPlan.current_weight_for_custom_calc
+      plan.target_protein_g &&
+      plan.current_weight_for_custom_calc &&
+      plan.current_weight_for_custom_calc > 0
+        ? plan.target_protein_g / plan.current_weight_for_custom_calc
         : 1.6;
 
     const effectiveProteinPerKg =
@@ -157,7 +160,7 @@ function CustomizePlanForm() {
         : defaultProteinPerKg;
 
     const calculatedProteinGrams =
-      userProfile.current_weight_kg! * effectiveProteinPerKg;
+      profile.current_weight_kg! * effectiveProteinPerKg;
     const calculatedProteinCalories = calculatedProteinGrams * 4;
 
     let remainingCaloriesForCustom =
@@ -213,14 +216,13 @@ function CustomizePlanForm() {
         finalCustomTotalCalories > 0
           ? Math.round((calculatedFatCalories / finalCustomTotalCalories) * 100)
           : 0,
-      bmr_kcal: userPlan.bmr_kcal,
-      maintenance_calories_tdee: userPlan.maintenance_calories_tdee,
+      bmr_kcal: plan.bmr_kcal,
+      maintenance_calories_tdee: plan.maintenance_calories_tdee,
 
-      current_weight_for_custom_calc: userProfile.current_weight_kg,
+      current_weight_for_custom_calc: profile.current_weight_kg,
       estimated_weekly_weight_change_kg:
-        userPlan.maintenance_calories_tdee && finalCustomTotalCalories
-          ? ((userPlan.maintenance_calories_tdee - finalCustomTotalCalories) *
-              7) /
+        plan.maintenance_calories_tdee && finalCustomTotalCalories
+          ? ((plan.maintenance_calories_tdee - finalCustomTotalCalories) * 7) /
             7700
           : undefined,
 
@@ -231,22 +233,7 @@ function CustomizePlanForm() {
 
     if (JSON.stringify(customPlanResults) !== JSON.stringify(newCustomPlan))
       setCustomPlanResults(newCustomPlan);
-  }, [
-    watchedCustomInputs,
-    customPlanResults,
-    userPlan,
-    isLoadingPlan,
-    userProfile,
-    isLoadingProfile,
-  ]);
-
-  if (isLoadingPlan || isLoadingProfile)
-    return (
-      <div className='w-full my-10 flex gap-1 items-center justify-center'>
-        <Spinner />
-        <span>Loading your plan...</span>
-      </div>
-    );
+  }, [customPlanResults, plan, profile, watchedCustomInputs]);
 
   return (
     <Form {...form}>
@@ -262,8 +249,8 @@ function CustomizePlanForm() {
                   <CustomizeToolTip
                     message={`Override the system-calculated total daily calories. Leave blank to use the original estimate:
                           ${
-                            userPlan?.target_daily_calories
-                              ? formatNumber(userPlan.target_daily_calories, {
+                            plan?.target_daily_calories
+                              ? formatNumber(plan.target_daily_calories, {
                                   maximumFractionDigits: 0,
                                 })
                               : 'N/A'
@@ -275,8 +262,8 @@ function CustomizePlanForm() {
                     <Input
                       type='number'
                       placeholder={`e.g., ${
-                        userPlan?.target_daily_calories
-                          ? formatNumber(userPlan.target_daily_calories, {
+                        plan?.target_daily_calories
+                          ? formatNumber(plan.target_daily_calories, {
                               maximumFractionDigits: 0,
                             })
                           : '2000'
@@ -311,27 +298,24 @@ function CustomizePlanForm() {
                   <CustomizeToolTip
                     message={` Set your desired protein intake in grams per kg of your current body weight (
                       ${
-                        userPlan?.current_weight_for_custom_calc
-                          ? formatNumber(
-                              userPlan.current_weight_for_custom_calc,
-                              {
-                                maximumFractionDigits: 1,
-                              }
-                            )
-                          : userProfile?.current_weight_kg
-                          ? formatNumber(userProfile.current_weight_kg, {
+                        plan?.current_weight_for_custom_calc
+                          ? formatNumber(plan.current_weight_for_custom_calc, {
+                              maximumFractionDigits: 1,
+                            })
+                          : profile?.current_weight_kg
+                          ? formatNumber(profile.current_weight_kg, {
                               maximumFractionDigits: 1,
                             })
                           : 'N/A'
                       } kg). Affects protein, carbs, and fat distribution.
                       Original estimate:
                       ${
-                        userPlan?.current_weight_for_custom_calc &&
-                        userPlan?.current_weight_for_custom_calc > 0 &&
-                        userPlan?.target_protein_g
+                        plan?.current_weight_for_custom_calc &&
+                        plan?.current_weight_for_custom_calc > 0 &&
+                        plan?.target_protein_g
                           ? formatNumber(
-                              userPlan.target_protein_g /
-                                userPlan.current_weight_for_custom_calc,
+                              plan.target_protein_g /
+                                plan.current_weight_for_custom_calc,
                               { maximumFractionDigits: 1 }
                             )
                           : 'N/A'
@@ -343,12 +327,12 @@ function CustomizePlanForm() {
                     <Input
                       type='number'
                       placeholder={`e.g., ${
-                        userPlan?.current_weight_for_custom_calc &&
-                        userPlan?.current_weight_for_custom_calc > 0 &&
-                        userPlan?.target_protein_g
+                        plan?.current_weight_for_custom_calc &&
+                        plan?.current_weight_for_custom_calc > 0 &&
+                        plan?.target_protein_g
                           ? formatNumber(
-                              userPlan.target_protein_g /
-                                userPlan.current_weight_for_custom_calc,
+                              plan.target_protein_g /
+                                plan.current_weight_for_custom_calc,
                               { maximumFractionDigits: 1 }
                             )
                           : '1.6'
