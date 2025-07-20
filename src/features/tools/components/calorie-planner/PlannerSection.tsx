@@ -1,5 +1,6 @@
 import { getUserPlan, getUserProfile } from '@/lib/supabase/data-service';
 import PlannerForm from './PlannerForm';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 
 async function PlannerSection() {
   try {
@@ -7,8 +8,18 @@ async function PlannerSection() {
     const plan = await getUserPlan();
 
     return <PlannerForm profile={profile} plan={plan} />;
-  } catch {
-    return <p>Error...</p>;
+  } catch (error: any) {
+    return (
+      <ErrorMessage
+        title='Planner Data Error'
+        message={
+          error?.message ||
+          "We couldn't load your planner data. Please ensure your profile is complete and try again."
+        }
+        showRetry={true}
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 }
 

@@ -75,7 +75,6 @@ function WeeklyMealPlanTabs({
       const newWeeklyPlan = JSON.parse(JSON.stringify(meal_data));
       const updatedMealData = {
         ...result.adjustedMeal,
-        id: mealToOptimize.id,
         totalCalories: result.adjustedMeal.total_calories
           ? Number(result.adjustedMeal.total_calories)
           : null,

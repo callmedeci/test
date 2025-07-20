@@ -1,3 +1,4 @@
+import ErrorMessage from '@/components/ui/ErrorMessage';
 import {
   getMealPlan,
   getUserPlan,
@@ -26,7 +27,17 @@ async function PlanSection({
       </>
     );
   } catch (error: any) {
-    return <p>{error}</p>;
+    return (
+      <ErrorMessage
+        title='Unable to Load Meal Plan'
+        message={
+          error?.message ||
+          "We couldn't load your meal plan. Please check your connection and try again."
+        }
+        showRetry={true}
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 }
 

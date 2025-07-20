@@ -1,5 +1,6 @@
 import { getUser, getUserProfile } from '@/lib/supabase/data-service';
 import ProfileForm from './ProfileForm';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 
 async function ProfileSection() {
   try {
@@ -7,8 +8,18 @@ async function ProfileSection() {
     const profile = await getUserProfile();
 
     return <ProfileForm user={user} profile={profile} />;
-  } catch {
-    return <p>Unanable to load your data</p>;
+  } catch (error: any) {
+    return (
+      <ErrorMessage
+        title='Profile Data Unavailable'
+        message={
+          error?.message ||
+          "We couldn't load your profile information. Please ensure you're logged in and try again."
+        }
+        showRetry={true}
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 }
 
