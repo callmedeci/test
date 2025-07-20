@@ -36,12 +36,6 @@ const DailyPromptInputSchema = z.object({
       total_fat: z.number().optional().nullable(),
     })
   ),
-  age: z.number().optional(),
-  biological_sex: z.string().optional(),
-  height_cm: z.number().optional(),
-  current_weight_kg: z.number().optional(),
-  physical_activity_level: z.string().optional(),
-  primary_diet_goal: z.string().optional(),
   preferred_diet: z.string().optional(),
   allergies: z.array(z.string()).optional(),
   dispreferred_ingredients: z.array(z.string()).optional(),
@@ -50,7 +44,6 @@ const DailyPromptInputSchema = z.object({
   dispreferred_cuisines: z.array(z.string()).optional(),
   medical_conditions: z.array(z.string()).optional(),
   medications: z.array(z.string()).optional(),
-  equipment_access: z.array(z.string()).optional(),
 });
 
 type DailyPromptInput = z.infer<typeof DailyPromptInputSchema>;
@@ -59,116 +52,57 @@ const dailyPrompt = ai.definePrompt({
   name: 'generateDailyMealPlanPrompt',
   input: { schema: DailyPromptInputSchema },
   output: { schema: AIDailyPlanOutputSchema },
-  prompt: `You are an expert nutritionist and personal chef for "NutriPlan," a platform for personalized meal planning. Your task is to generate a complete, edible, and optimized daily meal plan for {{dayOfWeek}}, consisting of six meals (Breakfast, Morning Snack, Lunch, Afternoon Snack, Dinner, Evening Snack) that strictly align with the provided macronutrient targets, user profile, and dietary preferences. Each meal must be contextually appropriate (e.g., light snacks, substantial meals for breakfast/lunch/dinner) and tailored to the user’s goals, lifestyle, and restrictions.
+  prompt: `You are the Head Nutritionist for "NutriPlan," an elite service providing scientifically-backed, personalized meal plans. Your reputation depends on precision, practicality, and creating delicious, appropriate meals. Your task is to generate a complete and optimized daily meal plan for a client for {{dayOfWeek}}. The plan must strictly adhere to all targets, preferences, and constraints.
 
-**User Profile**:
-{{#if age}}- Age: {{age}}{{/if}}
-{{#if biological_sex}}- Biological Sex: {{biological_sex}}{{/if}}
-{{#if height_cm}}- Height: {{height_cm}} cm{{/if}}
-{{#if current_weight_kg}}- Current Weight: {{current_weight_kg}} kg{{/if}}
-{{#if physical_activity_level}}- Activity Level: {{physical_activity_level}}{{/if}}
-{{#if primary_diet_goal}}- Primary Diet Goal: {{primary_diet_goal}}{{/if}}
-{{#if preferred_diet}}- Dietary Preference: {{preferred_diet}}{{/if}}
-{{#if allergies.length}}- Allergies to Avoid: {{#each allergies}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
-{{#if dispreferred_ingredients.length}}- Disliked Ingredients: {{#each dispreferred_ingredients}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
-{{#if preferred_ingredients.length}}- Favorite Ingredients: {{#each preferred_ingredients}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
-{{#if preferred_cuisines.length}}- Favorite Cuisines: {{#each preferred_cuisines}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
-{{#if dispreferred_cuisines.length}}- Cuisines to Avoid: {{#each dispreferred_cuisines}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
-{{#if medical_conditions.length}}- Medical Conditions: {{#each medical_conditions}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
-{{#if medications.length}}- Medications: {{#each medications}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
-{{#if equipment_access.length}}- Equipment Access: {{#each equipment_access}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{/if}}
+**Client Profile & Goals**:
+- Age: {{age}}
+- Biological Sex: {{biological_sex}}
+- Height: {{height_cm}} cm
+- Current Weight: {{current_weight_kg}} kg
+- Primary Diet Goal: {{primary_diet_goal}}
+- Dietary Preference: {{#if preferred_diet}}{{preferred_diet}}{{else}}None specified{{/if}}
+- Allergies to Avoid (CRITICAL): {{#if allergies.length}}{{#each allergies}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}None{{/if}}
+- Medical Conditions: {{#if medical_conditions.length}}{{#each medical_conditions}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}None{{/if}}
+- Disliked Ingredients: {{#if dispreferred_ingredients.length}}{{#each dispreferred_ingredients}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}None{{/if}}
+- Favorite Ingredients: {{#if preferred_ingredients.length}}{{#each preferred_ingredients}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}None{{/if}}
+- Favorite Cuisines: {{#if preferred_cuisines.length}}{{#each preferred_cuisines}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}None{{/if}}
+- Disliked Cuisines: {{#if dispreferred_cuisines.length}}{{#each dispreferred_cuisines}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}None{{/if}}
 
-**Chain-of-Thought Reasoning (Mandatory)**:
-Follow these steps to ensure accurate, relevant, and practical meal plans:
-1. **Analyze User Profile**: Evaluate age, biological sex, activity level, diet goal, and medical conditions to tailor the meal plan to the user’s nutritional needs (e.g., higher protein for muscle gain, low-carb for diabetes).
-2. **Assess Meal Context**: Ensure each meal is appropriate for its type:
-   - Breakfast: Substantial, energizing meals (e.g., oatmeal, smoothies).
-   - Morning/Afternoon/Evening Snack: Light, quick options (e.g., fruit, nuts).
-   - Lunch/Dinner: Hearty, balanced meals (e.g., salads, protein-based dishes).
-3. **Match Macronutrient Targets**: For each meal in {{meal_targets}}, ensure total calories, protein, carbs, and fat are within a 5% tolerance of the provided targets ({{total_calories}} kcal, {{total_protein}}g protein, {{total_carbs}}g carbs, {{total_fat}}g fat). Use precise nutritional data (e.g., USDA database).
-4. **Respect Constraints**: Strictly avoid ingredients that conflict with allergies, medical conditions, or dispreferred ingredients/cuisines. Prioritize preferred ingredients and cuisines.
-5. **Ensure Practicality**: Suggest meals that are feasible with the user’s equipment access (e.g., basic kitchen tools). Avoid overly complex recipes unless specified.
-6. **Validate Outputs**: Double-check that the sum of calories, protein, carbs, and fat for each meal’s ingredients matches the targets within 5%. Adjust ingredients if necessary.
-7. **Handle Edge Cases**: If meal targets are missing or unachievable (e.g., due to strict restrictions), generate a balanced meal based on the user’s profile and typical macro ratios for the meal type (e.g., 20-30% of daily calories for breakfast).
+**Chain-of-Thought (Mandatory Internal Process)**:
+Follow these steps meticulously for each meal:
+1.  **Deconstruct the Request**: Identify the meal type (e.g., Breakfast) and its specific calorie and macronutrient targets from the 'Meal Targets' section below.
+2.  **Apply Meal Context Rules**: Review the 'Meal Appropriateness Rules' below. Brainstorm 2-3 meal ideas that fit the context (e.g., for Breakfast, think oatmeal, omelette, or smoothie).
+3.  **Select Core Ingredients**: Choose ingredients that align with the user's preferences and the meal idea. Prioritize favorite ingredients and cuisines. **Crucially, explicitly forbid any allergens or disliked ingredients.**
+4.  **Assign Quantities & Calculate Macros**: For each ingredient, assign a realistic quantity (e.g., in grams, cups, oz). Using precise nutritional data (e.g., from USDA data), calculate the calories, protein, carbs, and fat for that quantity.
+5.  **Iterate and Refine**: Sum the macros for all ingredients. Compare the sum against the meal's targets. If it's not within a strict **3% tolerance**, adjust the ingredient quantities and recalculate. Repeat until the targets are met. This iterative refinement is mandatory.
+6.  **Final Quality Check**: Review the meal. Is it appetizing? Does it make sense? (e.g., Is "Grilled Salmon" being suggested for breakfast? If so, reject and restart for that meal). Ensure ingredient names are clear (e.g., "Chicken Breast, Boneless, Skinless" not just "Chicken").
+
+**Meal Appropriateness Rules (Non-Negotiable)**:
+- **Breakfast**: Focus on typical morning foods. Examples: Oats, eggs, yogurt, fruits, smoothies, whole-grain toast. **Absolutely no** heavy lunch/dinner items like steak, rice dinners, or savory fried dishes.
+- **Lunch/Dinner**: These are the main meals. They should be substantial and balanced. Examples: Salads with protein, grain bowls, lean meat/fish with vegetables, tofu/lentil dishes.
+- **Snacks (Morning, Afternoon, Evening)**: Should be light, simple, and require minimal preparation. Examples: A piece of fruit, a handful of nuts, Greek yogurt, a protein bar, vegetable sticks.
 
 **Meal Targets for {{dayOfWeek}}**:
 {{#each meal_targets}}
 - **Meal: {{name}}**
-  {{#if total_calories}}- TARGET Calories: {{total_calories}} kcal{{/if}}
-  {{#if total_protein}}- TARGET Protein: {{total_protein}}g{{/if}}
-  {{#if total_carbs}}- TARGET Carbohydrates: {{total_carbs}}g{{/if}}
-  {{#if total_fat}}- TARGET Fat: {{total_fat}}g{{/if}}
+  - TARGET Calories: {{total_calories}} kcal
+  - TARGET Protein: {{total_protein}}g
+  - TARGET Carbohydrates: {{total_carbs}}g
+  - TARGET Fat: {{total_fat}}g
 {{/each}}
 
-**Example Daily Meal Plan (Reference Only)**:
-{
-  "meals": [
-    {
-      "meal_title": "Greek Yogurt Smoothie",
-      "ingredients": [
-        {
-          "name": "Greek Yogurt (Non-Fat)",
-          "calories": 90,
-          "protein": 15,
-          "carbs": 5,
-          "fat": 0
-        },
-        {
-          "name": "Mixed Berries",
-          "calories": 50,
-          "protein": 1,
-          "carbs": 12,
-          "fat": 0.5
-        },
-        {
-          "name": "Almond Milk",
-          "calories": 30,
-          "protein": 1,
-          "carbs": 0,
-          "fat": 2.5
-        }
-      ]
-    },
-    {
-      "meal_title": "Apple Slices with Almond Butter",
-      "ingredients": [
-        {
-          "name": "Apple",
-          "calories": 95,
-          "protein": 0.5,
-          "carbs": 25,
-          "fat": 0.3
-        },
-        {
-          "name": "Almond Butter",
-          "calories": 100,
-          "protein": 3.5,
-          "carbs": 3,
-          "fat": 9
-        }
-      ]
-    }
-    // ... (similar entries for Lunch, Afternoon Snack, Dinner, Evening Snack)
-  ]
-}
+**CRITICAL Output Instructions**:
+- Your entire response MUST be a single, valid JSON object and nothing else. Do not include any text, notes, apologies, or markdown like \`\`\`json before or after the JSON object.
+- The JSON must conform to the structure: \`{ meals: Array<{ meal_title: string; ingredients: Array<{ name: string; quantity: number; unit: string; calories: number; protein: number; carbs: number; fat: number; }> }> }\`.
+- Generate exactly six meal objects in the "meals" array, ordered as: Breakfast, Morning Snack, Lunch, Afternoon Snack, Dinner, Evening Snack.
+- Every ingredient object in the "ingredients" array MUST include "quantity" (e.g., 100) and "unit" (e.g., "g", "cup", "oz").
+- All nutritional values must be numbers, not strings.
+- Double-check all calculations to ensure the sum of ingredient macros for each meal matches the target within a 3% tolerance.
+- If a meal cannot be generated due to conflicting constraints, the "meal_title" should reflect the issue (e.g., "Breakfast: Could Not Generate Due to Restrictions") and the "ingredients" array should be empty.
 
-**Critical Output Instructions**:
-- Respond with ONLY a valid JSON object matching the provided schema: { meals: Array<{ meal_title: string; ingredients: Array<{ name: string; calories: number; protein: number; carbs: number; fat: number; }> }> }.
-- Generate exactly six meal objects in the "meals" array, corresponding to Breakfast, Morning Snack, Lunch, Afternoon Snack, Dinner, and Evening Snack, in that order.
-- Each meal MUST have:
-  - A "meal_title": A short, appetizing name (e.g., "Sunrise Scramble", "Zesty Salmon Salad").
-  - A non-empty "ingredients" array with 2–5 ingredients, each with precise "name", "calories", "protein", "carbs", and "fat" values (numbers, not strings).
-- Sum the macros for each meal’s ingredients and ensure they are within 5% of the provided targets. If targets are missing, use profile data to estimate reasonable macros (e.g., 20-30% of daily calories for breakfast).
-- Strictly respect allergies, medical conditions, and dispreferred ingredients/cuisines. Prioritize preferred ingredients/cuisines.
-- If no suitable meal can be generated for a target, include a meal with a note in the title (e.g., "No Suitable Breakfast") and an empty ingredients array.
-- Do NOT include text, notes, greetings, or markdown outside the JSON object.
-- Double-check all calculations before finalizing the output.
-
-Respond ONLY with the pure JSON object matching the schema.
+Begin JSON response now.
 `,
 });
-
-// Genkit Flow (Unchanged)
 const generatePersonalizedMealPlanFlow = ai.defineFlow(
   {
     name: 'generatePersonalizedMealPlanFlow',
@@ -196,12 +130,6 @@ const generatePersonalizedMealPlanFlow = ai.defineFlow(
         const dailyPromptInput: DailyPromptInput = {
           day_of_week: dayOfWeek,
           meal_targets: mealTargets!,
-          age: input.age,
-          biological_sex: input.biological_sex,
-          height_cm: input.height_cm,
-          current_weight_kg: input.current_weight_kg,
-          physical_activity_level: input.physical_activity_level,
-          primary_diet_goal: input.primary_diet_goal,
           preferred_diet: input.preferred_diet,
           allergies: input.allergies,
           dispreferred_ingredients: input.dispreferrred_ingredients,
@@ -210,7 +138,6 @@ const generatePersonalizedMealPlanFlow = ai.defineFlow(
           dispreferred_cuisines: input.dispreferrred_cuisines,
           medical_conditions: input.medical_conditions,
           medications: input.medications,
-          equipment_access: input.equipment_access,
         };
 
         const { output: dailyOutput } = await dailyPrompt(dailyPromptInput);
@@ -226,6 +153,7 @@ const generatePersonalizedMealPlanFlow = ai.defineFlow(
 
         const processedMeals: AIGeneratedMeal[] = dailyOutput.meals
           .map((meal, index) => {
+            // Return null for invalid meals to filter out later
             if (
               meal === null ||
               !meal.ingredients ||
