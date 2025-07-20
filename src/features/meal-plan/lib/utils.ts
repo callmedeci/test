@@ -5,78 +5,18 @@ import {
 } from '@/lib/constants';
 import {
   BaseProfileData,
-  GeneratePersonalizedMealPlanInput,
+  FullUserProfileType,
   WeeklyMealPlan,
 } from '@/lib/schemas';
 import { DailyTargetsTypes, MealToOptimizeTypes } from '../types';
 import { requiredFields } from './config';
 
-export function mapProfileToMealPlanInput(
-  profile: Partial<BaseProfileData>
-): GeneratePersonalizedMealPlanInput {
-  const input: GeneratePersonalizedMealPlanInput = {
-    age: profile.age!,
-    biological_sex: profile.biological_sex!,
-    height_cm: profile.height_cm!,
-    current_weight_kg: profile.current_weight_kg!,
-    target_weight_1month_kg: profile.target_weight_1month_kg!,
-    physical_activity_level: profile.physical_activity_level!,
-    primary_diet_goal: profile.primary_diet_goal!,
-
-    // Optional fields
-    long_term_goal_weight_kg: profile.long_term_goal_weight_kg ?? undefined,
-    bf_current: profile.bf_current ?? undefined,
-    bf_target: profile.bf_target ?? undefined,
-    bf_ideal: profile.bf_ideal ?? undefined,
-    mm_current: profile.mm_current ?? undefined,
-    mm_target: profile.mm_target ?? undefined,
-    mm_ideal: profile.mm_ideal ?? undefined,
-    bw_current: profile.bw_current ?? undefined,
-    bw_target: profile.bw_target ?? undefined,
-    bw_ideal: profile.bw_ideal ?? undefined,
-    waist_current: profile.waist_current ?? undefined,
-    waist_goal_1m: profile.waist_goal_1m ?? undefined,
-    waist_ideal: profile.waist_ideal ?? undefined,
-    hips_current: profile.hips_current ?? undefined,
-    hips_goal_1m: profile.hips_goal_1m ?? undefined,
-    hips_ideal: profile.hips_ideal ?? undefined,
-    right_leg_current: profile.right_leg_current ?? undefined,
-    right_leg_goal_1m: profile.right_leg_goal_1m ?? undefined,
-    right_leg_ideal: profile.right_leg_ideal ?? undefined,
-    left_leg_current: profile.left_leg_current ?? undefined,
-    left_leg_goal_1m: profile.left_leg_goal_1m ?? undefined,
-    left_leg_ideal: profile.left_leg_ideal ?? undefined,
-    right_arm_current: profile.right_arm_current ?? undefined,
-    right_arm_goal_1m: profile.right_arm_goal_1m ?? undefined,
-    right_arm_ideal: profile.right_arm_ideal ?? undefined,
-    left_arm_current: profile.left_arm_current ?? undefined,
-    left_arm_goal_1m: profile.left_arm_goal_1m ?? undefined,
-    left_arm_ideal: profile.left_arm_ideal ?? undefined,
-    preferred_diet: profile.preferred_diet ?? undefined,
-    allergies: profile.allergies ?? undefined,
-    preferred_cuisines: profile.preferred_cuisines ?? undefined,
-    dispreferrred_cuisines: profile.dispreferrred_cuisines ?? undefined,
-    preferred_ingredients: profile.preferred_ingredients ?? undefined,
-    dispreferrred_ingredients: profile.dispreferrred_ingredients ?? undefined,
-    preferred_micronutrients: profile.preferred_micronutrients ?? undefined,
-    medical_conditions: profile.medical_conditions ?? undefined,
-    medications: profile.medications ?? undefined,
-
-    // Assigning the values properly
-    equipment_access: profile.equipment_access ?? undefined,
-    exercise_frequency: profile.exercise_frequency ?? undefined,
-    exercise_goals: profile.exercise_goals ?? undefined,
-    injuries: profile.injuries ?? undefined,
-    pain_mobility_issues: profile.pain_mobility_issues ?? undefined,
-    preferred_exercise_types: profile.preferred_exercise_types ?? undefined,
-    surgeries: profile.surgeries ?? undefined,
-    typical_exercise_intensity: profile.typical_exercise_intensity ?? undefined,
-  };
-
+export function mapProfileToMealPlanInput(profile: FullUserProfileType) {
+  const input = profile;
   Object.keys(input).forEach(
     (key) =>
-      input[key as keyof GeneratePersonalizedMealPlanInput] === undefined &&
-      delete input[key as keyof GeneratePersonalizedMealPlanInput]
+      !input[key as keyof BaseProfileData] &&
+      delete input[key as keyof BaseProfileData]
   );
 
   return input;
@@ -88,7 +28,7 @@ export function getAdjustedMealInput(
   mealToOptimize: MealToOptimizeTypes
 ) {
   let mealDistribution;
-  const userMealDistributions = profileData.mealDistributions;
+  const userMealDistributions = profileData.meal_distributions;
   if (!userMealDistributions)
     mealDistribution = defaultMacroPercentages[mealToOptimize.name];
   else

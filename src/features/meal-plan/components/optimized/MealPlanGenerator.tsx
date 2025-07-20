@@ -10,18 +10,22 @@ import {
   BaseProfileData,
   GeneratePersonalizedMealPlanOutput,
   MealPlans,
+  UserPlanType,
 } from '@/lib/schemas';
 import { Loader2, Wand2 } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
 import { mapProfileToMealPlanInput } from '../../lib/utils';
 
+type MealPlanGeneratorProps = {
+  profile: BaseProfileData;
+  mealPlan: MealPlans;
+  userPlan: UserPlanType;
+};
 function MealPlanGenerator({
   mealPlan,
   profile,
-}: {
-  profile: BaseProfileData;
-  mealPlan: MealPlans;
-}) {
+  userPlan,
+}: MealPlanGeneratorProps) {
   const { toast } = useToast();
 
   const [isLoading, startTransition] = useTransition();
@@ -41,7 +45,12 @@ function MealPlanGenerator({
         return;
       }
 
-      const input = mapProfileToMealPlanInput(profile);
+      const input = mapProfileToMealPlanInput({
+        ...profile,
+        ...mealPlan,
+        ...userPlan,
+      });
+
       try {
         const result = await generatePersonalizedMealPlan(input);
         if (!result) return;

@@ -1,4 +1,3 @@
-import { User } from 'firebase/auth';
 import * as z from 'zod';
 import {
   activityLevels as allActivityLevels,
@@ -134,7 +133,7 @@ export interface GlobalCalculatedTargets {
 }
 
 // Base fields for onboarding/profile data used by tools
-export interface BaseProfileData extends User {
+export interface BaseProfileData {
   name: string;
   age?: number;
   biological_sex?: string;
@@ -718,10 +717,12 @@ export type OnboardingFormValues = z.infer<typeof OnboardingFormSchema>;
 export type { CustomCalculatedTargets };
 
 export interface UserPlanType {
-  id: number;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
+  //These fields are not used in the current schema but are included for reference
+  // id: number;
+  // user_id: string;
+  // created_at: string;
+  // updated_at: string;
+
   bmr_kcal: number | null;
 
   custom_carbs_g: number | null;
@@ -807,6 +808,100 @@ export const SuggestMealsForMacrosInputSchema = z.object({
 export type SuggestMealsForMacrosInput = z.infer<
   typeof SuggestMealsForMacrosInputSchema
 >;
+
+// Schema for an ingredient in a meal
+export const IngredientSchema = z.object({
+  name: z.string().min(1, 'Ingredient name is required'),
+  quantity: z.preprocess(
+    preprocessOptionalNumber,
+    z.coerce
+      .number()
+      .min(0, 'Quantity must be non-negative')
+      .nullable()
+      .default(null)
+  ),
+  unit: z.string().min(1, 'Unit is required (e.g., g, ml, piece)'),
+  calories: z.preprocess(
+    preprocessOptionalNumber,
+    z.coerce.number().min(0).nullable().default(null)
+  ),
+  protein: z.preprocess(
+    preprocessOptionalNumber,
+    z.coerce.number().min(0).nullable().default(null)
+  ),
+  carbs: z.preprocess(
+    preprocessOptionalNumber,
+    z.coerce.number().min(0).nullable().default(null)
+  ),
+  fat: z.preprocess(
+    preprocessOptionalNumber,
+    z.coerce.number().min(0).nullable().default(null)
+  ),
+});
+export type Ingredient = z.infer<typeof IngredientSchema>;
+
+// Schema for a single meal
+export const MealSchema = z.object({
+  // id: z.string().optional(),
+
+  name: z.string().min(1, 'Meal name is required'),
+  custom_name: z.string().optional().default(''),
+  ingredients: z.array(IngredientSchema).default([]),
+  total_calories: z.preprocess(
+    preprocessOptionalNumber,
+    z.coerce.number().min(0).nullable().default(null)
+  ),
+  total_protein: z.preprocess(
+    preprocessOptionalNumber,
+    z.coerce.number().min(0).nullable().default(null)
+  ),
+  total_carbs: z.preprocess(
+    preprocessOptionalNumber,
+    z.coerce.number().min(0).nullable().default(null)
+  ),
+  total_fat: z.preprocess(
+    preprocessOptionalNumber,
+    z.coerce.number().min(0).nullable().default(null)
+  ),
+});
+export type Meal = z.infer<typeof MealSchema>;
+
+// Schema for a day's meal plan
+export const DailyMealPlanSchema = z.object({
+  day_of_week: z.string(),
+  meals: z.array(MealSchema),
+});
+export type DailyMealPlan = z.infer<typeof DailyMealPlanSchema>;
+
+// Schema for the entire weekly meal plan (current or optimized)
+export const WeeklyMealPlanSchema = z.object({
+  //These fields are not used in the current schema but are included for reference
+  // id: z.string().optional(),
+  // user_id: z.string().optional(),
+  // start_date: z.date().optional(),
+
+  days: z.array(DailyMealPlanSchema),
+  weekly_summary: z
+    .object({
+      total_calories: z.number(),
+      total_protein: z.number(),
+      total_carbs: z.number(),
+      total_fat: z.number(),
+    })
+    .optional(),
+});
+export type WeeklyMealPlan = z.infer<typeof WeeklyMealPlanSchema>;
+
+export interface MealPlans {
+  //These fields are not used in the current schema but are included for reference
+  // id: string;
+  // user_id: string;
+  // created_at: number;
+  // updated_at: number;
+
+  meal_data: WeeklyMealPlan;
+  ai_plan: GeneratePersonalizedMealPlanOutput;
+}
 
 export const AIServiceIngredientSchema = z.object({
   name: z.string(),
@@ -956,18 +1051,9 @@ export const GeneratePersonalizedMealPlanInputSchema = z.object({
   medical_conditions: z.array(z.string()).optional(),
   medications: z.array(z.string()).optional(),
 
+  //  meal_data: WeeklyMealPlan;
   // Meal targets
-  meal_targets: z
-    .array(
-      z.object({
-        meal_name: z.string(),
-        calories: z.number(),
-        protein: z.number(),
-        carbs: z.number(),
-        fat: z.number(),
-      })
-    )
-    .optional(),
+  meal_data: WeeklyMealPlanSchema,
 });
 
 export type GeneratePersonalizedMealPlanInput = z.infer<
@@ -1017,95 +1103,6 @@ export type GeneratePersonalizedMealPlanOutput = z.infer<
   typeof GeneratePersonalizedMealPlanOutputSchema
 >;
 
-// Schema for an ingredient in a meal
-export const IngredientSchema = z.object({
-  name: z.string().min(1, 'Ingredient name is required'),
-  quantity: z.preprocess(
-    preprocessOptionalNumber,
-    z.coerce
-      .number()
-      .min(0, 'Quantity must be non-negative')
-      .nullable()
-      .default(null)
-  ),
-  unit: z.string().min(1, 'Unit is required (e.g., g, ml, piece)'),
-  calories: z.preprocess(
-    preprocessOptionalNumber,
-    z.coerce.number().min(0).nullable().default(null)
-  ),
-  protein: z.preprocess(
-    preprocessOptionalNumber,
-    z.coerce.number().min(0).nullable().default(null)
-  ),
-  carbs: z.preprocess(
-    preprocessOptionalNumber,
-    z.coerce.number().min(0).nullable().default(null)
-  ),
-  fat: z.preprocess(
-    preprocessOptionalNumber,
-    z.coerce.number().min(0).nullable().default(null)
-  ),
-});
-export type Ingredient = z.infer<typeof IngredientSchema>;
-
-// Schema for a single meal
-export const MealSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, 'Meal name is required'), // e.g. Breakfast, Lunch. This is the meal type.
-  custom_name: z.string().optional().default(''), // User given name for the meal e.g. Chicken Salad
-  ingredients: z.array(IngredientSchema).default([]),
-  total_calories: z.preprocess(
-    preprocessOptionalNumber,
-    z.coerce.number().min(0).nullable().default(null)
-  ),
-  total_protein: z.preprocess(
-    preprocessOptionalNumber,
-    z.coerce.number().min(0).nullable().default(null)
-  ),
-  total_carbs: z.preprocess(
-    preprocessOptionalNumber,
-    z.coerce.number().min(0).nullable().default(null)
-  ),
-  total_fat: z.preprocess(
-    preprocessOptionalNumber,
-    z.coerce.number().min(0).nullable().default(null)
-  ),
-});
-export type Meal = z.infer<typeof MealSchema>;
-
-// Schema for a day's meal plan
-export const DailyMealPlanSchema = z.object({
-  day_of_week: z.string(),
-  meals: z.array(MealSchema),
-});
-export type DailyMealPlan = z.infer<typeof DailyMealPlanSchema>;
-
-// Schema for the entire weekly meal plan (current or optimized)
-export const WeeklyMealPlanSchema = z.object({
-  id: z.string(),
-  user_id: z.string(),
-  start_date: z.date(),
-  days: z.array(DailyMealPlanSchema),
-  weekly_summary: z
-    .object({
-      total_calories: z.number(),
-      total_protein: z.number(),
-      total_carbs: z.number(),
-      total_fat: z.number(),
-    })
-    .optional(),
-});
-export type WeeklyMealPlan = z.infer<typeof WeeklyMealPlanSchema>;
-
-export interface MealPlans {
-  id: string;
-  user_id: string;
-  meal_data: WeeklyMealPlan;
-  ai_plan: GeneratePersonalizedMealPlanOutput;
-  created_at: number;
-  updated_at: number;
-}
-
 export const SupportChatbotInputSchema = z.object({
   userQuery: z.string(),
 });
@@ -1150,3 +1147,5 @@ export const SuggestIngredientSwapOutputSchema = z.array(
 export type SuggestIngredientSwapOutput = z.infer<
   typeof SuggestIngredientSwapOutputSchema
 >;
+
+export type FullUserProfileType = UserPlanType & MealPlans & BaseProfileData;
