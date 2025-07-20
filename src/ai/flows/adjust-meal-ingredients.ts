@@ -25,9 +25,9 @@ const prompt = ai.definePrompt({
 - Age: {{userProfile.age}}
 - Diet Goal: {{userProfile.primary_diet_goal}}
 - Dietary Preference: {{#if userProfile.preferred_diet}}{{userProfile.preferred_diet}}{{else}}None specified{{/if}}
-- Allergies (Critical to Avoid): {{#if userProfile.allergies.length}}{{#each userProfile.allergies}}{{{this}}}{{/unless}}{{/each}}{{else}}None{{/if}}
-- Disliked Ingredients: {{#if userProfile.dispreferrred_ingredients.length}}{{#each userProfile.dispreferrred_ingredients}}{{{this}}}{{/unless}}{{/each}}{{else}}None{{/if}}
-- Favorite Ingredients: {{#if userProfile.preferred_ingredients.length}}{{#each userProfile.preferred_ingredients}}{{{this}}}{{/unless}}{{/each}}{{else}}None{{/if}}
+- Allergies (Critical to Avoid): {{#if userProfile.allergies.length}}{{#each userProfile.allergies}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}None{{/if}}
+- Disliked Ingredients: {{#if userProfile.dispreferrred_ingredients.length}}{{#each userProfile.dispreferrred_ingredients}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}None{{/if}}
+- Favorite Ingredients: {{#if userProfile.preferred_ingredients.length}}{{#each userProfile.preferred_ingredients}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}None{{/if}}
 
 **Target Macros for "{{originalMeal.name}}":**
 - Calories: {{targetMacros.calories}} kcal
