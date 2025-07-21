@@ -915,7 +915,7 @@ export type AIServiceIngredient = z.infer<typeof AIServiceIngredientSchema>;
 
 export const AIServiceMealSchema = z.object({
   name: z.string(),
-  custom_name: z.string().optional(),
+  custom_name: z.string(),
   ingredients: z.array(AIServiceIngredientSchema),
   total_calories: z.number(),
   total_protein: z.number(),

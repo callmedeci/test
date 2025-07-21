@@ -58,7 +58,7 @@ export function getAdjustedMealInput(
   return {
     originalMeal: {
       name: mealToOptimize.name,
-      customName: mealToOptimize.custom_name || '',
+      custom_name: mealToOptimize.custom_name || '',
       ingredients: preparedIngredients,
       total_calories: Number(mealToOptimize.total_calories) || 0,
       total_protein: Number(mealToOptimize.total_protein) || 0,

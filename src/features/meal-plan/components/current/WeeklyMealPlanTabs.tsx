@@ -98,8 +98,6 @@ function WeeklyMealPlanTabs({
           carbs: ing.carbs ? Number(ing.carbs) : null,
           fat: ing.fat ? Number(ing.fat) : null,
         })),
-
-        custom_name: 'test',
       };
 
       newWeeklyPlan.days[dayIndex].meals[mealIndex] = updatedMealData;
