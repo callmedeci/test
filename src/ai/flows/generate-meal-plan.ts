@@ -29,16 +29,16 @@ First, meticulously analyze every detail of the user's profile. This is the foun
 - **Primary Goal:** {{primary_diet_goal}}.
 - **Activity Level:** {{physical_activity_level}}.
 - **Dietary System:** Follows a strict **{{preferred_diet}}** diet.
-- **Allergies (Critical):** Absolutely NO ingredients from this list: {{#if allergies.length}}{{join allergies ", "}}{{else}}None{{/if}}.
+- **Allergies (Critical):** Absolutely NO ingredients from this list: {{#if allergies.length}}{{#each allergies}}{{this}} {{/each}}{{else}}None{{/if}}.
 - **Cuisine Preferences:**
-  - **Likes:** {{#if preferred_cuisines.length}}{{join preferred_cuisines ", "}}{{else}}None specified{{/if}}.
-  - **Dislikes:** {{#if dispreferrred_cuisines.length}}{{join dispreferrred_cuisines ", "}}{{else}}None specified{{/if}}.
+  - **Likes:** {{#if preferred_cuisines.length}}{{#each preferred_cuisines}}{{this}} {{/each}}{{else}}None specified{{/if}}.
+  - **Dislikes:** {{#if dispreferrred_cuisines.length}}{{#each dispreferrred_cuisines}}{{this}} {{/each}}{{else}}None specified{{/if}}.
 - **Ingredient Preferences:**
-  - **Likes:** {{#if preferred_ingredients.length}}{{join preferred_ingredients ", "}}{{else}}None specified{{/if}}.
-  - **Dislikes:** {{#if dispreferrred_ingredients.length}}{{join dispreferrred_ingredients ", "}}{{else}}None specified{{/if}}.
+  - **Likes:** {{#if preferred_ingredients.length}}{{#each preferred_ingredients}}{{this}} {{/each}}{{else}}None specified{{/if}}.
+  - **Dislikes:** {{#if dispreferrred_ingredients.length}}{{#each dispreferrred_ingredients}}{{this}} {{/each}}{{else}}None specified{{/if}}.
 - **Health Context:**
-  - **Medical Conditions:** {{#if medical_conditions.length}}{{join medical_conditions ", "}}{{else}}None{{/if}}. Adjust plan accordingly (e.g., lower sodium for hypertension).
-  - **Micronutrient Focus:** Emphasize ingredients rich in: {{#if preferred_micronutrients.length}}{{join preferred_micronutrients ", "}}{{else}}None specified{{/if}}.
+  - **Medical Conditions:** {{#if medical_conditions.length}}{{#each medical_conditions}}{{this}} {{/each}}{{else}}None{{/if}}. Adjust plan accordingly (e.g., lower sodium for hypertension).
+  - **Micronutrient Focus:** Emphasize ingredients rich in: {{#if preferred_micronutrients.length}}{{#each preferred_micronutrients}}{{this}} {{/each}}{{else}}None specified{{/if}}.
 
 **[Step 2] Daily Macro Calculation**
 Based on the user's profile, determine the target daily calories and macronutrients.

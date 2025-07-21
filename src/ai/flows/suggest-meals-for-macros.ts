@@ -21,9 +21,9 @@ const prompt = ai.definePrompt({
   name: 'suggestMealsForMacrosPrompt',
   input: { schema: SuggestMealsForMacrosInputSchema },
   output: { schema: SuggestMealsForMacrosOutputSchema },
-
+  // Add a system prompt to set the AI's core role and output format.
   system: `You are NutriMind, an expert AI nutritionist. Your task is to generate meal suggestions based on user data and macro targets. Adhere strictly to all user preferences and dietary restrictions. Your entire response MUST be a single, valid JSON object and nothing else.`,
-
+  // The main prompt is now more direct.
   prompt: `
   Analyze the user's profile and the meal target below to generate 1-3 highly personalized and appropriate meal suggestions.
 
