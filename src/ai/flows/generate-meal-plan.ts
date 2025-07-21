@@ -46,20 +46,39 @@ Based on the user's profile, determine the target daily calories and macronutrie
 - **Distribution:** Aim for a balanced macronutrient split (e.g., 40% carbs, 30% protein, 30% fat), but adjust based on the user's diet type (e.g., higher fat for Keto). The final weekly totals must be accurate.
 
 **[Step 3] Meal Plan Generation**
-Create the 7-day plan, following these critical rules:
+Generate a 7-day meal plan, with each day consisting of six meals: Breakfast, Morning Snack, Lunch, Afternoon Snack, Dinner, and Evening Snack. Follow these critical rules:
 
 🧠 **CRITICAL THINKING RULES:**
-1.  **Meal Appropriateness:** Meals MUST be appropriate for their designated time. Do not suggest heavy, dinner-style meals like 'Steak and Potatoes' for 'Breakfast'. Breakfast should be breakfast food, lunch should be lunch food.
-2.  **Variety is Key:** Strive for variety across the week. Do not suggest the exact same meal multiple days in a row. Show creativity.
-3.  **Create Real Meals:** Each meal must be a complete, logical recipe. Do not list just one or two isolated ingredients (e.g., "Chicken Breast"). Combine it with other foods to make a full dish.
-4.  **Logical Macro Distribution:** Distribute the daily macros logically across the 5 meals. Breakfast and Lunch should be substantial, with smaller, appropriate snacks in between.
+1.  **Meal Appropriateness:** Each meal must be suitable for its designated time. For example, Breakfast should include typical breakfast foods, not heavy dinner-style meals like 'Steak and Potatoes'.
+2.  **Variety is Key:** Ensure variety across the week. Do not repeat the same meal on multiple days unless limited by dietary restrictions. Be creative in suggesting different dishes.
+3.  **Complete Meals:** Each meal should be a complete, logical recipe. Do not list isolated ingredients (e.g., "Chicken Breast"); combine them into a full dish.
+4.  **Macro Distribution:** Distribute the daily macros logically across the six meals. Breakfast, Lunch, and Dinner should be more substantial, while snacks should be lighter but still nutritious.
 
 **[Step 4] Final JSON Assembly & Validation**
-Construct the final JSON object. The structure MUST be exactly as follows to match the application's requirements.
+Construct the final JSON object with the following structure:
 
 **Strict JSON Output Format:**
 Your response MUST be a JSON object with two top-level keys: "days" and "weekly_summary".
 
+- **\`days\`**: An array of 7 day objects, one for each day of the week (Monday to Sunday).
+  - Each day object has:
+    - **\`day_of_week\`**: string (e.g., "Monday", "Tuesday", ..., "Sunday").
+    - **\`meals\`**: An array of exactly 6 meal objects: "Breakfast", "Morning Snack", "Lunch", "Afternoon Snack", "Dinner", "Evening Snack".
+      - Each meal object has:
+        - **\`meal_name\`**: string (one of the six meal types).
+        - **\`ingredients\`**: An array of ingredient objects.
+          - Each ingredient object has:
+            - **\`name\`**: string.
+            - **\`quantity\`**: number (amount in grams for this meal).
+            - **\`calories\`**: number (per 100g).
+            - **\`protein\`**: number (per 100g).
+            - **\`carbs\`**: number (per 100g).
+            - **\`fat\`**: number (per 100g).
+        - **\`total_calories\`**, **\`total_protein\`**, **\`total_carbs\`**, **\`total_fat\`**: number (totals for that meal).
+- **\`weekly_summary\`**: An object with the sum of all macros for the entire week.
+  - **\`total_calories\`**, **\`total_protein\`**, **\`total_carbs\`**, **\`total_fat\`**: number.
+
+**Example JSON:**
 \`\`\`json
 {
   "days": [
@@ -82,9 +101,50 @@ Your response MUST be a JSON object with two top-level keys: "days" and "weekly_
           "total_protein": 30,
           "total_carbs": 60,
           "total_fat": 15
+        },
+        {
+          "meal_name": "Morning Snack",
+          "ingredients": [],
+          "total_calories": 200,
+          "total_protein": 10,
+          "total_carbs": 25,
+          "total_fat": 8
+        },
+        {
+          "meal_name": "Lunch",
+          "ingredients": [],
+          "total_calories": 600,
+          "total_protein": 35,
+          "total_carbs": 70,
+          "total_fat": 20
+        },
+        {
+          "meal_name": "Afternoon Snack",
+          "ingredients": [],
+          "total_calories": 200,
+          "total_protein": 10,
+          "total_carbs": 25,
+          "total_fat": 8
+        },
+        {
+          "meal_name": "Dinner",
+          "ingredients": [],
+          "total_calories": 700,
+          "total_protein": 40,
+          "total_carbs": 80,
+          "total_fat": 25
+        },
+        {
+          "meal_name": "Evening Snack",
+          "ingredients": [],
+          "total_calories": 200,
+          "total_protein": 10,
+          "total_carbs": 25,
+          "total_fat": 8
         }
       ]
     }
+    // Repeat similar structure for Tuesday through Sunday
   ],
   "weekly_summary": {
     "total_calories": 14000,
@@ -95,24 +155,7 @@ Your response MUST be a JSON object with two top-level keys: "days" and "weekly_
 }
 \`\`\`
 
-**Breakdown of the required structure:**
-- **\`days\`**: An array of 7 day objects (one for each day of the week).
-  - Each day object has:
-    - **\`day_of_week\`**: string (e.g., "Monday", "Tuesday").
-    - **\`meals\`**: An array of exactly 5 meal objects ("Breakfast", "Snack 1", "Lunch", "Snack 2", "Dinner").
-      - Each meal object has:
-        - **\`meal_name\`**: string.
-        - **\`ingredients\`**: An array of ingredient objects.
-          - Each ingredient object has a FLAT structure:
-            - **\`name\`**: string.
-            - **\`quantity\`**: number (the amount for this meal in grams).
-            - **\`calories\`**: number (per 100g of the ingredient).
-            - **\`protein\`**: number (per 100g).
-            - **\`carbs\`**: number (per 100g).
-            - **\`fat\`**: number (per 100g).
-        - **\`total_calories\`**, **\`total_protein\`**, **\`total_carbs\`**, **\`total_fat\`**: number (The calculated total for that specific meal).
-- **\`weekly_summary\`**: An object containing the sum of all macros for the entire week.
-  - **\`total_calories\`**, **\`total_protein\`**, **\`total_carbs\`**, **\`total_fat\`**: number.
+Ensure that the "days" array contains exactly seven day objects, each with six meal objects as specified. Generate the complete meal plan for all seven days—do not stop after one day. The meal plans for each day should be distinct to maximize variety.
 
 ⚠️ **FINAL WARNING:** Before responding, double-check every calculation and ensure the JSON is perfectly formatted with the exact field names shown. Respond ONLY with the pure JSON object. No introductory text, comments, or markdown wrappers.
 `,

@@ -68,7 +68,7 @@ const prompt = ai.definePrompt({
 - The \`adjustedMeal\` object represents the final, complete meal. Its \`ingredients\` array should include ALL final ingredients with their optimized quantities and recalculated nutritional values.
 - The \`name\` and \`customName\` of the meal in the output must match the original input.
 - Your response must strictly match this TypeScript type:
-  \`{ adjustedMeal: { name: string; customName?: string; ingredients: { name: string; quantity: number; unit: string; calories: number; protein: number; carbs: number; fat: number; }[]; total_calories: number; total_protein: number; total_carbs: number; total_fat: number; }; explanation: string; }\`
+  \`{ adjustedMeal: { name: string; custom_name?: string; ingredients: { name: string; quantity: number; unit: string; calories: number; protein: number; carbs: number; fat: number; }[]; total_calories: number; total_protein: number; total_carbs: number; total_fat: number; }; explanation: string; }\`
 
 Begin JSON response now.
 `,

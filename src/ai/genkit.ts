@@ -1,7 +1,7 @@
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
-export const geminiModel = googleAI.model('gemini-2.0-flash');
+export const geminiModel = googleAI.model('gemini-1.5-pro');
 
 // Genkit AI initialization
 export const ai = genkit({
