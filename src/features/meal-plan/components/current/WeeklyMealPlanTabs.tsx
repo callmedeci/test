@@ -27,6 +27,9 @@ function WeeklyMealPlanTabs({
   const [optimizingMealKey, setOptimizingMealKey] = useState<string | null>(
     null
   );
+  const [mealPlanState, setMealPlanState] = useState<MealPlans | null>(
+    mealPlan
+  );
 
   async function handleOptimizeMeal(dayIndex: number, mealIndex: number) {
     const { meal_data } = mealPlan;
@@ -72,19 +75,19 @@ function WeeklyMealPlanTabs({
           'AI did not return an adjusted meal or an unexpected format was received.'
         );
 
-      const newWeeklyPlan = JSON.parse(JSON.stringify(meal_data));
+      const newWeeklyPlan = meal_data;
       const updatedMealData = {
         ...result.adjustedMeal,
-        totalCalories: result.adjustedMeal.total_calories
+        total_calories: result.adjustedMeal.total_calories
           ? Number(result.adjustedMeal.total_calories)
           : null,
-        totalProtein: result.adjustedMeal.total_protein
+        total_protein: result.adjustedMeal.total_protein
           ? Number(result.adjustedMeal.total_protein)
           : null,
-        totalCarbs: result.adjustedMeal.total_carbs
+        total_carbs: result.adjustedMeal.total_carbs
           ? Number(result.adjustedMeal.total_carbs)
           : null,
-        totalFat: result.adjustedMeal.total_fat
+        total_fat: result.adjustedMeal.total_fat
           ? Number(result.adjustedMeal.total_fat)
           : null,
         ingredients: result.adjustedMeal.ingredients.map((ing) => ({
@@ -95,11 +98,14 @@ function WeeklyMealPlanTabs({
           carbs: ing.carbs ? Number(ing.carbs) : null,
           fat: ing.fat ? Number(ing.fat) : null,
         })),
+
+        custom_name: 'test',
       };
 
       newWeeklyPlan.days[dayIndex].meals[mealIndex] = updatedMealData;
 
       await editMealPlan({ meal_data: newWeeklyPlan });
+      setMealPlanState((meal) => ({ ...meal!, meal_data: newWeeklyPlan }));
 
       toast({
         title: `Meal Optimized: ${mealToOptimize.name}`,
@@ -146,7 +152,7 @@ function WeeklyMealPlanTabs({
         <ScrollBar orientation='horizontal' />
       </ScrollArea>
 
-      {mealPlan?.meal_data.days.map((dayPlan, dayIndex) => (
+      {mealPlanState?.meal_data.days.map((dayPlan, dayIndex) => (
         <TabsContent
           key={dayPlan.day_of_week}
           value={dayPlan.day_of_week}

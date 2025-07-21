@@ -988,6 +988,34 @@ export const AIDailyPlanOutputSchema = z.object({
 export type AIDailyPlanOutput = z.infer<typeof AIDailyPlanOutputSchema>;
 
 //Generate meal plan
+export const AIGeneratedIngredientSchema = z.object({
+  name: z.string(),
+  quantity: z.number().optional(),
+  unit: z.string().optional(),
+  calories: z.number(),
+  protein: z.number(),
+  carbs: z.number(),
+  fat: z.number(),
+});
+export type AIGeneratedIngredient = z.infer<typeof AIGeneratedIngredientSchema>;
+
+export const AIGeneratedMealSchema = z.object({
+  meal_name: z.string(),
+  custom_name: z.string().optional(),
+  ingredients: z.array(AIGeneratedIngredientSchema),
+  total_calories: z.number().optional(),
+  total_protein: z.number().optional(),
+  total_carbs: z.number().optional(),
+  total_fat: z.number().optional(),
+});
+export type AIGeneratedMeal = z.infer<typeof AIGeneratedMealSchema>;
+
+export const DayPlanSchema = z.object({
+  day_of_week: z.string(),
+  meals: z.array(AIGeneratedMealSchema),
+});
+export type DayPlan = z.infer<typeof DayPlanSchema>;
+
 export const GeneratePersonalizedMealPlanInputSchema = z.object({
   age: z.number().optional(),
   biological_sex: z.string().optional(),
@@ -1056,34 +1084,6 @@ export const GeneratePersonalizedMealPlanInputSchema = z.object({
 export type GeneratePersonalizedMealPlanInput = z.infer<
   typeof GeneratePersonalizedMealPlanInputSchema
 >;
-
-export const AIGeneratedIngredientSchema = z.object({
-  name: z.string(),
-  quantity: z.number().optional(),
-  unit: z.string().optional(),
-  calories: z.number(),
-  protein: z.number(),
-  carbs: z.number(),
-  fat: z.number(),
-});
-export type AIGeneratedIngredient = z.infer<typeof AIGeneratedIngredientSchema>;
-
-export const AIGeneratedMealSchema = z.object({
-  meal_name: z.string(),
-  custom_name: z.string().optional(),
-  ingredients: z.array(AIGeneratedIngredientSchema),
-  total_calories: z.number().optional(),
-  total_protein: z.number().optional(),
-  total_carbs: z.number().optional(),
-  total_fat: z.number().optional(),
-});
-export type AIGeneratedMeal = z.infer<typeof AIGeneratedMealSchema>;
-
-export const DayPlanSchema = z.object({
-  day_of_week: z.string(),
-  meals: z.array(AIGeneratedMealSchema),
-});
-export type DayPlan = z.infer<typeof DayPlanSchema>;
 
 export const GeneratePersonalizedMealPlanOutputSchema = z.object({
   days: z.array(DayPlanSchema),
