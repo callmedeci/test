@@ -19,93 +19,103 @@ const prompt = ai.definePrompt({
   name: 'generatePersonalizedMealPlanPrompt',
   input: { schema: GeneratePersonalizedMealPlanInputSchema },
   output: { schema: GeneratePersonalizedMealPlanOutputSchema },
-  prompt: `You are a professional AI nutritionist tasked with creating a HIGHLY PERSONALIZED weekly meal plan. The accuracy and relevance of this plan are CRITICAL for the user's health and satisfaction. You MUST meticulously analyze and incorporate ALL user data provided below.
+  prompt: `You are NutriMind, an elite AI nutritionist. Your task is to create a complete, delicious, and highly personalized 7-day meal plan based on a detailed user profile and specific nutritional targets. The output must be perfect, as it will be used directly in an application.
 
-**USER PROFILE DATA:**
-{{{input}}}
+**[Step 1] Deep Profile Analysis**
+First, meticulously analyze every detail of the user's profile. This is the foundation for a truly personalized plan.
 
-**DAILY NUTRITION TARGETS:**
-- Daily Calories: {{daily_calories_target}}
-- Daily Protein: {{daily_protein_target}}g
-- Daily Carbs: {{daily_carbs_target}}g
-- Daily Fat: {{daily_fat_target}}g
+**👤 User Profile & Goals:**
+- **Bio:** {{age}}-year-old {{biological_sex}}, {{height_cm}} cm, {{current_weight_kg}} kg.
+- **Primary Goal:** {{primary_diet_goal}}.
+- **Activity Level:** {{physical_activity_level}}.
+- **Dietary System:** Follows a strict **{{preferred_diet}}** diet.
+- **Allergies (Critical):** Absolutely NO ingredients from this list: {{#if allergies.length}}{{join allergies ", "}}{{else}}None{{/if}}.
+- **Cuisine Preferences:**
+  - **Likes:** {{#if preferred_cuisines.length}}{{join preferred_cuisines ", "}}{{else}}None specified{{/if}}.
+  - **Dislikes:** {{#if dispreferrred_cuisines.length}}{{join dispreferrred_cuisines ", "}}{{else}}None specified{{/if}}.
+- **Ingredient Preferences:**
+  - **Likes:** {{#if preferred_ingredients.length}}{{join preferred_ingredients ", "}}{{else}}None specified{{/if}}.
+  - **Dislikes:** {{#if dispreferrred_ingredients.length}}{{join dispreferrred_ingredients ", "}}{{else}}None specified{{/if}}.
+- **Health Context:**
+  - **Medical Conditions:** {{#if medical_conditions.length}}{{join medical_conditions ", "}}{{else}}None{{/if}}. Adjust plan accordingly (e.g., lower sodium for hypertension).
+  - **Micronutrient Focus:** Emphasize ingredients rich in: {{#if preferred_micronutrients.length}}{{join preferred_micronutrients ", "}}{{else}}None specified{{/if}}.
 
-**CRITICAL PERSONALIZATION REQUIREMENTS:**
-1. DIETARY RESTRICTIONS: Strictly follow {{preferredDiet}} diet - ONLY use compatible ingredients.
-2. ALLERGIES: NEVER include {{allergies}} - this is a safety imperative.
-3. PREFERRED CUISINES: Prioritize {{preferredCuisines}}.
-4. AVOID CUISINES: Exclude {{dispreferredCuisines}}.
-5. PREFERRED INGREDIENTS: Frequently use {{preferredIngredients}}.
-6. AVOID INGREDIENTS: Never use {{dispreferredIngredients}}.
-7. MEDICAL CONDITIONS: Adjust for {{medicalConditions}} (e.g., reduce sodium for hypertension).
-8. GOAL: Tailor to {{primary_diet_goal}} - adjust portions and macros accordingly.
-9. ACTIVITY LEVEL: Account for {{physical_activity_level}}.
-10. MICRONUTRIENTS: Emphasize {{preferred_micronutrients}} in selections.
+**[Step 2] Daily Macro Calculation**
+Based on the user's profile, determine the target daily calories and macronutrients.
+- **Goal:** For **{{primary_diet_goal}}**, a caloric surplus/deficit of 300-500 kcal from maintenance is appropriate.
+- **Distribution:** Aim for a balanced macronutrient split (e.g., 40% carbs, 30% protein, 30% fat), but adjust based on the user's diet type (e.g., higher fat for Keto). The final weekly totals must be accurate.
 
-**MEAL TYPE GUIDELINES:**
-- Breakfast: Use typical foods like eggs, oatmeal, fruits, yogurt.
-- Snacks: Light options like fruits, nuts, small protein portions.
-- Lunch and Dinner: Balanced meals with protein, vegetables, carbs.
-- Ensure meals suit their time of day.
+**[Step 3] Meal Plan Generation**
+Create the 7-day plan, following these critical rules:
 
-**MEAL DISTRIBUTION:**
-- If {{meal_distributions}} is provided, allocate calories and macros per meal accordingly.
-- Otherwise, use: 20% Breakfast, 10% Morning Snack, 25% Lunch, 10% Afternoon Snack, 25% Dinner, 10% Evening Snack.
+🧠 **CRITICAL THINKING RULES:**
+1.  **Meal Appropriateness:** Meals MUST be appropriate for their designated time. Do not suggest heavy, dinner-style meals like 'Steak and Potatoes' for 'Breakfast'. Breakfast should be breakfast food, lunch should be lunch food.
+2.  **Variety is Key:** Strive for variety across the week. Do not suggest the exact same meal multiple days in a row. Show creativity.
+3.  **Create Real Meals:** Each meal must be a complete, logical recipe. Do not list just one or two isolated ingredients (e.g., "Chicken Breast"). Combine it with other foods to make a full dish.
+4.  **Logical Macro Distribution:** Distribute the daily macros logically across the 5 meals. Breakfast and Lunch should be substantial, with smaller, appropriate snacks in between.
 
-**MEAL PLAN STRUCTURE:**
-Return a JSON object with two top-level properties:
-1. "days": Array of 7 day objects (Monday-Sunday)
-2. "weekly_summary": Nutritional totals for the week
+**[Step 4] Final JSON Assembly & Validation**
+Construct the final JSON object. The structure MUST be exactly as follows to match the application's requirements.
 
-**DETAILED JSON STRUCTURE:**
-"days":
-- Array of 7 day objects
-- Each day object has:
-  - "day_of_week": string (e.g., "Monday")
-  - "meals": array of exactly 6 meal objects (Breakfast, Morning Snack, Lunch, Afternoon Snack, Dinner, Evening Snack)
+**Strict JSON Output Format:**
+Your response MUST be a JSON object with two top-level keys: "days" and "weekly_summary".
 
-Each meal object must have:
-- "meal_name": string
-- "ingredients": array of ingredient objects
-- "total_calories": number
-- "total_protein": number
-- "total_carbs": number
-- "total_fat": number
+\`\`\`json
+{
+  "days": [
+    {
+      "day_of_week": "Monday",
+      "meals": [
+        {
+          "meal_name": "Breakfast",
+          "ingredients": [
+            {
+              "name": "Oats",
+              "quantity": 50,
+              "calories": 389,
+              "protein": 16.9,
+              "carbs": 66.3,
+              "fat": 6.9
+            }
+          ],
+          "total_calories": 500,
+          "total_protein": 30,
+          "total_carbs": 60,
+          "total_fat": 15
+        }
+      ]
+    }
+  ],
+  "weekly_summary": {
+    "total_calories": 14000,
+    "total_protein": 1050,
+    "total_carbs": 1400,
+    "total_fat": 466
+  }
+}
+\`\`\`
 
-Each ingredient object must have:
-- "name": string
-- "quantity_g": number
-- "macros": object with:
-  - "calories": number
-  - "protein_g": number
-  - "carbs_g": number
-  - "fat_g": number (values for quantity_g)
+**Breakdown of the required structure:**
+- **\`days\`**: An array of 7 day objects (one for each day of the week).
+  - Each day object has:
+    - **\`day_of_week\`**: string (e.g., "Monday", "Tuesday").
+    - **\`meals\`**: An array of exactly 5 meal objects ("Breakfast", "Snack 1", "Lunch", "Snack 2", "Dinner").
+      - Each meal object has:
+        - **\`meal_name\`**: string.
+        - **\`ingredients\`**: An array of ingredient objects.
+          - Each ingredient object has a FLAT structure:
+            - **\`name\`**: string.
+            - **\`quantity\`**: number (the amount for this meal in grams).
+            - **\`calories\`**: number (per 100g of the ingredient).
+            - **\`protein\`**: number (per 100g).
+            - **\`carbs\`**: number (per 100g).
+            - **\`fat\`**: number (per 100g).
+        - **\`total_calories\`**, **\`total_protein\`**, **\`total_carbs\`**, **\`total_fat\`**: number (The calculated total for that specific meal).
+- **\`weekly_summary\`**: An object containing the sum of all macros for the entire week.
+  - **\`total_calories\`**, **\`total_protein\`**, **\`total_carbs\`**, **\`total_fat\`**: number.
 
-"weekly_summary":
-- "total_calories": number
-- "total_protein": number
-- "total_carbs": number
-- "total_fat": number
-- Ensure totals approximate 7 * daily targets.
-
-**ADDITIONAL INSTRUCTIONS:**
-- Vary meals across the week for diversity.
-- Ensure ingredients complement each other culinarily.
-- Use realistic, safe quantities for human consumption.
-
-**VALIDATION CHECKLIST:**
-✓ Macros match 7 * daily targets
-✓ No allergens or dispreferred items
-✓ Meals align with {{preferredDiet}} and {{preferredCuisines}}
-✓ Meal types suit their time of day
-✓ Calculations are accurate
-✓ JSON structure is exact
-
-**IMPORTANT RULES:**
-- Use EXACT field names
-- NO extra fields in weekly_summary
-- ALL values must be realistic and calculated correctly
-- Respond with pure JSON only.`,
+⚠️ **FINAL WARNING:** Before responding, double-check every calculation and ensure the JSON is perfectly formatted with the exact field names shown. Respond ONLY with the pure JSON object. No introductory text, comments, or markdown wrappers.
+`,
 });
 
 const generatePersonalizedMealPlanFlow = ai.defineFlow(

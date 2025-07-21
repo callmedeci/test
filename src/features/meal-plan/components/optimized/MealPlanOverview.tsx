@@ -1,4 +1,3 @@
-import { GeneratePersonalizedMealPlanOutput } from '@/ai/flows/generate-meal-plan';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ChartContainer,
@@ -17,6 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { chartConfig } from '@/features/meal-plan/lib/config';
 import { daysOfWeek } from '@/lib/constants';
+import { GeneratePersonalizedMealPlanOutput } from '@/lib/schemas';
 import { formatNumber } from '@/lib/utils';
 import { BarChart3, ChefHat } from 'lucide-react';
 import {
@@ -162,7 +162,7 @@ function MealPlanOverview({ mealPlan }: MealPlanOverviewProps) {
                   <CardHeader>
                     <CardTitle className='text-xl font-semibold flex items-center'>
                       <ChefHat className='mr-2 h-5 w-5 text-accent' />
-                      {meal.name}
+                      {meal.meal_name}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>

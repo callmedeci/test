@@ -1,9 +1,9 @@
+import ErrorMessage from '@/components/ui/ErrorMessage';
 import {
   getMealPlan,
   getUserPlan,
   getUserProfile,
 } from '@/lib/supabase/data-service';
-import { AlertTriangle } from 'lucide-react';
 import MealPlanGenerator from './MealPlanGenerator';
 
 async function AiPlanSection() {
@@ -20,10 +20,15 @@ async function AiPlanSection() {
       />
     );
   } catch (error: any) {
-    <p className='text-destructive text-center py-4'>
-      <AlertTriangle className='inline mr-2' />
-      {error}
-    </p>;
+    return (
+      <ErrorMessage
+        title='Unable to Load data'
+        message={
+          error?.message ||
+          "We couldn't load your data. Please check your connection and try again."
+        }
+      />
+    );
   }
 }
 
