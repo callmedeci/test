@@ -1,6 +1,6 @@
 'use server';
 
-import { ai } from '@/ai/genkit';
+import { geminiModel } from '@/ai/genkit';
 import {
   SupportChatbotInputSchema,
   SupportChatbotOutputSchema,
@@ -15,7 +15,7 @@ export async function handleSupportQuery(
   return supportChatbotFlow(input);
 }
 
-const prompt = ai.definePrompt({
+const prompt = geminiModel.definePrompt({
   name: 'supportChatbotPrompt',
   input: { schema: SupportChatbotInputSchema },
   output: { schema: SupportChatbotOutputSchema },
@@ -67,7 +67,7 @@ Respond ONLY with the pure JSON object matching the following TypeScript type:
 { botResponse: string; }`,
 });
 
-const supportChatbotFlow = ai.defineFlow(
+const supportChatbotFlow = geminiModel.defineFlow(
   {
     name: 'supportChatbotFlow',
     inputSchema: SupportChatbotInputSchema,

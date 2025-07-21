@@ -1,6 +1,6 @@
 'use server';
 
-import { ai } from '@/ai/genkit';
+import { geminiModel } from '@/ai/genkit';
 import {
   SuggestIngredientSwapInputSchema,
   SuggestIngredientSwapOutputSchema,
@@ -17,7 +17,7 @@ export async function suggestIngredientSwap(
 }
 
 // AI Prompt
-const prompt = ai.definePrompt({
+const prompt = geminiModel.definePrompt({
   name: 'suggestIngredientSwapPrompt',
   input: { schema: SuggestIngredientSwapInputSchema },
   output: { schema: SuggestIngredientSwapOutputSchema },
@@ -93,7 +93,7 @@ Array<{ ingredientName: string; reason: string; }>
 });
 
 // Genkit Flow (Unchanged)
-const suggestIngredientSwapFlow = ai.defineFlow(
+const suggestIngredientSwapFlow = geminiModel.defineFlow(
   {
     name: 'suggestIngredientSwapFlow',
     inputSchema: SuggestIngredientSwapInputSchema,

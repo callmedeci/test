@@ -1,6 +1,6 @@
 'use server';
 
-import { ai } from '@/ai/genkit';
+import { geminiModel } from '@/ai/genkit';
 import {
   SuggestMealsForMacrosInputSchema,
   SuggestMealsForMacrosOutputSchema,
@@ -17,7 +17,7 @@ export async function suggestMealsForMacros(
 }
 
 // AI Prompt
-const prompt = ai.definePrompt({
+const prompt = geminiModel.definePrompt({
   name: 'suggestMealsForMacrosPrompt',
   input: { schema: SuggestMealsForMacrosInputSchema },
   output: { schema: SuggestMealsForMacrosOutputSchema },
@@ -61,7 +61,7 @@ const prompt = ai.definePrompt({
 });
 
 // Genkit Flow (Unchanged)
-const suggestMealsForMacrosFlow = ai.defineFlow(
+const suggestMealsForMacrosFlow = geminiModel.defineFlow(
   {
     name: 'suggestMealsForMacrosFlow',
     inputSchema: SuggestMealsForMacrosInputSchema,

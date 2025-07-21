@@ -1,6 +1,6 @@
 'use server';
 
-import { ai } from '@/ai/genkit';
+import { openaiModel } from '@/ai/genkit';
 
 import {
   AdjustMealIngredientsInputSchema,
@@ -15,7 +15,7 @@ export async function adjustMealIngredients(
   return adjustMealIngredientsFlow(input);
 }
 
-const prompt = ai.definePrompt({
+const prompt = openaiModel.definePrompt({
   name: 'adjustMealIngredientsPrompt',
   input: { schema: AdjustMealIngredientsInputSchema },
   output: { schema: AdjustMealIngredientsOutputSchema },
@@ -74,7 +74,7 @@ Begin JSON response now.
 `,
 });
 
-const adjustMealIngredientsFlow = ai.defineFlow(
+const adjustMealIngredientsFlow = openaiModel.defineFlow(
   {
     name: 'adjustMealIngredientsFlow',
     inputSchema: AdjustMealIngredientsInputSchema,
