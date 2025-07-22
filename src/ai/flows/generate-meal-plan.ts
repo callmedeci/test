@@ -92,7 +92,7 @@ Your response MUST be a single, valid JSON object and nothing else. The 'days' a
 `,
 });
 
-const generatePersonalizedMealPlanFlow = openaiModel.defineFlow(
+const generatePersonalizedMealPlanFlow = geminiModel.defineFlow(
   {
     name: 'generatePersonalizedMealPlanFlow',
     inputSchema: GeneratePersonalizedMealPlanInputSchema,
