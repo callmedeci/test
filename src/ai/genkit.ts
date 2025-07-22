@@ -18,7 +18,10 @@ export const openaiModel = genkit({
   plugins: [
     openAI({ apiKey: process.env.OPENAI_API_KEY }),
     devLocalVectorstore([
-      { indexName: 'pdfRAG', embedder: googleAI.embedder('textEmbedding004') },
+      {
+        indexName: 'pdfRAG',
+        embedder: googleAI.embedder('gemini-embedding-001'),
+      },
     ]),
   ],
   model: gpt4,
@@ -29,7 +32,10 @@ export const geminiModel = genkit({
     googleAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_KEY }),
 
     devLocalVectorstore([
-      { indexName: 'pdfRAG', embedder: googleAI.embedder('textEmbedding004') },
+      {
+        indexName: 'pdfRAG',
+        embedder: googleAI.embedder('gemini-embedding-001'),
+      },
     ]),
   ],
   model: googleAI.model('gemini-2.0-flash'),
