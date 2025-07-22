@@ -1,14 +1,14 @@
 'use server';
 
-import { geminiModel, pdfRetriver, indexPdfFlow } from '@/ai/genkit';
-import path from 'path';
+import { indexPdfFlow, openaiModel, pdfRetriver } from '@/ai/genkit';
 import {
   GeneratePersonalizedMealPlanInputSchema,
   GeneratePersonalizedMealPlanOutputSchema,
-  type GeneratePersonalizedMealPlanOutput,
   type GeneratePersonalizedMealPlanInput,
+  type GeneratePersonalizedMealPlanOutput,
 } from '@/lib/schemas';
 import { getAIApiErrorMessage } from '@/lib/utils';
+import path from 'path';
 import z from 'zod';
 
 export async function generatePersonalizedMealPlan(
@@ -18,7 +18,7 @@ export async function generatePersonalizedMealPlan(
 }
 
 // Enhanced prompt that includes RAG context
-export const prompt = geminiModel.definePrompt({
+export const prompt = openaiModel.definePrompt({
   name: 'generatePersonalizedMealPlanPrompt',
   input: {
     schema: GeneratePersonalizedMealPlanInputSchema.extend({
@@ -150,9 +150,11 @@ Respond ONLY with the pure, complete JSON object.
 `,
 });
 
+const projectPath = path.join(process.cwd());
+
 const NUTRITION_PDF_PATHS = Array.from(
   { length: 28 },
-  (_, i) => `./src/public/pdf/${i + 1}.pdf`
+  (_, i) => `${projectPath}/src/public/pdf/${i + 1}.pdf`
 );
 
 let isInitialized = false;
@@ -180,7 +182,7 @@ async function initializePDFs() {
   console.log('PDF initialization complete!');
 }
 
-const generatePersonalizedMealPlanFlow = geminiModel.defineFlow(
+const generatePersonalizedMealPlanFlow = openaiModel.defineFlow(
   {
     name: 'generatePersonalizedMealPlanFlow',
     inputSchema: GeneratePersonalizedMealPlanInputSchema,
@@ -276,7 +278,7 @@ async function retrieveNutritionalContext(
   const limitedQueries = searchQueries.slice(0, 5);
 
   for (const query of limitedQueries) {
-    const docs = await geminiModel.retrieve({
+    const docs = await openaiModel.retrieve({
       retriever: pdfRetriver,
       query: query,
       options: { k: 2 }, // Get top 2 results per query

@@ -13,6 +13,17 @@ import pdf from 'pdf-parse';
 
 import { chunk } from 'llm-chunk';
 
+//open-ai
+export const openaiModel = genkit({
+  plugins: [
+    openAI({ apiKey: process.env.OPENAI_API_KEY }),
+    devLocalVectorstore([
+      { indexName: 'pdfRAG', embedder: googleAI.embedder('textEmbedding004') },
+    ]),
+  ],
+  model: gpt4,
+});
+
 export const geminiModel = genkit({
   plugins: [
     googleAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_KEY }),
@@ -43,7 +54,7 @@ export async function extractTextFromPdf(filePath: string) {
 }
 
 // Flow to index a single PDF file
-export const indexPdfFlow = geminiModel.defineFlow(
+export const indexPdfFlow = openaiModel.defineFlow(
   {
     name: 'indexPdf',
     inputSchema: z.object({
@@ -56,11 +67,11 @@ export const indexPdfFlow = geminiModel.defineFlow(
     }),
   },
   async ({ filePath, metadata = {} }) => {
-    const pdfText = await geminiModel.run('extract-text', () =>
+    const pdfText = await openaiModel.run('extract-text', () =>
       extractTextFromPdf(filePath)
     );
 
-    const chunks = await geminiModel.run('chunk-text', async () =>
+    const chunks = await openaiModel.run('chunk-text', async () =>
       chunk(pdfText, chunkingConfig)
     );
 
@@ -73,7 +84,7 @@ export const indexPdfFlow = geminiModel.defineFlow(
       });
     });
 
-    await geminiModel.index({
+    await openaiModel.index({
       indexer: pdfIndexer,
       documents,
     });
@@ -86,7 +97,7 @@ export const indexPdfFlow = geminiModel.defineFlow(
 );
 
 //Flow to index muliple PDfs from directory
-export const indexPdfDirectoryFlow = geminiModel.defineFlow(
+export const indexPdfDirectoryFlow = openaiModel.defineFlow(
   {
     name: 'indexPdfDirectory',
     inputSchema: z.object({
@@ -124,7 +135,7 @@ export const indexPdfDirectoryFlow = geminiModel.defineFlow(
   }
 );
 
-export const pdfMainFlow = geminiModel.defineFlow(
+export const pdfMainFlow = openaiModel.defineFlow(
   {
     name: 'pdfMainFlow',
     inputSchema: z.object({
@@ -144,13 +155,13 @@ export const pdfMainFlow = geminiModel.defineFlow(
     }),
   },
   async ({ question, maxResults, temperature }) => {
-    const docs = await geminiModel.retrieve({
+    const docs = await openaiModel.retrieve({
       retriever: pdfRetriver,
       query: question,
       options: { k: maxResults },
     });
 
-    const { text } = await geminiModel.generate({
+    const { text } = await openaiModel.generate({
       prompt: `
     You are a helpful AI assistant that answers questions based on the provided document context.
     Use only the information from the provided documents to answer the question.
@@ -179,9 +190,3 @@ export const pdfMainFlow = geminiModel.defineFlow(
     };
   }
 );
-
-//open-ai
-export const openaiModel = genkit({
-  plugins: [openAI({ apiKey: process.env.OPENAI_API_KEY })],
-  model: gpt4,
-});
