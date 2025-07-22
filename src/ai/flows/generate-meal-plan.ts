@@ -1,6 +1,5 @@
 'use server';
 
-import { openaiModel } from '@/ai/genkit';
 import {
   GeneratePersonalizedMealPlanInputSchema,
   GeneratePersonalizedMealPlanOutputSchema,
@@ -8,6 +7,7 @@ import {
   type GeneratePersonalizedMealPlanInput,
 } from '@/lib/schemas';
 import { getAIApiErrorMessage } from '@/lib/utils';
+import { geminiModel, openaiModel } from '../genkit';
 
 export async function generatePersonalizedMealPlan(
   input: GeneratePersonalizedMealPlanInput
@@ -15,104 +15,80 @@ export async function generatePersonalizedMealPlan(
   return generatePersonalizedMealPlanFlow(input);
 }
 
-const prompt = openaiModel.definePrompt({
+const prompt = geminiModel.definePrompt({
   name: 'generatePersonalizedMealPlanPrompt',
   input: { schema: GeneratePersonalizedMealPlanInputSchema },
   output: { schema: GeneratePersonalizedMealPlanOutputSchema },
-  prompt: `You are NutriMind, an elite AI nutritionist responsible for generating a complete and highly personalized 7-day meal plan. Your output must be a single, perfect JSON object, as it will be directly consumed by an application.
 
-**[Step 1] Analyze User Context**
-Meticulously analyze the following user data. This is the foundation for the meal plan.
+  prompt: `You are NutriMind, an elite AI nutritionist. Your single most important task is to create a COMPLETE and FULLY-DETAILED 7-day meal plan. The output must be a perfect, unabridged JSON object.
 
-**User Data & Nutritional Goals (JSON Input):**
-\`\`\`json
-{
-  // User Profile & Preferences
-  "age": {{age}},
-  "biological_sex": "{{biological_sex}}",
-  "height_cm": {{height_cm}},
-  "current_weight_kg": {{current_weight_kg}},
-  "primary_diet_goal": "{{primary_diet_goal}}",
-  "physical_activity_level": "{{physical_activity_level}}",
-  "preferred_diet": "{{preferred_diet}}",
-  "allergies": [{{#if allergies.length}}"{{#each allergies}}{{this}}", "{{/each}}"{{/if}}],
-  "preferred_cuisines": [{{#if preferred_cuisines.length}}"{{#each preferred_cuisines}}{{this}}", "{{/each}}"{{/if}}],
-  "dispreferrred_cuisines": [{{#if dispreferrred_cuisines.length}}"{{#each dispreferrred_cuisines}}{{this}}", "{{/each}}"{{/if}}],
-  "preferred_ingredients": [{{#if preferred_ingredients.length}}"{{#each preferred_ingredients}}{{this}}", "{{/each}}"{{/if}}],
-  "dispreferrred_ingredients": [{{#if dispreferrred_ingredients.length}}"{{#each dispreferrred_ingredients}}{{this}}", "{{/each}}"{{/if}}],
-  "medical_conditions": [{{#if medical_conditions.length}}"{{#each medical_conditions}}{{this}}", "{{/each}}"{{/if}}],
-  "preferred_micronutrients": [{{#if preferred_micronutrients.length}}"{{#each preferred_micronutrients}}{{this}}", "{{/each}}"{{/if}}],
+**[Step 1] In-Depth User Profile Analysis**
+Analyze every detail of the user's profile to create a truly personalized plan.
+... (Keep your user profile section exactly the same) ...
 
-  // Daily Nutritional Targets (Use these exact values for each day)
-  "target_daily_calories": {{meal_data.target_daily_calories}},
-  "target_protein_g": {{meal_data.target_protein_g}},
-  "target_carbs_g": {{meal_data.target_carbs_g}},
-  "target_fat_g": {{meal_data.target_fat_g}}
-}
-\`\`\`
+**[Step 2] Internal Plan of Action (Do Not Output This Plan)**
+Before generating the JSON, you will perform these steps internally:
+1.  Calculate the user's target daily calories and macros.
+2.  Design a unique and appropriate set of six meals for **Monday**.
+3.  Design a unique and appropriate set of six meals for **Tuesday**.
+4.  Design a unique and appropriate set of six meals for **Wednesday**.
+5.  Design a unique and appropriate set of six meals for **Thursday**.
+6.  Design a unique and appropriate set of six meals for **Friday**.
+7.  Design a unique and appropriate set of six meals for **Saturday**.
+8.  Design a unique and appropriate set of six meals for **Sunday**.
+9.  Calculate the final weekly summary totals based on ALL SEVEN days.
+10. Assemble the complete JSON object as specified below.
 
-**[Step 2] Generate the 7-Day Meal Plan**
-Create a comprehensive 7-day meal plan from Monday to Sunday. Adhere strictly to the following rules:
+**[Step 3] 7-Day Meal Plan Generation**
+Generate the 7-day meal plan based on your internal plan. Follow these non-negotiable rules:
 
-🧠 **CRITICAL GENERATION RULES:**
-1.  **Full 7-Day Plan:** You MUST generate a complete plan for all seven days of the week (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday). Do not stop after one day.
-2.  **Six Meals Per Day:** Each day MUST consist of exactly six meals: "Breakfast", "Morning Snack", "Lunch", "Afternoon Snack", "Dinner", and "Evening Snack".
-3.  **Adhere to Daily Targets:** The sum of calories, protein, carbs, and fat for the six meals of any given day must closely match the \`target_daily_calories\`, \`target_protein_g\`, \`target_carbs_g\`, and \`target_fat_g\` provided in the context above.
-4.  **Variety and Creativity:** Ensure variety across the week. Avoid repeating meals. All meals must be complete recipes, not single ingredients (e.g., use "Grilled Chicken Salad with Lemon Vinaigrette" instead of just "Chicken Breast").
-5.  **Meal Appropriateness:** Ensure meals are logical for their time slot. Breakfast should be a breakfast-style meal, and snacks should be lighter than main meals.
-6.  **Respect All Preferences:** The plan must strictly avoid all allergies and disliked ingredients/cuisines, while prioritizing preferred ones.
+🧠 **CRITICAL THINKING RULES:**
+1.  **COMPLETE 7-DAY OUTPUT:** You absolutely must generate the full plan for all seven days, from Monday to Sunday. Incomplete plans are unacceptable.
+2.  **EXACT MEAL NAMES:** Each day must contain six meals, named exactly: "Breakfast", "Morning Snack", "Lunch", "Afternoon Snack", "Dinner", and "Evening Snack".
+3.  **VARIETY AND APPROPRIATENESS:** Ensure meal variety across the week. Meals must be logical for their time of day.
+4.  **COMPLETE MEALS:** Do not list single ingredients. Create full dishes (e.g., "Salmon with Roasted Asparagus").
 
-**[Step 3] Construct the Final JSON**
-Assemble the final output as a single, valid JSON object. The structure MUST be exactly as follows.
+**[Step 4] Final JSON Assembly**
+Your response MUST be a single, valid JSON object and nothing else. The 'days' array must contain 7 elements.
 
-**Strict JSON Output Format:**
+**Strict JSON Output Format Example (Showing Monday and Tuesday):**
 \`\`\`json
 {
   "days": [
     {
       "day_of_week": "Monday",
       "meals": [
-        {
-          "meal_name": "Breakfast",
-          "custom_name": "Scrambled Eggs with Spinach and Whole-Wheat Toast",
-          "ingredients": [
-            { "name": "Eggs", "quantity": 150, "unit": "g", "calories": 155, "protein": 13, "carbs": 1.1, "fat": 11 },
-            { "name": "Spinach", "quantity": 50, "unit": "g", "calories": 23, "protein": 2.9, "carbs": 3.6, "fat": 0.4 },
-            { "name": "Whole-Wheat Bread", "quantity": 60, "unit": "g", "calories": 247, "protein": 13, "carbs": 41, "fat": 3.2 }
-          ],
-          "total_calories": 450,
-          "total_protein": 30,
-          "total_carbs": 40,
-          "total_fat": 20
-        },
-        // ... (Morning Snack, Lunch, Afternoon Snack, Dinner, Evening Snack for Monday)
+        { "meal_name": "Breakfast", "ingredients": [{"name": "Greek Yogurt", "quantity": 150, "calories": 150, "protein": 15, "carbs": 8, "fat": 6}], "total_calories": 450, "total_protein": 30, "total_carbs": 50, "total_fat": 15 },
+        { "meal_name": "Morning Snack", "ingredients": [], "total_calories": 200, "total_protein": 10, "total_carbs": 25, "total_fat": 8 },
+        { "meal_name": "Lunch", "ingredients": [], "total_calories": 600, "total_protein": 40, "total_carbs": 60, "total_fat": 20 },
+        { "meal_name": "Afternoon Snack", "ingredients": [], "total_calories": 200, "total_protein": 10, "total_carbs": 25, "total_fat": 8 },
+        { "meal_name": "Dinner", "ingredients": [], "total_calories": 700, "total_protein": 45, "total_carbs": 70, "total_fat": 25 },
+        { "meal_name": "Evening Snack", "ingredients": [], "total_calories": 150, "total_protein": 10, "total_carbs": 15, "total_fat": 5 }
       ]
     },
     {
       "day_of_week": "Tuesday",
       "meals": [
-        // ... (6 meal objects for Tuesday)
+        { "meal_name": "Breakfast", "ingredients": [{"name": "Oatmeal with Berries", "quantity": 50, "calories": 300, "protein": 10, "carbs": 55, "fat": 5}], "total_calories": 450, "total_protein": 30, "total_carbs": 50, "total_fat": 15 },
+        { "meal_name": "Morning Snack", "ingredients": [], "total_calories": 200, "total_protein": 10, "total_carbs": 25, "total_fat": 8 },
+        { "meal_name": "Lunch", "ingredients": [], "total_calories": 600, "total_protein": 40, "total_carbs": 60, "total_fat": 20 },
+        { "meal_name": "Afternoon Snack", "ingredients": [], "total_calories": 200, "total_protein": 10, "total_carbs": 25, "total_fat": 8 },
+        { "meal_name": "Dinner", "ingredients": [], "total_calories": 700, "total_protein": 45, "total_carbs": 70, "total_fat": 25 },
+        { "meal_name": "Evening Snack", "ingredients": [], "total_calories": 150, "total_protein": 10, "total_carbs": 15, "total_fat": 5 }
       ]
-    },
-    // ... (Continue for Wednesday, Thursday, Friday, Saturday, Sunday)
+    }
+    // ... and so on for Wednesday, Thursday, Friday, Saturday, and Sunday.
   ],
   "weekly_summary": {
-    "total_calories": 17500,
-    "total_protein": 1400,
-    "total_carbs": 1575,
-    "total_fat": 622
+    "total_calories": 16100,
+    "total_protein": 1050,
+    "total_carbs": 1750,
+    "total_fat": 567
   }
 }
 \`\`\`
 
-⚠️ **FINAL VALIDATION CHECK:**
-Before responding, double-check your entire output.
-- Does the \`days\` array contain exactly 7 objects?
-- Does each day object contain exactly 6 meal objects?
-- Are all daily and weekly totals calculated correctly based on the ingredients?
-- Is the entire response a single JSON object with no extra text, comments, or markdown?
-
-Respond ONLY with the pure, complete JSON object.
+⚠️ **FINAL COMMAND:** Generate the entire, unabridged 7-day meal plan. Do not truncate the output. The final JSON object must be complete.
 `,
 });
 
@@ -129,6 +105,8 @@ const generatePersonalizedMealPlanFlow = openaiModel.defineFlow(
       const { output } = await prompt(input);
       if (!output) throw new Error('AI did not return output.');
 
+      console.log('AI OUTPUT 🔥🔥', output);
+
       const validationResult =
         GeneratePersonalizedMealPlanOutputSchema.safeParse(output);
       if (!validationResult.success) {
@@ -141,9 +119,9 @@ const generatePersonalizedMealPlanFlow = openaiModel.defineFlow(
         );
       }
 
-      return validationResult.data;
+      return output;
     } catch (error: any) {
-      console.error('Error in generatePersonalizedMealPlanFlow:', error);
+      console.error('Error in suggestMealsForMacrosFlow:', error);
       throw new Error(getAIApiErrorMessage(error));
     }
   }

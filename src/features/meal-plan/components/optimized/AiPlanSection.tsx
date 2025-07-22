@@ -12,6 +12,8 @@ async function AiPlanSection() {
     const profile = await getUserProfile();
     const userPlan = await getUserPlan();
 
+    console.log('AI AI AI 🔥🔥', mealPlan.ai_plan);
+
     return (
       <MealPlanGenerator
         mealPlan={mealPlan}
