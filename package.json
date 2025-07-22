@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "export": "next export"
+    "export": "next export",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@genkit-ai/dev-local-vectorstore": "^1.15.2",
