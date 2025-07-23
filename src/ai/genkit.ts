@@ -14,7 +14,7 @@ import pdf from 'pdf-parse';
 import { chunk } from 'llm-chunk';
 
 // Set working directory to /tmp for serverless environments
-if (process.env.VERCEL || process.env.LAMBDA_TASK_ROOT) {
+if (process.env.VERCEL) {
   process.chdir('/tmp');
 }
 
@@ -82,7 +82,7 @@ class RateLimiter {
   }
 }
 
-const embedRateLimiter = new RateLimiter(50, 60000); // 50 requests per minute with buffer
+const embedRateLimiter = new RateLimiter(50, 60000);
 
 export async function extractTextFromPdf(filePath: string) {
   const pdfFile = path.resolve(filePath);

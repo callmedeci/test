@@ -314,12 +314,17 @@ const generatePersonalizedMealPlanFlow = geminiModel.defineFlow(
         input
       );
 
+      console.log('✅', nutritionalContext);
+      console.log('✅', sources);
+
       // Step 2: Generate meal plan with enhanced nutritional context
       const { output } = await prompt({
         ...input,
         nutritionalContext,
         sources,
       });
+
+      console.log('🗿🗿', output);
 
       if (!output) throw new Error('AI did not return output.');
 
@@ -421,6 +426,9 @@ async function retrieveNutritionalContext(
         // Continue with other queries
       }
     }
+
+    console.log(nutritionalContext.trim());
+    console.log(allSources);
 
     return {
       nutritionalContext: nutritionalContext.trim(),
