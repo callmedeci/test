@@ -13,16 +13,22 @@ import pdf from 'pdf-parse';
 
 import { chunk } from 'llm-chunk';
 
+const vectorStoreConfig = {
+  indexName: 'pdfRAG',
+  embedder: googleAI.embedder('text-embedding-004'),
+  // Add explicit path configuration
+  ...(process.env.VERCEL
+    ? {
+        localPath: path.join('/tmp', '__db_pdfRAG.json'),
+      }
+    : {}),
+};
+
 //open-ai
 export const openaiModel = genkit({
   plugins: [
     openAI({ apiKey: process.env.OPENAI_API_KEY }),
-    devLocalVectorstore([
-      {
-        indexName: 'pdfRAG',
-        embedder: googleAI.embedder('text-embedding-004'),
-      },
-    ]),
+    devLocalVectorstore([vectorStoreConfig]),
   ],
   model: gpt4,
 });
@@ -30,13 +36,7 @@ export const openaiModel = genkit({
 export const geminiModel = genkit({
   plugins: [
     googleAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_KEY }),
-
-    devLocalVectorstore([
-      {
-        indexName: 'pdfRAG',
-        embedder: googleAI.embedder('text-embedding-004'),
-      },
-    ]),
+    devLocalVectorstore([vectorStoreConfig]),
   ],
   model: googleAI.model('gemini-2.0-flash'),
 });
@@ -187,7 +187,7 @@ export const pdfMainFlow = geminiModel.defineFlow(
     });
 
     return {
-      answer: text, // Fixed typo from 'asnwer'
+      answer: text,
       sources: docs.map((doc) => ({
         content: doc.text.substring(0, 200) + '...',
         metadata: doc.metadata,
