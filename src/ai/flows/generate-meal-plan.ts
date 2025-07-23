@@ -15,6 +15,7 @@ import {
 import { getAIApiErrorMessage } from '@/lib/utils';
 import path from 'path';
 import z from 'zod';
+import fs from 'fs';
 
 export async function generatePersonalizedMealPlan(
   input: GeneratePersonalizedMealPlanInput
@@ -158,7 +159,7 @@ Respond ONLY with the pure, complete JSON object.
 const NUTRITION_PDF_PATHS = Array.from(
   { length: 28 },
   (_, i) =>
-    `https://ptswwleyrtvkfejddmzr.supabase.co/storage/v1/object/public/pdf-files//${
+    `https://ptswwleyrtvkfejddmzr.supabase.co/storage/v1/object/public/pdf-files/${
       i + 1
     }.pdf`
 );
@@ -169,21 +170,45 @@ async function initializePDFs() {
   if (isInitialized) return;
 
   console.log('Initializing nutrition PDFs...');
-  for (const filePath of NUTRITION_PDF_PATHS) {
+
+  for (let i = 1; i <= 28; i++) {
+    const url = `https://ptswwleyrtvkfejddmzr.supabase.co/storage/v1/object/public/pdf-files/${i}.pdf`;
+
     try {
+      // Fetch PDF as buffer
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${url}: ${response.status}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      // If indexPdfFlow accepts buffer, pass it directly
+      // Otherwise, write to temp file first
+      const tempPath = path.join('/tmp', `${i}.pdf`);
+      fs.writeFileSync(tempPath, buffer);
+
       await indexPdfFlow({
-        filePath,
+        filePath: tempPath,
         metadata: {
-          fileName: path.basename(filePath),
+          fileName: `${i}.pdf`,
           type: 'nutrition-guide',
           indexed_at: new Date().toISOString(),
+          originalUrl: url,
         },
       });
-      console.log(`✓ Indexed: ${filePath}`);
+
+      // Clean up temp file
+      fs.unlinkSync(tempPath);
+
+      console.log(`✓ Indexed: ${i}.pdf`);
     } catch (error: any) {
-      console.warn(`⚠ Failed to index ${filePath}:`, error.message);
+      console.warn(`⚠ Failed to process ${i}.pdf:`, error.message);
     }
   }
+
   isInitialized = true;
   console.log('PDF initialization complete!');
 }
