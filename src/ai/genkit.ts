@@ -154,7 +154,7 @@ export const pdfMainFlow = openaiModel.defineFlow(
       sources: z.array(
         z.object({
           content: z.string(),
-          metadata: z.record(z.any()),
+          metadata: z.record(z.any()).optional(),
           score: z.number().optional(),
         })
       ),

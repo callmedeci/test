@@ -150,11 +150,9 @@ Respond ONLY with the pure, complete JSON object.
 `,
 });
 
-const projectPath = path.join(process.cwd());
-
 const NUTRITION_PDF_PATHS = Array.from(
   { length: 28 },
-  (_, i) => `${projectPath}/src/public/pdf/${i + 1}.pdf`
+  (_, i) => `./src/public/pdf/${i + 1}.pdf`
 );
 
 let isInitialized = false;
