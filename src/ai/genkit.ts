@@ -44,10 +44,10 @@ export const pdfIndexer = devLocalIndexerRef('pdfRAG');
 export const pdfRetriver = devLocalRetrieverRef('pdfRAG');
 
 export const chunkingConfig = {
-  minLength: 1000,
-  maxLength: 2000,
+  minLength: 600,
+  maxLength: 1500,
   splitter: 'sentence',
-  overlap: 100,
+  overlap: 150,
   delimiters: '',
 } as any;
 

@@ -386,28 +386,43 @@ async function retrieveNutritionalContext(
     // Retrieve relevant context from PDF documents
     let nutritionalContext = '';
     const allSources: any[] = [];
+    const seenContent = new Set<string>(); // Prevent duplicate content
 
-    // Limit to top 3 queries to manage performance and rate limits
-    const limitedQueries = searchQueries.slice(0, 3);
+    // Increase the number of queries processed (was 3, now 5)
+    const limitedQueries = searchQueries.slice(0, 5);
 
     for (const query of limitedQueries) {
       try {
+        // Significantly increase k value to get more chunks per query
         const docs = await geminiModel.retrieve({
           retriever: pdfRetriver,
           query: query,
-          options: { k: 1 }, // Get only top 1 result per query
+          options: {
+            k: 15, // Increased from 1 to 15 chunks per query
+          },
         });
 
         if (docs.length > 0) {
           nutritionalContext += `\n\n**Nutritional Context for ${query}:**\n`;
-          nutritionalContext += docs
+
+          // Filter out duplicate content and add unique chunks
+          const uniqueDocs = docs.filter((doc) => {
+            const contentHash = doc.text.substring(0, 100); // Use first 100 chars as hash
+            if (seenContent.has(contentHash)) return false;
+
+            seenContent.add(contentHash);
+            return true;
+          });
+
+          nutritionalContext += uniqueDocs
             .map((doc, idx) => `[Reference ${idx + 1}]: ${doc.text}`)
             .join('\n\n');
 
           allSources.push(
-            ...docs.map((doc) => ({
-              content: doc.text.substring(0, 200) + '...',
+            ...uniqueDocs.map((doc) => ({
+              content: doc.text.substring(0, 300) + '...', // Show more content preview
               metadata: doc.metadata,
+              score: doc.metadata?.score,
             }))
           );
         }
@@ -418,10 +433,13 @@ async function retrieveNutritionalContext(
         );
         // Continue with other queries
       }
+
+      // Add small delay between queries to respect rate limits
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    console.log(nutritionalContext.trim());
-    console.log(allSources);
+    console.log(`Retrieved ${allSources.length} unique sources`);
+    console.log(`Context length: ${nutritionalContext.length} characters`);
 
     return {
       nutritionalContext: nutritionalContext.trim(),
