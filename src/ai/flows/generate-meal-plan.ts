@@ -1,6 +1,11 @@
 'use server';
 
-import { geminiModel, indexPdfFlow, pdfRetriver } from '@/ai/genkit';
+import {
+  geminiModel,
+  indexPdfFlow,
+  // openaiModel,
+  pdfRetriver,
+} from '@/ai/genkit';
 import {
   GeneratePersonalizedMealPlanInputSchema,
   GeneratePersonalizedMealPlanOutputSchema,
@@ -152,7 +157,10 @@ Respond ONLY with the pure, complete JSON object.
 
 const NUTRITION_PDF_PATHS = Array.from(
   { length: 28 },
-  (_, i) => `./src/public/pdf/${i + 1}.pdf`
+  (_, i) =>
+    `https://ptswwleyrtvkfejddmzr.supabase.co/storage/v1/object/public/pdf-files//${
+      i + 1
+    }.pdf`
 );
 
 let isInitialized = false;

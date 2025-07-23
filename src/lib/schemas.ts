@@ -1000,7 +1000,7 @@ export const AIGeneratedIngredientSchema = z.object({
 export type AIGeneratedIngredient = z.infer<typeof AIGeneratedIngredientSchema>;
 
 export const AIGeneratedMealSchema = z.object({
-  meal_name: z.string(),
+  meal_name: z.string().optional(),
   custom_name: z.string().optional(),
   ingredients: z.array(AIGeneratedIngredientSchema),
   total_calories: z.number().optional(),
