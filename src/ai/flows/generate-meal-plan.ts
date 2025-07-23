@@ -16,6 +16,7 @@ import { getAIApiErrorMessage } from '@/lib/utils';
 import path from 'path';
 import z from 'zod';
 import fs from 'fs';
+import os from 'os';
 
 export async function generatePersonalizedMealPlan(
   input: GeneratePersonalizedMealPlanInput
@@ -156,42 +157,64 @@ Respond ONLY with the pure, complete JSON object.
 `,
 });
 
-const NUTRITION_PDF_PATHS = Array.from(
-  { length: 28 },
-  (_, i) =>
-    `https://ptswwleyrtvkfejddmzr.supabase.co/storage/v1/object/public/pdf-files/${
-      i + 1
-    }.pdf`
-);
-
 let isInitialized = false;
+
+function getTempDir() {
+  if (process.env.VERCEL) {
+    return '/tmp';
+  }
+  return os.tmpdir();
+}
+
+async function downloadPdf(url: string, localPath: string): Promise<void> {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to download ${url}: ${response.status}`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  // Ensure directory exists
+  const dir = path.dirname(localPath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  fs.writeFileSync(localPath, buffer);
+}
 
 async function initializePDFs() {
   if (isInitialized) return;
 
   console.log('Initializing nutrition PDFs...');
 
+  const tempDir = path.join(getTempDir(), 'pdfs');
+
+  if (fs.existsSync(tempDir)) {
+    try {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    } catch (error) {
+      console.warn('Could not clean up temp directory:', error);
+    }
+  }
+
+  try {
+    fs.mkdirSync(tempDir, { recursive: true });
+  } catch (error: any) {
+    throw new Error(`Cannot create temp directory: ${error.message}`);
+  }
+
   for (let i = 1; i <= 28; i++) {
     const url = `https://ptswwleyrtvkfejddmzr.supabase.co/storage/v1/object/public/pdf-files/${i}.pdf`;
+    const localPath = path.join(tempDir, `${i}.pdf`);
 
     try {
-      // Fetch PDF as buffer
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${url}: ${response.status}`);
-      }
-
-      const arrayBuffer = await response.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      // If indexPdfFlow accepts buffer, pass it directly
-      // Otherwise, write to temp file first
-      const tempPath = path.join('/tmp', `${i}.pdf`);
-      fs.writeFileSync(tempPath, buffer);
+      await downloadPdf(url, localPath);
 
       await indexPdfFlow({
-        filePath: tempPath,
+        filePath: localPath,
         metadata: {
           fileName: `${i}.pdf`,
           type: 'nutrition-guide',
@@ -200,8 +223,9 @@ async function initializePDFs() {
         },
       });
 
+      console.log(`✓ Successfully processed: ${i}.pdf`);
       // Clean up temp file
-      fs.unlinkSync(tempPath);
+      fs.unlinkSync(localPath);
 
       console.log(`✓ Indexed: ${i}.pdf`);
     } catch (error: any) {
@@ -335,3 +359,12 @@ async function retrieveNutritionalContext(
     sources: allSources,
   };
 }
+
+process.on('exit', () => {
+  const tempDir = path.join(getTempDir(), 'pdfs');
+  if (fs.existsSync(tempDir)) {
+    try {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    } catch {}
+  }
+});
