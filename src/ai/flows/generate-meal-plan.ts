@@ -1,11 +1,6 @@
 'use server';
 
-import {
-  geminiModel,
-  indexPdfFlow,
-  // openaiModel,
-  pdfRetriver,
-} from '@/ai/genkit';
+import { geminiModel, indexPdfFlow, pdfRetriver } from '@/ai/genkit';
 import {
   GeneratePersonalizedMealPlanInputSchema,
   GeneratePersonalizedMealPlanOutputSchema,
@@ -158,6 +153,7 @@ Respond ONLY with the pure, complete JSON object.
 });
 
 let isInitialized = false;
+let initializationPromise: Promise<void> | null = null;
 
 function getTempDir() {
   if (process.env.VERCEL) {
@@ -188,53 +184,109 @@ async function downloadPdf(url: string, localPath: string): Promise<void> {
 async function initializePDFs() {
   if (isInitialized) return;
 
-  console.log('Initializing nutrition PDFs...');
+  // Prevent multiple simultaneous initializations
+  if (initializationPromise) {
+    return initializationPromise;
+  }
 
-  const tempDir = path.join(getTempDir(), 'pdfs');
+  initializationPromise = (async () => {
+    console.log('Initializing nutrition PDFs...');
 
-  if (fs.existsSync(tempDir)) {
-    try {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    } catch (error) {
-      console.warn('Could not clean up temp directory:', error);
+    const tempDir = path.join(getTempDir(), 'pdfs');
+
+    if (fs.existsSync(tempDir)) {
+      try {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      } catch (error) {
+        console.warn('Could not clean up temp directory:', error);
+      }
     }
-  }
-
-  try {
-    fs.mkdirSync(tempDir, { recursive: true });
-  } catch (error: any) {
-    throw new Error(`Cannot create temp directory: ${error.message}`);
-  }
-
-  for (let i = 1; i <= 28; i++) {
-    const url = `https://ptswwleyrtvkfejddmzr.supabase.co/storage/v1/object/public/pdf-files/${i}.pdf`;
-    const localPath = path.join(tempDir, `${i}.pdf`);
 
     try {
-      await downloadPdf(url, localPath);
-
-      await indexPdfFlow({
-        filePath: localPath,
-        metadata: {
-          fileName: `${i}.pdf`,
-          type: 'nutrition-guide',
-          indexed_at: new Date().toISOString(),
-          originalUrl: url,
-        },
-      });
-
-      console.log(`✓ Successfully processed: ${i}.pdf`);
-      // Clean up temp file
-      fs.unlinkSync(localPath);
-
-      console.log(`✓ Indexed: ${i}.pdf`);
+      fs.mkdirSync(tempDir, { recursive: true });
     } catch (error: any) {
-      console.warn(`⚠ Failed to process ${i}.pdf:`, error.message);
+      throw new Error(`Cannot create temp directory: ${error.message}`);
     }
-  }
 
-  isInitialized = true;
-  console.log('PDF initialization complete!');
+    // Process only a subset of PDFs to avoid rate limiting
+    const pdfBatches = [
+      [1, 2, 3, 4, 5],
+      [6, 7, 8, 9, 10],
+      [11, 12, 13, 14, 15],
+      [16, 17, 18, 19, 20],
+      [21, 22, 23, 24, 25],
+      [26, 27, 28],
+    ];
+
+    for (const batch of pdfBatches) {
+      console.log(`Processing batch: ${batch.join(', ')}`);
+
+      for (const i of batch) {
+        const url = `https://ptswwleyrtvkfejddmzr.supabase.co/storage/v1/object/public/pdf-files/${i}.pdf`;
+        const localPath = path.join(tempDir, `${i}.pdf`);
+
+        try {
+          await downloadPdf(url, localPath);
+
+          await indexPdfFlow({
+            filePath: localPath,
+            metadata: {
+              fileName: `${i}.pdf`,
+              type: 'nutrition-guide',
+              indexed_at: new Date().toISOString(),
+              originalUrl: url,
+            },
+          });
+
+          console.log(`✓ Successfully processed: ${i}.pdf`);
+
+          // Clean up temp file immediately
+          try {
+            fs.unlinkSync(localPath);
+          } catch (unlinkError) {
+            console.warn(
+              `Could not delete temp file ${localPath}:`,
+              unlinkError
+            );
+          }
+        } catch (error: any) {
+          console.warn(`⚠ Failed to process ${i}.pdf:`, error.message);
+
+          // Clean up temp file on error too
+          try {
+            if (fs.existsSync(localPath)) {
+              fs.unlinkSync(localPath);
+            }
+          } catch (unlinkError) {
+            console.warn(
+              `Could not delete temp file ${localPath}:`,
+              unlinkError
+            );
+          }
+
+          // If it's a rate limit error, break and wait
+          if (
+            error.message.includes('429') ||
+            error.message.includes('Too Many Requests')
+          ) {
+            console.log('Rate limit hit, stopping batch processing...');
+            break;
+          }
+        }
+      }
+
+      // Wait between batches to avoid rate limiting
+      if (batch !== pdfBatches[pdfBatches.length - 1]) {
+        console.log('Waiting 2 minutes before next batch...');
+        await new Promise((resolve) => setTimeout(resolve, 120000)); // 2 minutes
+      }
+    }
+
+    isInitialized = true;
+    console.log('PDF initialization complete!');
+  })();
+
+  return initializationPromise;
 }
 
 const generatePersonalizedMealPlanFlow = geminiModel.defineFlow(
@@ -247,8 +299,15 @@ const generatePersonalizedMealPlanFlow = geminiModel.defineFlow(
     input: GeneratePersonalizedMealPlanInput
   ): Promise<GeneratePersonalizedMealPlanOutput> => {
     try {
-      // Ensure PDFs are indexed before proceeding
-      await initializePDFs();
+      // Try to initialize PDFs, but don't fail if it doesn't work
+      try {
+        await initializePDFs();
+      } catch (initError: any) {
+        console.warn(
+          'PDF initialization failed, continuing without RAG context:',
+          initError.message
+        );
+      }
 
       // Step 1: Retrieve relevant nutritional context based on user profile
       const { nutritionalContext, sources } = await retrieveNutritionalContext(
@@ -291,73 +350,89 @@ async function retrieveNutritionalContext(
   nutritionalContext: string;
   sources: any[];
 }> {
-  const searchQueries: string[] = [];
+  try {
+    const searchQueries: string[] = [];
 
-  // Build search queries based on user profile data
-  searchQueries.push(`${input.primary_diet_goal} nutrition requirements`);
-  searchQueries.push(`${input.preferred_diet} diet guidelines`);
+    // Build search queries based on user profile data
+    searchQueries.push(`${input.primary_diet_goal} nutrition requirements`);
+    searchQueries.push(`${input.preferred_diet} diet guidelines`);
 
-  if (input.physical_activity_level) {
-    searchQueries.push(`${input.physical_activity_level} activity nutrition`);
-  }
-
-  // Add medical condition specific searches
-  if (input.medical_conditions && input.medical_conditions.length > 0) {
-    input.medical_conditions.forEach((condition) => {
-      searchQueries.push(`${condition} dietary guidelines nutrition`);
-    });
-  }
-
-  // Add micronutrient specific searches
-  if (
-    input.preferred_micronutrients &&
-    input.preferred_micronutrients.length > 0
-  ) {
-    input.preferred_micronutrients.forEach((nutrient) => {
-      searchQueries.push(`${nutrient} food sources requirements`);
-    });
-  }
-
-  // Add cuisine-specific nutrition info
-  if (input.preferred_cuisines && input.preferred_cuisines.length > 0) {
-    input.preferred_cuisines.slice(0, 2).forEach((cuisine) => {
-      searchQueries.push(`${cuisine} cuisine nutritional profile`);
-    });
-  }
-
-  // Retrieve relevant context from PDF documents
-  let nutritionalContext = '';
-  const allSources: any[] = [];
-
-  // Limit to top 5 queries to manage performance
-  const limitedQueries = searchQueries.slice(0, 5);
-
-  for (const query of limitedQueries) {
-    const docs = await geminiModel.retrieve({
-      retriever: pdfRetriver,
-      query: query,
-      options: { k: 2 }, // Get top 2 results per query
-    });
-
-    if (docs.length > 0) {
-      nutritionalContext += `\n\n**Nutritional Context for ${query}:**\n`;
-      nutritionalContext += docs
-        .map((doc, idx) => `[Reference ${idx + 1}]: ${doc.text}`)
-        .join('\n\n');
-
-      allSources.push(
-        ...docs.map((doc) => ({
-          content: doc.text.substring(0, 200) + '...',
-          metadata: doc.metadata,
-        }))
-      );
+    if (input.physical_activity_level) {
+      searchQueries.push(`${input.physical_activity_level} activity nutrition`);
     }
-  }
 
-  return {
-    nutritionalContext: nutritionalContext.trim(),
-    sources: allSources,
-  };
+    // Add medical condition specific searches
+    if (input.medical_conditions && input.medical_conditions.length > 0) {
+      input.medical_conditions.forEach((condition) => {
+        searchQueries.push(`${condition} dietary guidelines nutrition`);
+      });
+    }
+
+    // Add micronutrient specific searches
+    if (
+      input.preferred_micronutrients &&
+      input.preferred_micronutrients.length > 0
+    ) {
+      input.preferred_micronutrients.forEach((nutrient) => {
+        searchQueries.push(`${nutrient} food sources requirements`);
+      });
+    }
+
+    // Add cuisine-specific nutrition info
+    if (input.preferred_cuisines && input.preferred_cuisines.length > 0) {
+      input.preferred_cuisines.slice(0, 2).forEach((cuisine) => {
+        searchQueries.push(`${cuisine} cuisine nutritional profile`);
+      });
+    }
+
+    // Retrieve relevant context from PDF documents
+    let nutritionalContext = '';
+    const allSources: any[] = [];
+
+    // Limit to top 3 queries to manage performance and rate limits
+    const limitedQueries = searchQueries.slice(0, 3);
+
+    for (const query of limitedQueries) {
+      try {
+        const docs = await geminiModel.retrieve({
+          retriever: pdfRetriver,
+          query: query,
+          options: { k: 1 }, // Get only top 1 result per query
+        });
+
+        if (docs.length > 0) {
+          nutritionalContext += `\n\n**Nutritional Context for ${query}:**\n`;
+          nutritionalContext += docs
+            .map((doc, idx) => `[Reference ${idx + 1}]: ${doc.text}`)
+            .join('\n\n');
+
+          allSources.push(
+            ...docs.map((doc) => ({
+              content: doc.text.substring(0, 200) + '...',
+              metadata: doc.metadata,
+            }))
+          );
+        }
+      } catch (retrievalError: any) {
+        console.warn(
+          `Failed to retrieve context for query "${query}":`,
+          retrievalError.message
+        );
+        // Continue with other queries
+      }
+    }
+
+    return {
+      nutritionalContext: nutritionalContext.trim(),
+      sources: allSources,
+    };
+  } catch (error: any) {
+    console.warn('Failed to retrieve nutritional context:', error.message);
+    return {
+      nutritionalContext: '',
+      sources: [],
+    };
+  }
 }
 
 process.on('exit', () => {

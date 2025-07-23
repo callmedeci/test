@@ -13,15 +13,14 @@ import pdf from 'pdf-parse';
 
 import { chunk } from 'llm-chunk';
 
+// Set working directory to /tmp for serverless environments
+if (process.env.VERCEL || process.env.LAMBDA_TASK_ROOT) {
+  process.chdir('/tmp');
+}
+
 const vectorStoreConfig = {
   indexName: 'pdfRAG',
   embedder: googleAI.embedder('text-embedding-004'),
-  // Add explicit path configuration
-  ...(process.env.VERCEL
-    ? {
-        localPath: path.join('/tmp', '__db_pdfRAG.json'),
-      }
-    : {}),
 };
 
 //open-ai
@@ -52,6 +51,39 @@ export const chunkingConfig = {
   delimiters: '',
 } as any;
 
+// Rate limiting utility
+class RateLimiter {
+  private requests: number[] = [];
+  private readonly maxRequests: number;
+  private readonly timeWindow: number;
+
+  constructor(maxRequests: number = 50, timeWindowMs: number = 60000) {
+    this.maxRequests = maxRequests;
+    this.timeWindow = timeWindowMs;
+  }
+
+  async waitIfNeeded(): Promise<void> {
+    const now = Date.now();
+
+    // Remove old requests outside the time window
+    this.requests = this.requests.filter(
+      (time) => now - time < this.timeWindow
+    );
+
+    if (this.requests.length >= this.maxRequests) {
+      const oldestRequest = this.requests[0];
+      const waitTime = this.timeWindow - (now - oldestRequest) + 1000; // Add 1s buffer
+      console.log(`Rate limit reached, waiting ${waitTime}ms...`);
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+      return this.waitIfNeeded(); // Recursive call to check again
+    }
+
+    this.requests.push(now);
+  }
+}
+
+const embedRateLimiter = new RateLimiter(50, 60000); // 50 requests per minute with buffer
+
 export async function extractTextFromPdf(filePath: string) {
   const pdfFile = path.resolve(filePath);
   const dataBuffer = await readFile(pdfFile);
@@ -59,7 +91,7 @@ export async function extractTextFromPdf(filePath: string) {
   return data.text;
 }
 
-// Flow to index a single PDF file
+// Flow to index a single PDF file with rate limiting
 export const indexPdfFlow = geminiModel.defineFlow(
   {
     name: 'indexPdf',
@@ -73,32 +105,44 @@ export const indexPdfFlow = geminiModel.defineFlow(
     }),
   },
   async ({ filePath, metadata = {} }) => {
-    const pdfText = await geminiModel.run('extract-text', () =>
-      extractTextFromPdf(filePath)
-    );
+    try {
+      const pdfText = await geminiModel.run('extract-text', () =>
+        extractTextFromPdf(filePath)
+      );
 
-    const chunks = await geminiModel.run('chunk-text', async () =>
-      chunk(pdfText, chunkingConfig)
-    );
+      const chunks = await geminiModel.run('chunk-text', async () =>
+        chunk(pdfText, chunkingConfig)
+      );
 
-    const documents = chunks.map((text, index) => {
-      return Document.fromText(text, {
-        filePath,
-        chunkIndex: index,
-        totalChunk: chunks.length,
-        ...metadata,
+      const documents = chunks.map((text, index) => {
+        return Document.fromText(text, {
+          filePath,
+          chunkIndex: index,
+          totalChunk: chunks.length,
+          ...metadata,
+        });
       });
-    });
 
-    await geminiModel.index({
-      indexer: pdfIndexer,
-      documents,
-    });
+      // Rate limit before indexing (which involves embedding)
+      await embedRateLimiter.waitIfNeeded();
 
-    return {
-      documentsIndexed: documents.length,
-      chunks: chunks.length,
-    };
+      await geminiModel.index({
+        indexer: pdfIndexer,
+        documents,
+      });
+
+      return {
+        documentsIndexed: documents.length,
+        chunks: chunks.length,
+      };
+    } catch (error: any) {
+      if (error.status === 429) {
+        console.log('Rate limited, waiting 2 minutes before retry...');
+        await new Promise((resolve) => setTimeout(resolve, 120000)); // Wait 2 minutes
+        return indexPdfFlow({ filePath, metadata }); // Retry
+      }
+      throw error;
+    }
   }
 );
 
@@ -124,14 +168,21 @@ export const indexPdfDirectoryFlow = geminiModel.defineFlow(
 
     // Process files sequentially to avoid overwhelming the system
     for (const filePath of pdfFiles) {
-      const result = await indexPdfFlow({
-        filePath,
-        metadata: {
-          fileName: path.basename(filePath),
-          directory: path.dirname(filePath),
-        },
-      });
-      totalDocuments += result.documentsIndexed;
+      try {
+        const result = await indexPdfFlow({
+          filePath,
+          metadata: {
+            fileName: path.basename(filePath),
+            directory: path.dirname(filePath),
+          },
+        });
+        totalDocuments += result.documentsIndexed;
+
+        // Add delay between files to prevent rate limiting
+        await new Promise((resolve) => setTimeout(resolve, 2000)); // 2 second delay
+      } catch (error: any) {
+        console.error(`Failed to process ${filePath}:`, error.message);
+      }
     }
 
     return {
@@ -161,6 +212,9 @@ export const pdfMainFlow = geminiModel.defineFlow(
     }),
   },
   async ({ question, maxResults, temperature }) => {
+    // Rate limit before retrieval (which involves embedding)
+    await embedRateLimiter.waitIfNeeded();
+
     const docs = await geminiModel.retrieve({
       retriever: pdfRetriver,
       query: question,
