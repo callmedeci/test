@@ -209,13 +209,17 @@ async function initializePDFs() {
     }
 
     // Process only a subset of PDFs to avoid rate limiting
-    const pdfBatches = [[1, 2, 3, 4, 5, 6]];
+    const pdfBatches = [
+      [7, 8, 9, 10, 11],
+      [12, 13, 14, 15, 16],
+      [17, 18, 19],
+    ];
 
     for (const batch of pdfBatches) {
       console.log(`Processing batch: ${batch.join(', ')}`);
 
       for (const i of batch) {
-        const url = `https://ptswwleyrtvkfejddmzr.supabase.co/storage/v1/object/public/pdf-files/${i}.pdf`;
+        const url = `https://ptswwleyrtvkfejddmzr.supabase.co/storage/v1/object/public/pdf-files/temp/${i}.pdf`;
         const localPath = path.join(tempDir, `${i}.pdf`);
 
         try {
