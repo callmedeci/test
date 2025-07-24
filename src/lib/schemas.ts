@@ -731,6 +731,27 @@ export const OnboardingFormSchema = z.object({
 export type OnboardingFormValues = z.infer<typeof OnboardingFormSchema>;
 export type { CustomCalculatedTargets };
 
+// Coach Profile Schema
+export const CoachProfileSchema = z.object({
+  user_id: z.string(),
+  first_name: z.string(),
+  last_name: z.string(),
+  age: z.number(),
+  description: z.string(),
+  certification: z.string(),
+  years_experience: z.number(),
+  email_address: z.string().optional(),
+  profile_picture: z.string().nullable().optional(),
+  location: z.string().optional(),
+  joined_date: z.string().optional(),
+  specializations: z.array(z.string()).optional(),
+  total_clients: z.number().optional(),
+  rating: z.number().optional(),
+  total_reviews: z.number().optional(),
+  languages: z.array(z.string()).optional(),
+});
+export type CoachProfile = z.infer<typeof CoachProfileSchema>;
+
 export interface UserPlanType {
   //These fields are not used in the current schema but are included for reference
   // id: number;
