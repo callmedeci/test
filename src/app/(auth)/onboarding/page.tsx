@@ -36,6 +36,7 @@ import {
   genders,
   onboardingStepsData,
   smartPlannerDietGoals,
+  userRoles,
 } from '@/lib/constants';
 import { calculateEstimatedDailyTargets } from '@/lib/nutrition-calculator';
 import {
@@ -47,7 +48,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, CheckCircle, Leaf } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { FieldPath, useForm } from 'react-hook-form';
+import { type FieldPath, useForm } from 'react-hook-form';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -75,8 +76,17 @@ export default function OnboardingPage() {
       custom_total_calories: undefined,
       custom_protein_per_kg: undefined,
       remaining_calories_carbs_percentage: 50,
+      user_role: undefined,
     },
   });
+
+  // remaining_calories_carbs_percentage
+  const watchedCustomInputs = form.watch([
+    'custom_total_calories',
+    'custom_protein_per_kg',
+    'remaining_calories_carbs_percentage',
+    'current_weight_kg',
+  ]);
 
   const activeStepData = onboardingStepsData.find(
     (s) => s.stepNumber === currentStep
@@ -149,20 +159,163 @@ export default function OnboardingPage() {
     }
   }, [form]);
 
-  // Update calculated targets when we reach step 3 (after basic info collected)
-  useEffect(() => {
-    if (currentStep === 3) {
+  const handleNext = async () => {
+    if (
+      activeStepData?.fieldsToValidate &&
+      activeStepData.fieldsToValidate.length > 0
+    ) {
+      const result = await form.trigger(
+        activeStepData.fieldsToValidate as FieldPath<OnboardingFormValues>[]
+      );
+
+      if (!result) {
+        let firstErrorField: FieldPath<OnboardingFormValues> | undefined =
+          undefined;
+        for (const field of activeStepData.fieldsToValidate) {
+          if (form.formState.errors[field as keyof OnboardingFormValues]) {
+            firstErrorField = field as FieldPath<OnboardingFormValues>;
+            break;
+          }
+        }
+        const errorMessage = firstErrorField
+          ? form.formState.errors[firstErrorField as keyof OnboardingFormValues]
+              ?.message
+          : 'Please correct the errors.';
+        toast({
+          title: `Input Error: ${activeStepData.title}`,
+          description:
+            typeof errorMessage === 'string'
+              ? errorMessage
+              : 'Please fill all required fields correctly.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
+    // Calculate targets after completing step 2 (basic info)
+    if (currentStep === 2) {
       updateCalculatedTargetsForStep3();
     }
-  }, [currentStep, updateCalculatedTargetsForStep3]);
 
-  // remaining_calories_carbs_percentage
-  const watchedCustomInputs = form.watch([
-    'custom_total_calories',
-    'custom_protein_per_kg',
-    'remaining_calories_carbs_percentage',
-    'current_weight_kg',
-  ]);
+    // Move to next step if not at the end
+    if (currentStep < 5) {
+      // Changed from onboardingStepsData.length to 5
+      setCurrentStep((prev) => prev + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 1) setCurrentStep((prev) => prev - 1);
+  };
+
+  const handleSkip = () => {
+    if (activeStepData?.isOptional && currentStep < 5)
+      setCurrentStep((prev) => prev + 1);
+  };
+
+  const processAndSaveData = async (data: OnboardingFormValues) => {
+    const processedData: Record<string, any> = { ...data };
+
+    const arrayLikeFields: (keyof OnboardingFormValues)[] = [
+      'allergies',
+      'preferred_cuisines',
+      'dispreferrred_cuisines',
+      'preferred_ingredients',
+      'dispreferrred_ingredients',
+      'preferred_micronutrients',
+      'medical_conditions',
+      'medications',
+    ];
+
+    arrayLikeFields.forEach((field) => {
+      if (
+        typeof processedData[field] === 'string' &&
+        (processedData[field] as string).trim() !== ''
+      ) {
+        processedData[field] = (processedData[field] as string)
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => s);
+      } else if (
+        typeof processedData[field] === 'string' &&
+        (processedData[field] as string).trim() === ''
+      ) {
+        processedData[field] = [];
+      } else if (
+        processedData[field] === undefined ||
+        processedData[field] === null
+      ) {
+        processedData[field] = [];
+      }
+    });
+
+    const profileToEdit = {
+      is_onboarding_complete: true,
+      user_role: processedData.user_role,
+      age: processedData.age,
+      biological_sex: processedData.biological_sex,
+      height_cm: processedData.height_cm,
+      current_weight_kg: processedData.current_weight_kg,
+      target_weight_1month_kg: processedData.target_weight_1month_kg,
+      long_term_goal_weight_kg: processedData.long_term_goal_weight_kg,
+      physical_activity_level: processedData.physical_activity_level,
+      primary_diet_goal: processedData.primary_diet_goal,
+    };
+
+    const planToEdit = {
+      bmr_kcal: calculatedTargets?.bmr_kcal ?? null,
+      maintenance_calories_tdee:
+        calculatedTargets?.maintenance_calories_tdee ?? null,
+      target_daily_calories: calculatedTargets?.target_daily_calories ?? null,
+      target_protein_g: calculatedTargets?.target_protein_g ?? null,
+      target_protein_percentage:
+        calculatedTargets?.target_protein_percentage ?? null,
+      target_carbs_g: calculatedTargets?.target_carbs_g ?? null,
+      target_carbs_percentage:
+        calculatedTargets?.target_carbs_percentage ?? null,
+      target_fat_g: calculatedTargets?.target_fat_g ?? null,
+      target_fat_percentage: calculatedTargets?.target_fat_percentage ?? null,
+
+      custom_total_calories: processedData.custom_total_calories ?? null,
+      custom_protein_per_kg: processedData.custom_protein_per_kg ?? null,
+      remaining_calories_carbs_percentage:
+        processedData.remaining_calories_carbs_percentage ?? null,
+
+      custom_total_calories_final:
+        customCalculatedTargets?.custom_total_calories_final ?? null,
+      custom_protein_g: customCalculatedTargets?.custom_protein_g ?? null,
+      custom_protein_percentage:
+        customCalculatedTargets?.custom_protein_percentage ?? null,
+      custom_carbs_g: customCalculatedTargets?.custom_carbs_g ?? null,
+      custom_carbs_percentage:
+        customCalculatedTargets?.custom_carbs_percentage ?? null,
+      custom_fat_g: customCalculatedTargets?.custom_fat_g ?? null,
+      custom_fat_percentage:
+        customCalculatedTargets?.custom_fat_percentage ?? null,
+    };
+
+    try {
+      await editPlan(planToEdit);
+      await editProfile(profileToEdit);
+
+      toast({
+        title: 'Onboarding Complete!',
+        description: 'Your profile has been saved. Welcome to NutriPlan!',
+      });
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast({
+        title: 'Error Saving Profile',
+        description: error,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (currentStep === 3) updateCalculatedTargetsForStep3();
+  }, [currentStep, updateCalculatedTargetsForStep3]);
 
   // Handle custom calculations for step 4 (custom targets step)
   useEffect(() => {
@@ -307,159 +460,6 @@ export default function OnboardingPage() {
     customCalculatedTargets,
   ]);
 
-  const handleNext = async () => {
-    if (
-      activeStepData?.fieldsToValidate &&
-      activeStepData.fieldsToValidate.length > 0
-    ) {
-      const result = await form.trigger(
-        activeStepData.fieldsToValidate as FieldPath<OnboardingFormValues>[]
-      );
-
-      if (!result) {
-        let firstErrorField: FieldPath<OnboardingFormValues> | undefined =
-          undefined;
-        for (const field of activeStepData.fieldsToValidate) {
-          if (form.formState.errors[field as keyof OnboardingFormValues]) {
-            firstErrorField = field as FieldPath<OnboardingFormValues>;
-            break;
-          }
-        }
-        const errorMessage = firstErrorField
-          ? form.formState.errors[firstErrorField as keyof OnboardingFormValues]
-              ?.message
-          : 'Please correct the errors.';
-        toast({
-          title: `Input Error: ${activeStepData.title}`,
-          description:
-            typeof errorMessage === 'string'
-              ? errorMessage
-              : 'Please fill all required fields correctly.',
-          variant: 'destructive',
-        });
-        return;
-      }
-    }
-
-    // Calculate targets after completing step 2 (basic info)
-    if (currentStep === 2) {
-      updateCalculatedTargetsForStep3();
-    }
-
-    // Move to next step if not at the end
-    if (currentStep < 5) {
-      // Changed from onboardingStepsData.length to 5
-      setCurrentStep((prev) => prev + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentStep > 1) setCurrentStep((prev) => prev - 1);
-  };
-
-  const handleSkip = () => {
-    if (activeStepData?.isOptional && currentStep < 5)
-      setCurrentStep((prev) => prev + 1);
-  };
-
-  const processAndSaveData = async (data: OnboardingFormValues) => {
-    const processedData: Record<string, any> = { ...data };
-
-    const arrayLikeFields: (keyof OnboardingFormValues)[] = [
-      'allergies',
-      'preferred_cuisines',
-      'dispreferrred_cuisines',
-      'preferred_ingredients',
-      'dispreferrred_ingredients',
-      'preferred_micronutrients',
-      'medical_conditions',
-      'medications',
-    ];
-
-    arrayLikeFields.forEach((field) => {
-      if (
-        typeof processedData[field] === 'string' &&
-        (processedData[field] as string).trim() !== ''
-      ) {
-        processedData[field] = (processedData[field] as string)
-          .split(',')
-          .map((s) => s.trim())
-          .filter((s) => s);
-      } else if (
-        typeof processedData[field] === 'string' &&
-        (processedData[field] as string).trim() === ''
-      ) {
-        processedData[field] = [];
-      } else if (
-        processedData[field] === undefined ||
-        processedData[field] === null
-      ) {
-        processedData[field] = [];
-      }
-    });
-
-    const profileToEdit = {
-      is_onboarding_complete: true,
-      age: processedData.age,
-      biological_sex: processedData.biological_sex,
-      height_cm: processedData.height_cm,
-      current_weight_kg: processedData.current_weight_kg,
-      target_weight_1month_kg: processedData.target_weight_1month_kg,
-      long_term_goal_weight_kg: processedData.long_term_goal_weight_kg,
-      physical_activity_level: processedData.physical_activity_level,
-      primary_diet_goal: processedData.primary_diet_goal,
-    };
-
-    const planToEdit = {
-      bmr_kcal: calculatedTargets?.bmr_kcal ?? null,
-      maintenance_calories_tdee:
-        calculatedTargets?.maintenance_calories_tdee ?? null,
-      target_daily_calories: calculatedTargets?.target_daily_calories ?? null,
-      target_protein_g: calculatedTargets?.target_protein_g ?? null,
-      target_protein_percentage:
-        calculatedTargets?.target_protein_percentage ?? null,
-      target_carbs_g: calculatedTargets?.target_carbs_g ?? null,
-      target_carbs_percentage:
-        calculatedTargets?.target_carbs_percentage ?? null,
-      target_fat_g: calculatedTargets?.target_fat_g ?? null,
-      target_fat_percentage: calculatedTargets?.target_fat_percentage ?? null,
-
-      custom_total_calories: processedData.custom_total_calories ?? null,
-      custom_protein_per_kg: processedData.custom_protein_per_kg ?? null,
-      remaining_calories_carbs_percentage:
-        processedData.remaining_calories_carbs_percentage ?? null,
-
-      custom_total_calories_final:
-        customCalculatedTargets?.custom_total_calories_final ?? null,
-      custom_protein_g: customCalculatedTargets?.custom_protein_g ?? null,
-      custom_protein_percentage:
-        customCalculatedTargets?.custom_protein_percentage ?? null,
-      custom_carbs_g: customCalculatedTargets?.custom_carbs_g ?? null,
-      custom_carbs_percentage:
-        customCalculatedTargets?.custom_carbs_percentage ?? null,
-      custom_fat_g: customCalculatedTargets?.custom_fat_g ?? null,
-      custom_fat_percentage:
-        customCalculatedTargets?.custom_fat_percentage ?? null,
-    };
-
-    try {
-      await editPlan(planToEdit);
-      await editProfile(profileToEdit);
-
-      toast({
-        title: 'Onboarding Complete!',
-        description: 'Your profile has been saved. Welcome to NutriPlan!',
-      });
-      router.push('/dashboard');
-    } catch (error: any) {
-      toast({
-        title: 'Error Saving Profile',
-        description: error,
-        variant: 'destructive',
-      });
-    }
-  };
-
   if (!activeStepData) return <LoadingScreen loadingLabel='Loading step...' />;
 
   const progressValue = (currentStep / onboardingStepsData.length) * 100;
@@ -496,8 +496,28 @@ export default function OnboardingPage() {
               className='space-y-8'
             >
               {currentStep === 1 && (
-                <div className='text-center p-4'>
-                  {/* Welcome/Introduction content for step 1 */}
+                <div className='text-center p-4 space-y-6'>
+                  <div className='space-y-4'>
+                    <h3 className='text-xl font-semibold text-primary'>
+                      Welcome to Your Nutrition Journey!
+                    </h3>
+                    <p className='text-muted-foreground'>
+                      Let&apos;s personalize your experience. We&apos;ll ask a
+                      few questions about your health and preferences to
+                      generate your ideal meal plan. It only takes 3–5 minutes.
+                    </p>
+                  </div>
+
+                  <div className='max-w-md mx-auto'>
+                    <SelectField
+                      name='user_role'
+                      label='I am joining as a...'
+                      placeholder='Select your role'
+                      options={userRoles}
+                      description='This helps us customize your experience and available features.'
+                      control={form.control}
+                    />
+                  </div>
                 </div>
               )}
 

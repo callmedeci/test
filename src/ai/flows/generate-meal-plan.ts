@@ -1,17 +1,13 @@
 'use server';
 
-import { geminiModel, indexPdfFlow, pdfRetriver } from '@/ai/genkit';
+import { openaiModel } from '@/ai/genkit';
 import {
   GeneratePersonalizedMealPlanInputSchema,
   GeneratePersonalizedMealPlanOutputSchema,
-  type GeneratePersonalizedMealPlanInput,
   type GeneratePersonalizedMealPlanOutput,
+  type GeneratePersonalizedMealPlanInput,
 } from '@/lib/schemas';
 import { getAIApiErrorMessage } from '@/lib/utils';
-import path from 'path';
-import z from 'zod';
-import fs from 'fs';
-import os from 'os';
 
 export async function generatePersonalizedMealPlan(
   input: GeneratePersonalizedMealPlanInput
@@ -19,64 +15,37 @@ export async function generatePersonalizedMealPlan(
   return generatePersonalizedMealPlanFlow(input);
 }
 
-// Enhanced prompt that includes RAG context
-export const prompt = geminiModel.definePrompt({
+const prompt = openaiModel.definePrompt({
   name: 'generatePersonalizedMealPlanPrompt',
-  input: {
-    schema: GeneratePersonalizedMealPlanInputSchema.extend({
-      nutritionalContext: z.string().optional(),
-      sources: z
-        .array(
-          z.object({
-            content: z.string(),
-            metadata: z.record(z.any()),
-          })
-        )
-        .optional(),
-    }),
-  },
+  input: { schema: GeneratePersonalizedMealPlanInputSchema },
   output: { schema: GeneratePersonalizedMealPlanOutputSchema },
-  prompt: `You are NutriMind, an elite AI nutritionist responsible for generating a complete and highly personalized 7-day meal plan. Your output must be a single, perfect JSON object, as it will be directly consumed by an application.
 
-{{#if nutritionalContext}}
-**[Additional Nutritional Knowledge Base]**
-Use the following evidence-based nutritional information to enhance your meal planning decisions:
+  prompt: `You are NutriMind, an elite AI nutritionist and meal planning specialist with 15+ years of experience in personalized nutrition. You create coach-quality, professional meal plans that satisfy both fitness coaches and their clients.
 
-{{nutritionalContext}}
+**YOUR MISSION:** Generate a complete, precise 7-day meal plan with 6 meals per day that coaches can confidently provide to their clients. This plan must be nutritionally accurate, delicious, and perfectly aligned with the user's goals.
 
-{{#if sources}}
-**Sources Referenced:**
-{{#each sources}}
-- {{this.metadata.fileName}} (Chunk {{this.metadata.chunkIndex}})
-{{/each}}
-{{/if}}
-
-This information should guide your ingredient selection, portion sizing, and nutritional balance recommendations.
-{{/if}}
-
-**[Step 1] Analyze User Context**
-Meticulously analyze the following user data. This is the foundation for the meal plan.
-
-**User Data & Nutritional Goals (JSON Input):**
+**CONTEXT & USER DATA:**
 \`\`\`json
 {
-  // User Profile & Preferences
+  // Demographics & Physical Stats
   "age": {{age}},
   "biological_sex": "{{biological_sex}}",
   "height_cm": {{height_cm}},
   "current_weight_kg": {{current_weight_kg}},
   "primary_diet_goal": "{{primary_diet_goal}}",
   "physical_activity_level": "{{physical_activity_level}}",
+  
+  // Diet Preferences & Restrictions (STRICTLY ENFORCE)
   "preferred_diet": "{{preferred_diet}}",
-  "allergies": [{{#if allergies.length}}"{{#each allergies}}{{this}}", "{{/each}}"{{/if}}],
-  "preferred_cuisines": [{{#if preferred_cuisines.length}}"{{#each preferred_cuisines}}{{this}}", "{{/each}}"{{/if}}],
-  "dispreferrred_cuisines": [{{#if dispreferrred_cuisines.length}}"{{#each dispreferrred_cuisines}}{{this}}", "{{/each}}"{{/if}}],
-  "preferred_ingredients": [{{#if preferred_ingredients.length}}"{{#each preferred_ingredients}}{{this}}", "{{/each}}"{{/if}}],
-  "dispreferrred_ingredients": [{{#if dispreferrred_ingredients.length}}"{{#each dispreferrred_ingredients}}{{this}}", "{{/each}}"{{/if}}],
-  "medical_conditions": [{{#if medical_conditions.length}}"{{#each medical_conditions}}{{this}}", "{{/each}}"{{/if}}],
-  "preferred_micronutrients": [{{#if preferred_micronutrients.length}}"{{#each preferred_micronutrients}}{{this}}", "{{/each}}"{{/if}}],
+  "allergies": [{{#if allergies.length}}"{{#each allergies}}{{this}}"{{#unless @last}}, {{/unless}}{{/each}}"{{/if}}],
+  "preferred_cuisines": [{{#if preferred_cuisines.length}}"{{#each preferred_cuisines}}{{this}}"{{#unless @last}}, {{/unless}}{{/each}}"{{/if}}],
+  "dispreferrred_cuisines": [{{#if dispreferrred_cuisines.length}}"{{#each dispreferrred_cuisines}}{{this}}"{{#unless @last}}, {{/unless}}{{/each}}"{{/if}}],
+  "preferred_ingredients": [{{#if preferred_ingredients.length}}"{{#each preferred_ingredients}}{{this}}"{{#unless @last}}, {{/unless}}{{/each}}"{{/if}}],
+  "dispreferrred_ingredients": [{{#if dispreferrred_ingredients.length}}"{{#each dispreferrred_ingredients}}{{this}}"{{#unless @last}}, {{/unless}}{{/each}}"{{/if}}],
+  "medical_conditions": [{{#if medical_conditions.length}}"{{#each medical_conditions}}{{this}}"{{#unless @last}}, {{/unless}}{{/each}}"{{/if}}],
+  "preferred_micronutrients": [{{#if preferred_micronutrients.length}}"{{#each preferred_micronutrients}}{{this}}"{{#unless @last}}, {{/unless}}{{/each}}"{{/if}}],
 
-  // Daily Nutritional Targets (Use these exact values for each day)
+  // EXACT DAILY NUTRITIONAL TARGETS (Hit these targets precisely)
   "target_daily_calories": {{meal_data.target_daily_calories}},
   "target_protein_g": {{meal_data.target_protein_g}},
   "target_carbs_g": {{meal_data.target_carbs_g}},
@@ -84,25 +53,64 @@ Meticulously analyze the following user data. This is the foundation for the mea
 }
 \`\`\`
 
-**[Step 2] Generate the 7-Day Meal Plan**
-Create a comprehensive 7-day meal plan from Monday to Sunday. Adhere strictly to the following rules:
+**STEP-BY-STEP GENERATION PROCESS:**
 
-🧠 **CRITICAL GENERATION RULES:**
-1.  **Full 7-Day Plan:** You MUST generate a complete plan for all seven days of the week (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday). Do not stop after one day.
-2.  **Six Meals Per Day:** Each day MUST consist of exactly six meals: "Breakfast", "Morning Snack", "Lunch", "Afternoon Snack", "Dinner", and "Evening Snack".
-3.  **Adhere to Daily Targets:** The sum of calories, protein, carbs, and fat for the six meals of any given day must closely match the \`target_daily_calories\`, \`target_protein_g\`, \`target_carbs_g\`, and \`target_fat_g\` provided in the context above.
-4.  **Variety and Creativity:** Ensure variety across the week. Avoid repeating meals. All meals must be complete recipes, not single ingredients (e.g., use "Grilled Chicken Salad with Lemon Vinaigrette" instead of just "Chicken Breast").
-5.  **Meal Appropriateness:** Ensure meals are logical for their time slot. Breakfast should be a breakfast-style meal, and snacks should be lighter than main meals.
-6.  **Respect All Preferences:** The plan must strictly avoid all allergies and disliked ingredients/cuisines, while prioritizing preferred ones.
-{{#if nutritionalContext}}
-7.  **Evidence-Based Recommendations:** Incorporate the nutritional knowledge from the provided context to make scientifically-informed decisions about ingredient combinations, cooking methods, and nutritional optimization.
-{{/if}}
+**Step 1: Analyze User Profile**
+- Assess dietary restrictions, allergies, and preferences
+- Note medical conditions that affect food choices
+- Understand the primary diet goal and activity level
+- Calculate meal distribution strategy for 6 meals/day
 
-**[Step 3] Construct the Final JSON**
-Assemble the final output as a single, valid JSON object. The structure MUST be exactly as follows.
+**Step 2: Plan Meal Distribution Strategy**
+Create a logical calorie and macro distribution:
+- Breakfast: 25% of daily calories (substantial start)
+- Morning Snack: 10% of daily calories (light fuel)
+- Lunch: 30% of daily calories (main meal)
+- Afternoon Snack: 10% of daily calories (energy maintenance)
+- Dinner: 20% of daily calories (recovery focused)
+- Evening Snack: 5% of daily calories (light, low-carb)
 
-**Strict JSON Output Format:**
-\`\`\`json
+**Step 3: Generate Complete 7-Day Plan**
+For each day (Monday through Sunday), create 6 distinct meals that:
+- Are complete recipes with descriptive names (not single ingredients)
+- Include 3-8 ingredients per meal with precise nutritional data
+- Match the meal type (breakfast foods for breakfast, etc.)
+- Provide variety across the week (no repeated meals)
+- Respect ALL dietary restrictions and preferences
+
+**Step 4: Calculate Precise Nutritional Values**
+- Each ingredient must have accurate calories, protein, carbs, fat per 100g
+- Calculate actual values based on specified quantities
+- Ensure daily totals match targets within ±5% margin
+- Sum weekly totals accurately
+
+**CRITICAL SUCCESS CRITERIA:**
+✅ EXACTLY 7 days (Monday-Sunday)
+✅ EXACTLY 6 meals per day
+✅ Complete recipe names (e.g., "Mediterranean Quinoa Bowl with Grilled Chicken")
+✅ Precise ingredient quantities and nutritional calculations
+✅ Daily macros within ±5% of targets
+✅ Zero conflicts with allergies/restrictions
+✅ Professional quality that coaches trust
+✅ Weekly summary with accurate totals
+
+**MEAL NAMING STANDARDS:**
+- Breakfast: "Protein-Rich Oatmeal with Berries and Almonds"
+- Morning Snack: "Greek Yogurt with Honey and Walnuts"
+- Lunch: "Grilled Salmon with Quinoa and Roasted Vegetables"
+- Afternoon Snack: "Apple Slices with Almond Butter"
+- Dinner: "Lean Beef Stir-fry with Brown Rice"
+- Evening Snack: "Cottage Cheese with Cucumber Slices"
+
+**CRITICAL JSON OUTPUT RULES:**
+1. Return ONLY valid JSON - no markdown code blocks, no extra text, no comments
+2. Use only double quotes for strings
+3. All numeric values must be numbers, not strings
+4. No trailing commas anywhere in the JSON
+5. No JavaScript-style comments (//) in the JSON
+
+**EXACT OUTPUT FORMAT - COPY THIS STRUCTURE:**
+
 {
   "days": [
     {
@@ -110,27 +118,34 @@ Assemble the final output as a single, valid JSON object. The structure MUST be 
       "meals": [
         {
           "meal_name": "Breakfast",
-          "custom_name": "Scrambled Eggs with Spinach and Whole-Wheat Toast",
+          "custom_name": "Protein-Packed Scrambled Eggs with Spinach Toast",
           "ingredients": [
-            { "name": "Eggs", "quantity": 150, "unit": "g", "calories": 155, "protein": 13, "carbs": 1.1, "fat": 11 },
-            { "name": "Spinach", "quantity": 50, "unit": "g", "calories": 23, "protein": 2.9, "carbs": 3.6, "fat": 0.4 },
-            { "name": "Whole-Wheat Bread", "quantity": 60, "unit": "g", "calories": 247, "protein": 13, "carbs": 41, "fat": 3.2 }
+            {
+              "name": "Large Eggs",
+              "quantity": 120,
+              "unit": "g",
+              "calories": 155,
+              "protein": 13,
+              "carbs": 1.1,
+              "fat": 11
+            },
+            {
+              "name": "Fresh Spinach",
+              "quantity": 40,
+              "unit": "g", 
+              "calories": 23,
+              "protein": 2.9,
+              "carbs": 3.6,
+              "fat": 0.4
+            }
           ],
-          "total_calories": 450,
-          "total_protein": 30,
-          "total_carbs": 40,
-          "total_fat": 20
-        },
-        // ... (Morning Snack, Lunch, Afternoon Snack, Dinner, Evening Snack for Monday)
+          "total_calories": 465,
+          "total_protein": 32,
+          "total_carbs": 42,
+          "total_fat": 25
+        }
       ]
-    },
-    {
-      "day_of_week": "Tuesday",
-      "meals": [
-        // ... (6 meal objects for Tuesday)
-      ]
-    },
-    // ... (Continue for Wednesday, Thursday, Friday, Saturday, Sunday)
+    }
   ],
   "weekly_summary": {
     "total_calories": 17500,
@@ -139,154 +154,30 @@ Assemble the final output as a single, valid JSON object. The structure MUST be 
     "total_fat": 622
   }
 }
-\`\`\`
 
-⚠️ **FINAL VALIDATION CHECK:**
-Before responding, double-check your entire output.
-- Does the \`days\` array contain exactly 7 objects?
-- Does each day object contain exactly 6 meal objects?
-- Are all daily and weekly totals calculated correctly based on the ingredients?
-- Is the entire response a single JSON object with no extra text, comments, or markdown?
+**FINAL VALIDATION:** Before responding, verify:
+- All 7 days included with 6 meals each (42 total meals)
+- Each meal has 3-8 ingredients with complete nutritional data
+- Daily totals match targets within acceptable range
+- Weekly summary accurately reflects sum of all days
+- No allergens or disliked ingredients included
+- Meal names are descriptive and appetizing
+- JSON structure is valid and complete
+- NO markdown formatting, code blocks, or extra text
+- NO JavaScript comments or trailing commas
+- ALL strings use double quotes only
 
-Respond ONLY with the pure, complete JSON object.
-`,
+**RESPONSE INSTRUCTIONS:**
+- Start your response immediately with the opening curly brace {
+- End your response with the closing curly brace }
+- Include nothing else before or after the JSON
+- Double-check all commas and brackets are properly placed
+- Ensure all numbers are unquoted (155 not "155")
+
+Generate the complete meal plan now.`,
 });
 
-let isInitialized = false;
-let initializationPromise: Promise<void> | null = null;
-
-function getTempDir() {
-  if (process.env.VERCEL) {
-    return '/tmp';
-  }
-  return os.tmpdir();
-}
-
-async function downloadPdf(url: string, localPath: string): Promise<void> {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Failed to download ${url}: ${response.status}`);
-  }
-
-  const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-
-  // Ensure directory exists
-  const dir = path.dirname(localPath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-
-  fs.writeFileSync(localPath, buffer);
-}
-
-async function initializePDFs() {
-  if (isInitialized) return;
-
-  // Prevent multiple simultaneous initializations
-  if (initializationPromise) {
-    return initializationPromise;
-  }
-
-  initializationPromise = (async () => {
-    console.log('Initializing nutrition PDFs...');
-
-    const tempDir = path.join(getTempDir(), 'pdfs');
-
-    if (fs.existsSync(tempDir)) {
-      try {
-        fs.rmSync(tempDir, { recursive: true, force: true });
-      } catch (error) {
-        console.warn('Could not clean up temp directory:', error);
-      }
-    }
-
-    try {
-      fs.mkdirSync(tempDir, { recursive: true });
-    } catch (error: any) {
-      throw new Error(`Cannot create temp directory: ${error.message}`);
-    }
-
-    // Process only a subset of PDFs to avoid rate limiting
-    const pdfBatches = [
-      [7, 8, 9, 10, 11],
-      [12, 13, 14, 15, 16],
-      [17, 18, 19],
-    ];
-
-    for (const batch of pdfBatches) {
-      console.log(`Processing batch: ${batch.join(', ')}`);
-
-      for (const i of batch) {
-        const url = `https://ptswwleyrtvkfejddmzr.supabase.co/storage/v1/object/public/pdf-files/temp/${i}.pdf`;
-        const localPath = path.join(tempDir, `${i}.pdf`);
-
-        try {
-          await downloadPdf(url, localPath);
-
-          await indexPdfFlow({
-            filePath: localPath,
-            metadata: {
-              fileName: `${i}.pdf`,
-              type: 'nutrition-guide',
-              indexed_at: new Date().toISOString(),
-              originalUrl: url,
-            },
-          });
-
-          console.log(`✓ Successfully processed: ${i}.pdf`);
-
-          // Clean up temp file immediately
-          try {
-            fs.unlinkSync(localPath);
-          } catch (unlinkError) {
-            console.warn(
-              `Could not delete temp file ${localPath}:`,
-              unlinkError
-            );
-          }
-        } catch (error: any) {
-          console.warn(`⚠ Failed to process ${i}.pdf:`, error.message);
-
-          // Clean up temp file on error too
-          try {
-            if (fs.existsSync(localPath)) {
-              fs.unlinkSync(localPath);
-            }
-          } catch (unlinkError) {
-            console.warn(
-              `Could not delete temp file ${localPath}:`,
-              unlinkError
-            );
-          }
-
-          // If it's a rate limit error, break and wait
-          if (
-            error.message.includes('429') ||
-            error.message.includes('Too Many Requests')
-          ) {
-            console.log('Rate limit hit, stopping batch processing...');
-            break;
-          }
-        }
-      }
-
-      // Wait between batches to avoid rate limiting
-      if (batch !== pdfBatches[pdfBatches.length - 1]) {
-        console.log('Waiting 2 minutes before next batch...');
-        await new Promise((resolve) => setTimeout(resolve, 120000)); // 2 minutes
-      }
-    }
-
-    isInitialized = true;
-    console.log('PDF initialization complete!');
-  })();
-
-  return initializationPromise;
-}
-
-const generatePersonalizedMealPlanFlow = geminiModel.defineFlow(
+const generatePersonalizedMealPlanFlow = openaiModel.defineFlow(
   {
     name: 'generatePersonalizedMealPlanFlow',
     inputSchema: GeneratePersonalizedMealPlanInputSchema,
@@ -296,33 +187,7 @@ const generatePersonalizedMealPlanFlow = geminiModel.defineFlow(
     input: GeneratePersonalizedMealPlanInput
   ): Promise<GeneratePersonalizedMealPlanOutput> => {
     try {
-      // Try to initialize PDFs, but don't fail if it doesn't work
-      try {
-        await initializePDFs();
-      } catch (initError: any) {
-        console.warn(
-          'PDF initialization failed, continuing without RAG context:',
-          initError.message
-        );
-      }
-
-      // Step 1: Retrieve relevant nutritional context based on user profile
-      const { nutritionalContext, sources } = await retrieveNutritionalContext(
-        input
-      );
-
-      console.log('✅', nutritionalContext);
-      console.log('✅', sources);
-
-      // Step 2: Generate meal plan with enhanced nutritional context
-      const { output } = await prompt({
-        ...input,
-        nutritionalContext,
-        sources,
-      });
-
-      console.log('🗿🗿', output);
-
+      const { output } = await prompt(input);
       if (!output) throw new Error('AI did not return output.');
 
       const validationResult =
@@ -344,125 +209,3 @@ const generatePersonalizedMealPlanFlow = geminiModel.defineFlow(
     }
   }
 );
-
-// Helper function to retrieve nutritional context based on user profile
-async function retrieveNutritionalContext(
-  input: GeneratePersonalizedMealPlanInput
-): Promise<{
-  nutritionalContext: string;
-  sources: any[];
-}> {
-  try {
-    const searchQueries: string[] = [];
-
-    // Build search queries based on user profile data
-    searchQueries.push(`${input.primary_diet_goal} nutrition requirements`);
-    searchQueries.push(`${input.preferred_diet} diet guidelines`);
-
-    if (input.physical_activity_level) {
-      searchQueries.push(`${input.physical_activity_level} activity nutrition`);
-    }
-
-    // Add medical condition specific searches
-    if (input.medical_conditions && input.medical_conditions.length > 0) {
-      input.medical_conditions.forEach((condition) => {
-        searchQueries.push(`${condition} dietary guidelines nutrition`);
-      });
-    }
-
-    // Add micronutrient specific searches
-    if (
-      input.preferred_micronutrients &&
-      input.preferred_micronutrients.length > 0
-    ) {
-      input.preferred_micronutrients.forEach((nutrient) => {
-        searchQueries.push(`${nutrient} food sources requirements`);
-      });
-    }
-
-    // Add cuisine-specific nutrition info
-    if (input.preferred_cuisines && input.preferred_cuisines.length > 0) {
-      input.preferred_cuisines.slice(0, 2).forEach((cuisine) => {
-        searchQueries.push(`${cuisine} cuisine nutritional profile`);
-      });
-    }
-
-    // Retrieve relevant context from PDF documents
-    let nutritionalContext = '';
-    const allSources: any[] = [];
-    const seenContent = new Set<string>(); // Prevent duplicate content
-
-    // Increase the number of queries processed (was 3, now 5)
-    const limitedQueries = searchQueries.slice(0, 5);
-
-    for (const query of limitedQueries) {
-      try {
-        // Significantly increase k value to get more chunks per query
-        const docs = await geminiModel.retrieve({
-          retriever: pdfRetriver,
-          query: query,
-          options: {
-            k: 15, // Increased from 1 to 15 chunks per query
-          },
-        });
-
-        if (docs.length > 0) {
-          nutritionalContext += `\n\n**Nutritional Context for ${query}:**\n`;
-
-          // Filter out duplicate content and add unique chunks
-          const uniqueDocs = docs.filter((doc) => {
-            const contentHash = doc.text.substring(0, 100); // Use first 100 chars as hash
-            if (seenContent.has(contentHash)) return false;
-
-            seenContent.add(contentHash);
-            return true;
-          });
-
-          nutritionalContext += uniqueDocs
-            .map((doc, idx) => `[Reference ${idx + 1}]: ${doc.text}`)
-            .join('\n\n');
-
-          allSources.push(
-            ...uniqueDocs.map((doc) => ({
-              content: doc.text.substring(0, 300) + '...', // Show more content preview
-              metadata: doc.metadata,
-              score: doc.metadata?.score,
-            }))
-          );
-        }
-      } catch (retrievalError: any) {
-        console.warn(
-          `Failed to retrieve context for query "${query}":`,
-          retrievalError.message
-        );
-        // Continue with other queries
-      }
-
-      // Add small delay between queries to respect rate limits
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-
-    console.log(`Retrieved ${allSources.length} unique sources`);
-    console.log(`Context length: ${nutritionalContext.length} characters`);
-
-    return {
-      nutritionalContext: nutritionalContext.trim(),
-      sources: allSources,
-    };
-  } catch (error: any) {
-    console.warn('Failed to retrieve nutritional context:', error.message);
-    return {
-      nutritionalContext: '',
-      sources: [],
-    };
-  }
-}
-
-process.on('exit', () => {
-  const tempDir = path.join(getTempDir(), 'pdfs');
-  if (fs.existsSync(tempDir)) {
-    try {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    } catch {}
-  }
-});
