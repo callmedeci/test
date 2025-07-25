@@ -740,15 +740,8 @@ export const CoachProfileSchema = z.object({
   description: z.string(),
   certification: z.string(),
   years_experience: z.number(),
-  email_address: z.string().optional(),
-  profile_picture: z.string().nullable().optional(),
-  location: z.string().optional(),
   joined_date: z.string().optional(),
-  specializations: z.array(z.string()).optional(),
   total_clients: z.number().optional(),
-  rating: z.number().optional(),
-  total_reviews: z.number().optional(),
-  languages: z.array(z.string()).optional(),
 });
 export type CoachProfile = z.infer<typeof CoachProfileSchema>;
 

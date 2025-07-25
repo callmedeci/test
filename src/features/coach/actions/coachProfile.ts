@@ -3,8 +3,11 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { CoachProfileFormValues } from '../schemas/coachSchemas';
+import { editProfile } from '@/features/profile/actions/apiUserProfile';
 
-export async function saveCoachProfile(profileData: CoachProfileFormValues) {
+export async function saveCoachOnboarding(
+  onboardingData: CoachProfileFormValues & { user_role: 'coach' }
+) {
   try {
     const supabase = await createClient();
     const {
@@ -12,62 +15,43 @@ export async function saveCoachProfile(profileData: CoachProfileFormValues) {
       error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError) {
+    if (authError)
       throw new Error(`Authentication error: ${authError.message}`);
-    }
-    if (!user) {
-      throw new Error('Unauthorized access!');
-    }
 
-    // TODO: Replace with actual database save operation
-    // For now, we'll just log the data
-    console.log('Saving coach profile:', {
-      user_id: user.id,
-      ...profileData,
+    if (!user) throw new Error('Unauthorized access!');
+
+    const { age, first_name, last_name, user_role, ...coachInfo } =
+      onboardingData;
+
+    // Update profile
+    await editProfile({ age, user_role, is_onboarding_complete: true });
+
+    // Update user data
+    const { error: updateError } = await supabase.auth.updateUser({
+      data: {
+        full_name: `${first_name} ${last_name}`,
+      },
     });
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (updateError)
+      throw new Error(`Failed to update user: ${updateError.message}`);
+
+    // Upsert coach data (insert or update)
+    const { error: coachError } = await supabase
+      .from('coaches')
+      .update({
+        ...coachInfo,
+      })
+      .eq('user_id', user.id)
+      .single();
+
+    if (coachError)
+      throw new Error(`Failed to save coach data: ${coachError.message}`);
 
     revalidatePath('/', 'layout');
-    
-    return { success: true };
-  } catch (error) {
-    console.error('saveCoachProfile error:', error);
-    throw new Error('Failed to save coach profile');
-  }
-}
-
-export async function saveCoachOnboarding(onboardingData: CoachProfileFormValues & { user_role: 'coach' }) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError) {
-      throw new Error(`Authentication error: ${authError.message}`);
-    }
-    if (!user) {
-      throw new Error('Unauthorized access!');
-    }
-
-    // TODO: Replace with actual database save operation
-    console.log('Saving coach onboarding:', {
-      user_id: user.id,
-      is_onboarding_complete: true,
-      ...onboardingData,
-    });
-
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    revalidatePath('/', 'layout');
-    
     return { success: true };
   } catch (error) {
     console.error('saveCoachOnboarding error:', error);
-    throw new Error('Failed to complete coach onboarding');
+    throw error;
   }
 }

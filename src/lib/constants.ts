@@ -151,10 +151,12 @@ export const defaultMacroPercentages: {
 export const onboardingStepsData = [
   {
     stepNumber: 1,
-    title: 'Welcome to Your Nutrition Journey!',
-    explanation: 'Let\'s personalize your experience. We\'ll ask a few questions about your health and preferences to generate your ideal meal plan. It only takes 3–5 minutes.',
-    tooltipText: 'We\'ll ask a few questions to personalize your nutrition plan. It only takes 3–5 minutes.',
-    fieldsToValidate: ['user_role'],
+    title: 'Welcome to NutriPlan!',
+    explanation:
+      'Let’s personalize your nutrition journey. We’ll ask a few questions about your health and preferences to generate your ideal meal plan. It only takes 3–5 minutes.',
+    tooltipText:
+      'We’ll ask a few questions to personalize your nutrition plan. It only takes 3–5 minutes.',
+    fieldsToValidate: [],
     isOptional: false,
   },
   {
@@ -166,12 +168,12 @@ export const onboardingStepsData = [
       'These details help us calculate your calorie needs based on your body and activity level.',
     fieldsToValidate: [
       'age',
-      'biological_sex',
+      'gender',
       'height_cm',
-      'current_weight_kg',
-      'target_weight_1month_kg',
-      'physical_activity_level',
-      'primary_diet_goal',
+      'current_weight',
+      'goal_weight_1m',
+      'activityLevel',
+      'dietGoalOnboarding',
     ],
     isOptional: false,
   },

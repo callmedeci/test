@@ -11,15 +11,18 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import SubmitButton from '@/components/ui/SubmitButton';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { CoachProfileFormSchema, type CoachProfileFormValues } from '@/features/coach/schemas/coachSchemas';
+
 import { mockCoachProfile } from '@/features/coach/lib/mockData';
-import { saveCoachProfile } from '@/features/coach/actions/coachProfile';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Save } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import {
+  CoachProfileFormSchema,
+  CoachProfileFormValues,
+} from '../../schemas/coachSchemas';
 
 export function CoachProfileForm() {
   const { toast } = useToast();
@@ -38,8 +41,9 @@ export function CoachProfileForm() {
 
   async function handleSubmit(data: CoachProfileFormValues) {
     try {
-      await saveCoachProfile(data);
-      
+      //TODO: SAVE PROFILE
+      console.log(data);
+
       toast({
         title: 'Profile Updated',
         description: 'Your coach profile has been updated successfully.',
@@ -47,7 +51,8 @@ export function CoachProfileForm() {
     } catch (error: any) {
       toast({
         title: 'Update Failed',
-        description: error?.message || 'Failed to update profile. Please try again.',
+        description:
+          error?.message || 'Failed to update profile. Please try again.',
         variant: 'destructive',
       });
     }
@@ -62,7 +67,7 @@ export function CoachProfileForm() {
       certification: mockCoachProfile.certification,
       years_experience: mockCoachProfile.years_experience,
     });
-    
+
     toast({
       title: 'Form Reset',
       description: 'Form has been reset to original values.',
@@ -78,7 +83,10 @@ export function CoachProfileForm() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-6'>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className='space-y-6'
+          >
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <FormField
                 control={form.control}
@@ -87,10 +95,7 @@ export function CoachProfileForm() {
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder='Enter your first name'
-                        {...field}
-                      />
+                      <Input placeholder='Enter your first name' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -104,10 +109,7 @@ export function CoachProfileForm() {
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder='Enter your last name'
-                        {...field}
-                      />
+                      <Input placeholder='Enter your last name' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

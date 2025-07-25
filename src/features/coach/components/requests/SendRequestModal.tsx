@@ -42,9 +42,16 @@ export function SendRequestModal({ isOpen, onClose }: SendRequestModalProps) {
     resolver: zodResolver(SendClientRequestSchema),
     defaultValues: {
       approver_email: '',
-      request_message: 'Hi! I would like to be your nutrition coach and help you achieve your health goals. Please consider accepting my coaching request.',
+      request_message:
+        'Hi! I would like to be your nutrition coach and help you achieve your health goals. Please consider accepting my coaching request.',
     },
   });
+  const isLoading = form.formState.isSubmitting;
+
+  function handleClose() {
+    form.reset();
+    onClose();
+  }
 
   async function handleSubmit(data: SendClientRequestValues) {
     try {
@@ -58,28 +65,25 @@ export function SendRequestModal({ isOpen, onClose }: SendRequestModalProps) {
           title: 'Request Sent Successfully',
           description: `Your coaching request has been sent to ${data.approver_email}. They will receive an email notification.`,
         });
-        
+
         form.reset();
         onClose();
       } else {
         toast({
           title: 'Request Failed',
-          description: result.error || 'Failed to send request. Please try again.',
+          description:
+            result.error || 'Failed to send request. Please try again.',
           variant: 'destructive',
         });
       }
     } catch (error: any) {
       toast({
         title: 'Unexpected Error',
-        description: error?.message || 'An unexpected error occurred. Please try again.',
+        description:
+          error?.message || 'An unexpected error occurred. Please try again.',
         variant: 'destructive',
       });
     }
-  }
-
-  function handleClose() {
-    form.reset();
-    onClose();
   }
 
   return (
@@ -90,12 +94,16 @@ export function SendRequestModal({ isOpen, onClose }: SendRequestModalProps) {
             Send Coaching Request
           </DialogTitle>
           <DialogDescription>
-            Send a personalized coaching request to a potential client via email.
+            Send a personalized coaching request to a potential client via
+            email.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-4'>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className='space-y-4'
+          >
             <FormField
               control={form.control}
               name='approver_email'
@@ -107,7 +115,7 @@ export function SendRequestModal({ isOpen, onClose }: SendRequestModalProps) {
                       type='email'
                       placeholder='client@example.com'
                       {...field}
-                      disabled={form.formState.isSubmitting}
+                      disabled={isLoading}
                     />
                   </FormControl>
                   <FormMessage />
@@ -126,7 +134,7 @@ export function SendRequestModal({ isOpen, onClose }: SendRequestModalProps) {
                       placeholder='Write a personalized message to introduce yourself and explain why you would like to be their coach...'
                       rows={4}
                       {...field}
-                      disabled={form.formState.isSubmitting}
+                      disabled={isLoading}
                     />
                   </FormControl>
                   <FormMessage />
@@ -139,12 +147,12 @@ export function SendRequestModal({ isOpen, onClose }: SendRequestModalProps) {
                 type='button'
                 variant='outline'
                 onClick={handleClose}
-                disabled={form.formState.isSubmitting}
+                disabled={isLoading}
               >
                 Cancel
               </Button>
               <SubmitButton
-                isLoading={form.formState.isSubmitting}
+                isLoading={isLoading}
                 loadingLabel='Sending...'
                 label='Send Request'
                 icon={<Send className='h-4 w-4' />}

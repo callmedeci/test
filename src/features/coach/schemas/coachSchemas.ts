@@ -19,7 +19,7 @@ export const CoachProfileFormSchema = z.object({
     .min(50, 'Description must be at least 50 characters')
     .max(1000, 'Description must be less than 1000 characters'),
   certification: z
-    .string()
+    .array(z.string())
     .min(1, 'Certification is required')
     .max(200, 'Certification must be less than 200 characters'),
   years_experience: z
@@ -53,7 +53,7 @@ export const CoachOnboardingFormSchema = z.object({
     .min(50, 'Description must be at least 50 characters')
     .max(1000, 'Description must be less than 1000 characters'),
   certification: z
-    .string()
+    .array(z.string())
     .min(1, 'Certification is required')
     .max(200, 'Certification must be less than 200 characters'),
   years_experience: z
@@ -63,7 +63,9 @@ export const CoachOnboardingFormSchema = z.object({
     .max(50, 'Years of experience must be less than 50'),
 });
 
-export type CoachOnboardingFormValues = z.infer<typeof CoachOnboardingFormSchema>;
+export type CoachOnboardingFormValues = z.infer<
+  typeof CoachOnboardingFormSchema
+>;
 
 export const SendClientRequestSchema = z.object({
   approver_email: z

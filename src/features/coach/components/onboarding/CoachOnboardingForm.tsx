@@ -21,19 +21,23 @@ import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import SubmitButton from '@/components/ui/SubmitButton';
 import { useToast } from '@/hooks/use-toast';
-import { CoachOnboardingFormSchema, type CoachOnboardingFormValues } from '@/features/coach/schemas/coachSchemas';
-import { saveCoachOnboarding } from '@/features/coach/actions/coachProfile';
+import {
+  CoachOnboardingFormSchema,
+  type CoachOnboardingFormValues,
+} from '@/features/coach/schemas/coachSchemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle, Leaf, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { saveCoachOnboarding } from '../../actions/coachProfile';
 
 const coachSteps = [
   {
     stepNumber: 1,
     title: 'Welcome to NutriPlan Coach!',
-    description: 'Let\'s set up your coaching profile to help you manage clients effectively.',
+    description:
+      "Let's set up your coaching profile to help you manage clients effectively.",
     fields: [],
   },
   {
@@ -45,7 +49,8 @@ const coachSteps = [
   {
     stepNumber: 3,
     title: 'Professional Background',
-    description: 'Share your expertise and qualifications with potential clients.',
+    description:
+      'Share your expertise and qualifications with potential clients.',
     fields: ['description', 'certification', 'years_experience'] as const,
   },
   {
@@ -70,28 +75,31 @@ export function CoachOnboardingForm() {
       last_name: '',
       age: undefined,
       description: '',
-      certification: '',
+      certification: [],
       years_experience: undefined,
     },
   });
 
-  const activeStep = coachSteps.find(s => s.stepNumber === currentStep);
+  const activeStep = coachSteps.find((s) => s.stepNumber === currentStep);
   const progressValue = (currentStep / coachSteps.length) * 100;
 
   async function handleNext() {
     if (activeStep?.fields && activeStep.fields.length > 0) {
       const result = await form.trigger(activeStep.fields);
-      
+
       if (!result) {
-        const firstError = activeStep.fields.find(field => 
-          form.formState.errors[field]
+        const firstError = activeStep.fields.find(
+          (field) => form.formState.errors[field]
         );
-        
+
         if (firstError) {
           const errorMessage = form.formState.errors[firstError]?.message;
           toast({
             title: `Input Error: ${activeStep.title}`,
-            description: typeof errorMessage === 'string' ? errorMessage : 'Please fill all required fields correctly.',
+            description:
+              typeof errorMessage === 'string'
+                ? errorMessage
+                : 'Please fill all required fields correctly.',
             variant: 'destructive',
           });
         }
@@ -100,30 +108,32 @@ export function CoachOnboardingForm() {
     }
 
     if (currentStep < coachSteps.length) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
     }
   }
 
   function handlePrevious() {
     if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
+      setCurrentStep((prev) => prev - 1);
     }
   }
 
   async function handleSubmit(data: CoachOnboardingFormValues) {
     try {
       await saveCoachOnboarding(data);
-      
+
       toast({
         title: 'Coach Profile Created!',
-        description: 'Welcome to NutriPlan! Your coaching profile is now set up.',
+        description:
+          'Welcome to NutriPlan! Your coaching profile is now set up.',
       });
-      
+
       router.push('/coach-dashboard');
     } catch (error: any) {
       toast({
         title: 'Error Creating Profile',
-        description: error?.message || 'Something went wrong. Please try again.',
+        description:
+          error?.message || 'Something went wrong. Please try again.',
         variant: 'destructive',
       });
     }
@@ -140,9 +150,7 @@ export function CoachOnboardingForm() {
             <Users className='h-6 w-6 text-accent absolute -bottom-1 -right-1 bg-background rounded-full p-1' />
           </div>
         </div>
-        <CardTitle className='text-2xl font-bold'>
-          {activeStep.title}
-        </CardTitle>
+        <CardTitle className='text-2xl font-bold'>{activeStep.title}</CardTitle>
         <CardDescription>{activeStep.description}</CardDescription>
         <Progress value={progressValue} className='w-full mt-4' />
         <p className='text-sm text-muted-foreground mt-1'>
@@ -152,7 +160,10 @@ export function CoachOnboardingForm() {
 
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-6'>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className='space-y-6'
+          >
             {currentStep === 1 && (
               <div className='text-center p-6 space-y-4'>
                 <div className='space-y-4'>
@@ -160,15 +171,19 @@ export function CoachOnboardingForm() {
                     Welcome to Your Coaching Journey!
                   </h3>
                   <p className='text-muted-foreground'>
-                    As a nutrition coach, you'll be able to manage clients, create personalized meal plans, 
-                    and track their progress. Let's set up your professional profile so clients can learn about your expertise.
+                    As a nutrition coach, you&apos;ll be able to manage clients,
+                    create personalized meal plans, and track their progress.
+                    Let&apos;s set up your professional profile so clients can
+                    learn about your expertise.
                   </p>
                   <div className='bg-muted/50 p-4 rounded-lg'>
                     <p className='text-sm text-muted-foreground'>
                       This setup will take about 2-3 minutes and will help you:
                     </p>
                     <ul className='text-sm text-muted-foreground mt-2 space-y-1 text-left'>
-                      <li>• Create a professional profile for potential clients</li>
+                      <li>
+                        • Create a professional profile for potential clients
+                      </li>
                       <li>• Set up your coaching credentials and experience</li>
                       <li>• Access powerful client management tools</li>
                     </ul>
@@ -187,10 +202,7 @@ export function CoachOnboardingForm() {
                       <FormItem>
                         <FormLabel>First Name</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder='e.g., Sarah'
-                            {...field}
-                          />
+                          <Input placeholder='e.g., Sarah' {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -204,10 +216,7 @@ export function CoachOnboardingForm() {
                       <FormItem>
                         <FormLabel>Last Name</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder='e.g., Johnson'
-                            {...field}
-                          />
+                          <Input placeholder='e.g., Johnson' {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -274,8 +283,14 @@ export function CoachOnboardingForm() {
                       <FormLabel>Certification</FormLabel>
                       <FormControl>
                         <Input
+                          defaultValue={field.value}
+                          onChange={(e) => {
+                            const data = e.currentTarget.value
+                              .trim()
+                              .split(',');
+                            field.onChange(data);
+                          }}
                           placeholder='e.g., Registered Dietitian Nutritionist (RDN)'
-                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -317,11 +332,10 @@ export function CoachOnboardingForm() {
             {currentStep === 4 && (
               <div className='text-center space-y-4'>
                 <CheckCircle className='h-16 w-16 text-green-500 mx-auto' />
-                <p className='text-lg'>
-                  Your coach profile is ready!
-                </p>
+                <p className='text-lg'>Your coach profile is ready!</p>
                 <p className='text-muted-foreground'>
-                  Click "Complete Setup" to save your profile and access your coaching dashboard.
+                  Click &quot;Complete Setup&quot; to save your profile and
+                  access your coaching dashboard.
                 </p>
               </div>
             )}
@@ -335,7 +349,7 @@ export function CoachOnboardingForm() {
               >
                 Previous
               </Button>
-              
+
               <div className='space-x-2'>
                 {currentStep < coachSteps.length ? (
                   <Button type='button' onClick={handleNext}>

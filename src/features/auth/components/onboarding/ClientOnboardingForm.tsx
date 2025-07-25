@@ -17,6 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -782,7 +783,7 @@ export default function ClientOnboardingForm() {
                     You&apos;re all set! Your profile is complete.
                   </p>
                   <p className='text-muted-foreground'>
-                    Click "Finish Onboarding" to save your profile and
+                    Click &quot;Finish Onboarding&quot; to save your profile and
                     proceed to the dashboard. You can then generate your first
                     AI-powered meal plan.
                   </p>

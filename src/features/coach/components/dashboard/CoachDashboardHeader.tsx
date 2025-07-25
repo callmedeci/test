@@ -7,8 +7,9 @@ export async function CoachDashboardHeader() {
   const user = await getUser();
   if (!user) return;
 
-  // const [firstName, lastName] = user.user_metadata?.full_name?.split(' ');
-  const [firstName, lastName] = 'test tets'.split(' ');
+  const [firstName, lastName] = (
+    user.user_metadata?.full_name || 'User Template'
+  ).split(' ');
 
   return (
     <div className='flex items-center justify-between'>
