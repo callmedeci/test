@@ -103,3 +103,21 @@ export interface CoachStats {
   sessions_completed: number
   avg_response_time: string
 }
+
+export interface CoachClientRequest {
+  id: number
+  coach_id: string
+  client_user_id: string
+  request_message: string | null
+  status: 'pending' | 'accepted' | 'declined'
+  requested_at: string
+  responded_at: string | null
+  response_message: string | null
+  created_at: string
+}
+
+export interface SendRequestResult {
+  success: boolean
+  error?: string
+  requestId?: number
+}

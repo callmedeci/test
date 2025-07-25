@@ -315,3 +315,28 @@ export type PendingRequest = (typeof mockPendingRequests)[0]
 export type AcceptedClient = (typeof mockAcceptedClients)[0]
 export type RecentActivity = (typeof mockRecentActivity)[0]
 export type UpcomingTask = (typeof mockUpcomingTasks)[0]
+
+// Mock request history for demonstration
+export const mockRequestHistory = [
+  {
+    id: "history_001",
+    client_name: "Jennifer Adams",
+    email_address: "jennifer.adams@email.com",
+    status: "accepted",
+    action_date: "2 days ago",
+  },
+  {
+    id: "history_002", 
+    client_name: "Mark Thompson",
+    email_address: "mark.thompson@email.com",
+    status: "declined",
+    action_date: "1 week ago",
+  },
+  {
+    id: "history_003",
+    client_name: "Lisa Chen",
+    email_address: "lisa.chen@email.com", 
+    status: "pending",
+    action_date: "3 days ago",
+  },
+]
