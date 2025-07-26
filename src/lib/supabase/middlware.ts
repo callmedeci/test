@@ -27,6 +27,25 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Handle approve page access
+  if (pathname.startsWith("/approve")) {
+    const token = searchParams.get("token")
+    const requestId = searchParams.get("requestId")
+    const coachId = searchParams.get("coachId")
+    
+    // Allow access only if all required parameters are present
+    if (!token || !requestId || !coachId) {
+      return NextResponse.redirect(new URL("/error", request.url))
+    }
+    
+    // Must be authenticated to approve requests
+    if (!user) {
+      return NextResponse.redirect(new URL("/login", request.url))
+    }
+    
+    return supabaseRes
+  }
+
   // Handle password reset flow
   if (pathname.startsWith("/reset-password")) {
     if (searchParams.get("type") === "recovery" && searchParams.get("token_hash")?.startsWith("pkce"))

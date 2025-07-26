@@ -100,9 +100,10 @@ export interface CoachStats {
 export interface CoachClientRequest {
   id: number;
   coach_id: string;
-  client_user_id: string;
+  client_email: string;
   request_message: string | null;
   status: 'pending' | 'accepted' | 'declined';
+  approval_token: string | null;
   requested_at: string;
   responded_at: string | null;
   response_message: string | null;
