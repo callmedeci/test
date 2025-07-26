@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import type { SendRequestResult } from '../types';
+import { revalidatePath } from 'next/cache';
 
 export async function sendWelcomeEmail(
   emailTo: string,
@@ -104,6 +105,7 @@ export async function sendApprovalRequest(
       console.error('Email service error:', emailError);
     }
 
+    revalidatePath('/requests');
     return {
       success: true,
       requestId: request.id,
