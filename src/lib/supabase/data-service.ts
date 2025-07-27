@@ -66,6 +66,44 @@ export async function getMealPlan(): Promise<MealPlans> {
   return data as MealPlans;
 }
 
+export async function getMealPlan(userId?: string): Promise<MealPlans> {
+  const supabase = await createClient();
+  const targetUserId = userId || (await getUser()).id;
+
+  if (!targetUserId) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase
+    .from('meal_plans')
+    .select('*')
+    .eq('user_id', targetUserId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116')
+      throw new Error('No meal plan found for this user');
+
+    throw new Error(`Failed to fetch meal plan: ${error.message}`);
+  }
+
+  return data as MealPlans;
+}
+
+export async function getUserPlan(userId?: string): Promise<UserPlanType> {
+  const supabase = await createClient();
+  const targetUserId = userId || (await getUser()).id;
+
+  if (!targetUserId) throw new Error('User not authenticated');
+
+  const { data } = await supabase
+    .from('smart_plan')
+    .select('*')
+    .eq('user_id', targetUserId)
+    .single();
+
+  if (!data) throw new Error('User plan not found');
+
+  return data as UserPlanType;
+}
 export async function getProfileById(
   userId: string,
   userRole: 'client' | 'coach' = 'client',
