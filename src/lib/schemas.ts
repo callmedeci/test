@@ -731,6 +731,44 @@ export const OnboardingFormSchema = z.object({
 export type OnboardingFormValues = z.infer<typeof OnboardingFormSchema>;
 export type { CustomCalculatedTargets };
 
+// Coach-Client Relationship Types
+export interface CoachClientRelationship {
+  id: number;
+  coach_id: string;
+  client_id: string;
+  status: 'pending' | 'accepted' | 'declined';
+  status_message?: string | null;
+  requested_at: string;
+  responded_at?: string | null;
+  created_at: string;
+}
+
+export interface CoachClientRequest {
+  id: number;
+  coach_id: string;
+  client_email: string;
+  request_message?: string | null;
+  status: 'pending' | 'accepted' | 'declined';
+  approval_token?: string | null;
+  requested_at: string;
+  responded_at?: string | null;
+  response_message?: string | null;
+  created_at: string;
+}
+
+export interface CoachProfile {
+  id: number;
+  user_id: string;
+  description?: string | null;
+  certification: string[];
+  years_experience: number;
+  total_clients: number;
+  joined_date: string;
+  status: 'pending_approval' | 'approved' | 'suspended';
+  created_at: string;
+  updated_at: string;
+}
+
 // Coach Profile Schema
 export const CoachProfileSchema = z.object({
   user_id: z.string(),

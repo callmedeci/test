@@ -39,3 +39,5 @@ export default async function CoachClientProfilePage({
     </div>
   );
 }
+  )
+}
