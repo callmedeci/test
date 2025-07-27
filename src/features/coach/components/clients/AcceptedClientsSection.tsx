@@ -1,27 +1,19 @@
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCoachClients } from '../../lib/data-service';
-import ClientsList from './ClientsList';
 
-export async function AcceptedClientsSection() {
-  const clients = await getCoachClients();
-  if (!clients) return <p>You do not have any clinets</p>;
+import { Suspense } from 'react';
+import { ClientsList } from './ClientsList';
+import { ClientsStatsCards } from './ClientsStatsCards';
+import PageLoadingSpinner from '@/components/ui/PageLoadingSpinner';
 
+export function AcceptedClientsSection() {
   return (
-    <Card className='border border-border/50'>
-      <CardHeader>
-        <div className='flex items-center justify-between'>
-          <CardTitle className='text-lg font-semibold'>
-            Accepted Clients
-          </CardTitle>
-          <Badge variant='default' className='text-xs'>
-            {clients.length} client{clients.length > 1 ? 's' : ''}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <ClientsList clients={clients} />
-      </CardContent>
-    </Card>
+    <div className='space-y-6'>
+      <Suspense fallback={<PageLoadingSpinner message="Loading client stats..." />}>
+        <ClientsStatsCards />
+      </Suspense>
+      
+      <Suspense fallback={<PageLoadingSpinner message="Loading clients..." />}>
+        <ClientsList />
+      </Suspense>
+    </div>
   );
 }

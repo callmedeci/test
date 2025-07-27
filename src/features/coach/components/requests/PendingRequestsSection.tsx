@@ -1,31 +1,13 @@
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getPendingClientRequests } from '../../lib/data-service';
-import RequestsList from './RequestsList';
 import { Suspense } from 'react';
+import { RequestsList } from './RequestsList';
+import PageLoadingSpinner from '@/components/ui/PageLoadingSpinner';
 
-export async function PendingRequestsSection() {
-  const pendingRequests = await getPendingClientRequests();
-  if (!pendingRequests?.length) return <p>No pending requests</p>;
-
+export function PendingRequestsSection() {
   return (
-    <Card className='border border-border/50'>
-      <CardHeader>
-        <div className='flex items-center justify-between'>
-          <CardTitle className='text-lg font-semibold'>
-            Pending Requests
-          </CardTitle>
-          <Badge variant='secondary' className='text-xs'>
-            {pendingRequests.length} pending
-          </Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        <Suspense fallback={<p>Loading...</p>}>
-          <RequestsList requests={pendingRequests} />
-        </Suspense>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <Suspense fallback={<PageLoadingSpinner message="Loading pending requests..." />}>
+        <RequestsList />
+      </Suspense>
+    </div>
   );
 }
