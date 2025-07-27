@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -6,24 +5,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import { Progress } from '@/components/ui/progress';
 import {
   getProfileById,
   getUserDataById,
   getUserPlan,
-  getMealPlan,
 } from '@/lib/supabase/data-service';
 import { calculateProgress, formatValue } from '@/lib/utils';
-import {
-  Activity,
-  Calendar,
-  FileText,
-  Target,
-  TrendingUp,
-  User,
-} from 'lucide-react';
-import Link from 'next/link';
+import { Activity, Calendar, Target, TrendingUp, User } from 'lucide-react';
+import CoachClientQuickActions from './CoachClientQuickActions';
 
 interface CoachClientDashboardProps {
   clientId: string;
@@ -44,7 +35,10 @@ export async function CoachClientDashboard({
           <CardHeader>
             <CardTitle className='text-xl flex items-center gap-2 text-primary'>
               <User className='h-5 w-5' />
-              Client: {userData?.full_name || userData?.email || 'Unknown'}
+              Client:{' '}
+              {userData.user_metadata?.full_name ||
+                userData?.email ||
+                'Unknown'}
             </CardTitle>
             <CardDescription>
               Monitoring nutrition progress and meal planning
@@ -126,9 +120,7 @@ export async function CoachClientDashboard({
           <Card>
             <CardHeader>
               <CardTitle className='text-primary'>Weight Progress</CardTitle>
-              <CardDescription>
-                Progress towards 1-month goal
-              </CardDescription>
+              <CardDescription>Progress towards 1-month goal</CardDescription>
             </CardHeader>
             <CardContent className='space-y-4'>
               <div className='space-y-2'>
@@ -159,7 +151,9 @@ export async function CoachClientDashboard({
           <Card>
             <CardHeader>
               <CardTitle className='text-primary'>Body Composition</CardTitle>
-              <CardDescription>Body fat and muscle mass targets</CardDescription>
+              <CardDescription>
+                Body fat and muscle mass targets
+              </CardDescription>
             </CardHeader>
             <CardContent className='space-y-4'>
               <div className='space-y-2'>
@@ -208,7 +202,9 @@ export async function CoachClientDashboard({
             <CardTitle className='text-primary'>
               Daily Macronutrient Targets
             </CardTitle>
-            <CardDescription>Client's personalized macro breakdown</CardDescription>
+            <CardDescription>
+              Client&apos;s personalized macro breakdown
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className='grid gap-4 lg:grid-cols-3'>
@@ -217,7 +213,10 @@ export async function CoachClientDashboard({
                   <span className='font-medium'>Protein</span>
                   <span>
                     {formatValue(plan?.target_protein_g?.toFixed(2), 'g')} (
-                    {formatValue(plan?.target_protein_percentage?.toFixed(2), '%')}
+                    {formatValue(
+                      plan?.target_protein_percentage?.toFixed(2),
+                      '%'
+                    )}
                     )
                   </span>
                 </div>
@@ -231,7 +230,11 @@ export async function CoachClientDashboard({
                   <span className='font-medium'>Carbohydrates</span>
                   <span>
                     {formatValue(plan?.target_carbs_g?.toFixed(2), 'g')} (
-                    {formatValue(plan?.target_carbs_percentage?.toFixed(2), '%')})
+                    {formatValue(
+                      plan?.target_carbs_percentage?.toFixed(2),
+                      '%'
+                    )}
+                    )
                   </span>
                 </div>
                 <Progress
@@ -261,39 +264,11 @@ export async function CoachClientDashboard({
           <CardHeader>
             <CardTitle className='text-primary'>Coach Actions</CardTitle>
             <CardDescription>
-              Access client's detailed information and meal plans
+              Access client&apos;s detailed information and meal plans
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className='grid gap-3 md:grid-cols-2 lg:grid-cols-4'>
-              <Link href={`/coach-dashboard/clients/${clientId}/profile`}>
-                <Button variant='outline' className='w-full justify-start'>
-                  <User className='h-4 w-4 mr-2' />
-                  View Profile
-                </Button>
-              </Link>
-              <Link href={`/coach-dashboard/clients/${clientId}/meal-plan/current`}>
-                <Button variant='outline' className='w-full justify-start'>
-                  <Calendar className='h-4 w-4 mr-2' />
-                  Meal Plan
-                </Button>
-              </Link>
-              <Link href={`/coach-dashboard/clients/${clientId}/targets`}>
-                <Button variant='outline' className='w-full justify-start'>
-                  <Target className='h-4 w-4 mr-2' />
-                  Targets
-                </Button>
-              </Link>
-              <Link href={`/coach-dashboard/clients/${clientId}/reports`}>
-                <Button
-                  variant='outline'
-                  className='w-full justify-start border-primary/50 hover:bg-primary/5 hover:text-primary'
-                >
-                  <FileText className='h-4 w-4 mr-2' />
-                  Reports
-                </Button>
-              </Link>
-            </div>
+            <CoachClientQuickActions clientId={clientId} />
           </CardContent>
         </Card>
       </div>

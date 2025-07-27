@@ -1,11 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
 
-/**
- * Verifies if a coach has access to a specific client
- * @param coachId - The coach's user ID
- * @param clientId - The client's user ID
- * @returns Promise<boolean> - True if access is granted
- */
 export async function verifyCoachClientAccess(
   coachId: string,
   clientId: string
@@ -30,11 +24,6 @@ export async function verifyCoachClientAccess(
   }
 }
 
-/**
- * Gets all clients for a specific coach
- * @param coachId - The coach's user ID
- * @returns Promise<string[]> - Array of client IDs
- */
 export async function getCoachClients(coachId: string): Promise<string[]> {
   try {
     const supabase = await createClient();
@@ -54,11 +43,6 @@ export async function getCoachClients(coachId: string): Promise<string[]> {
   }
 }
 
-/**
- * Checks if current user is a coach and has access to client
- * @param clientId - The client's user ID
- * @returns Promise<{ hasAccess: boolean; isCoach: boolean }>
- */
 export async function checkCoachAccess(clientId: string): Promise<{
   hasAccess: boolean;
   isCoach: boolean;

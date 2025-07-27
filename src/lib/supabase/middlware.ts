@@ -50,7 +50,7 @@ export async function updateSession(request: NextRequest) {
   if (pathname.startsWith('/coach-dashboard/clients/') && user) {
     const pathSegments = pathname.split('/');
     const clientId = pathSegments[3]; // /coach-dashboard/clients/[clientId]/...
-    
+
     if (clientId && clientId !== 'page') {
       // Verify coach has access to this client
       const { data: coachData } = await supabase
@@ -59,9 +59,8 @@ export async function updateSession(request: NextRequest) {
         .eq('user_id', user.id)
         .single();
 
-      if (!coachData) {
+      if (!coachData)
         return NextResponse.redirect(new URL('/coach-dashboard', request.url));
-      }
 
       const { data: accessData } = await supabase
         .from('coach_clients')
@@ -71,9 +70,10 @@ export async function updateSession(request: NextRequest) {
         .eq('status', 'accepted')
         .single();
 
-      if (!accessData) {
-        return NextResponse.redirect(new URL('/coach-dashboard/clients', request.url));
-      }
+      if (!accessData)
+        return NextResponse.redirect(
+          new URL('/coach-dashboard/clients', request.url)
+        );
     }
   }
 

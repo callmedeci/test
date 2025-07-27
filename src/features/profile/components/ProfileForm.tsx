@@ -33,20 +33,21 @@ import {
   type ProfileFormValues,
 } from '@/lib/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User } from '@supabase/supabase-js';
+import { UserMetadata } from '@supabase/supabase-js';
 import { useForm } from 'react-hook-form';
 import { editProfile } from '../actions/apiUserProfile';
 
-function ProfileForm({
-  user,
-  profile,
-}: {
-  user: User;
+type ProfileFormProps = {
+  user: UserMetadata;
   profile: BaseProfileData;
-}) {
+  clientId?: string;
+};
+
+function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
   const { user_role, ...formData } = profile;
   console.log(user_role);
 
+  const isCoachView = Boolean(clientId);
   const { toast } = useToast();
 
   const form = useForm<ProfileFormValues>({
@@ -61,7 +62,7 @@ function ProfileForm({
     const { name, ...newProfile } = data;
 
     try {
-      await editProfile(newProfile, { data: { full_name: name } });
+      await editProfile(newProfile, { data: { full_name: name } }, clientId);
 
       return toast({
         title: 'Profile Updated',
@@ -88,38 +89,42 @@ function ProfileForm({
             label='Account Information'
             value='account-info'
           >
-            <FormField
-              control={form.control}
-              name='name'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <div>
-                      <Input
-                        placeholder='Your full name'
-                        {...field}
-                        value={field.value ?? ''}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!isCoachView && (
+              <>
+                <FormField
+                  control={form.control}
+                  name='name'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <div>
+                          <Input
+                            placeholder='Your full name'
+                            {...field}
+                            value={field.value ?? ''}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <Input
-                value={user?.email ?? 'N/A'}
-                readOnly
-                disabled
-                className='bg-muted/50'
-              />
-              <FormDescription>
-                Your email address cannot be changed here.
-              </FormDescription>
-            </FormItem>
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <Input
+                    value={user?.email ?? 'N/A'}
+                    readOnly
+                    disabled
+                    className='bg-muted/50'
+                  />
+                  <FormDescription>
+                    Your email address cannot be changed here.
+                  </FormDescription>
+                </FormItem>
+              </>
+            )}
 
             <FormField
               control={form.control}

@@ -8,19 +8,19 @@ import { Suspense } from 'react';
 
 interface CoachClientMealPlanPageProps {
   params: Promise<{ clientId: string }>;
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }
 
 export default async function CoachClientMealPlanPage({
   params,
+  searchParams,
 }: CoachClientMealPlanPageProps) {
   const { clientId } = await params;
 
   // Verify coach has access to this client
   const { hasAccess, isCoach } = await checkCoachAccess(clientId);
 
-  if (!isCoach || !hasAccess) {
-    notFound();
-  }
+  if (!isCoach || !hasAccess) notFound();
 
   return (
     <div className='container mx-auto py-8'>
@@ -28,16 +28,17 @@ export default async function CoachClientMealPlanPage({
         <SectionHeader
           className='text-3xl font-bold'
           title="Client's Current Meal Plan"
-          description='View and monitor your client's weekly meal schedule'
+          description="View and monitor your client's weekly meal schedule"
         />
         <CardContent>
           <Suspense fallback={<LoadingScreen />}>
-            <CoachClientMealPlan clientId={clientId} />
+            <CoachClientMealPlan
+              searchParams={searchParams}
+              clientId={clientId}
+            />
           </Suspense>
         </CardContent>
       </Card>
     </div>
   );
-}
-  )
 }

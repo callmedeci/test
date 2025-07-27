@@ -14,13 +14,9 @@ export default async function CoachClientDashboardPage({
   params,
 }: CoachClientDashboardPageProps) {
   const { clientId } = await params;
-
-  // Verify coach has access to this client
   const { hasAccess, isCoach } = await checkCoachAccess(clientId);
 
-  if (!isCoach || !hasAccess) {
-    notFound();
-  }
+  if (!isCoach || !hasAccess) notFound();
 
   return (
     <div className='space-y-6'>
@@ -28,7 +24,7 @@ export default async function CoachClientDashboardPage({
         <SectionHeader
           className='text-3xl font-bold'
           title='Client Dashboard'
-          description='Monitor your client's nutrition progress and meal plans'
+          description="Monitor your client's nutrition progress and meal plans"
         />
         <CardContent>
           <Suspense fallback={<LoadingScreen />}>
@@ -38,6 +34,4 @@ export default async function CoachClientDashboardPage({
       </Card>
     </div>
   );
-}
-  )
 }

@@ -19,6 +19,8 @@ export async function getCoachClients() {
       .eq('coach_id', user.id)
       .eq('status', 'accepted');
 
+    console.log('CLIENTS ✅✅', clients);
+
     if (reqError || !clients)
       throw new Error(`Fail to fetch clients ${reqError.message}`);
 
@@ -31,7 +33,7 @@ export async function getCoachClients() {
         );
         const userData = await getUserDataById(client.client_id);
 
-        return { ...(profile as any), ...userData };
+        return { ...(profile as any), ...userData.user_metadata };
       })
     );
 
@@ -70,7 +72,7 @@ export async function getCoachProfile() {
     );
     const userData = await getUserDataById(coach.user_id);
 
-    return { ...userData, ...(profile as any), ...coach };
+    return { ...userData.user_metadata, ...(profile as any), ...coach };
   } catch (error) {
     console.log(error);
   }

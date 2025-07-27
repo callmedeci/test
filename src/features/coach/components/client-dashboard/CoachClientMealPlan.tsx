@@ -1,19 +1,15 @@
 import ErrorMessage from '@/components/ui/ErrorMessage';
-import { getMealPlan, getProfileById } from '@/lib/supabase/data-service';
-import { CoachMealPlanView } from './CoachMealPlanView';
-
-interface CoachClientMealPlanProps {
-  clientId: string;
-}
+import PlanSection from '@/features/meal-plan/components/current/PlanSection';
 
 export async function CoachClientMealPlan({
+  searchParams,
   clientId,
-}: CoachClientMealPlanProps) {
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+  clientId: string;
+}) {
   try {
-    const mealPlan = await getMealPlan(clientId);
-    const profile = await getProfileById(clientId, 'client');
-
-    return <CoachMealPlanView mealPlan={mealPlan} profile={profile} />;
+    return <PlanSection searchParams={searchParams} clientId={clientId} />;
   } catch (error: any) {
     return (
       <ErrorMessage
