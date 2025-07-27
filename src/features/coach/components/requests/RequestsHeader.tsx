@@ -2,12 +2,24 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useQueryParams } from '@/hooks/useQueryParams';
 import { Search, UserPlus } from 'lucide-react';
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { SendRequestModal } from './SendRequestModal';
 
 export function RequestsHeader() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { updateQueryParams } = useQueryParams();
+
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+    const query = formData.get('query') as string;
+
+    e.currentTarget.reset();
+    updateQueryParams('client', query);
+  }
 
   return (
     <>
@@ -22,10 +34,14 @@ export function RequestsHeader() {
         </div>
 
         <div className='flex items-center gap-3'>
-          <div className='relative'>
+          <form onSubmit={handleSubmit} className='relative'>
             <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground size-4' />
-            <Input placeholder='Search clients...' className='pl-10 w-64' />
-          </div>
+            <Input
+              name='query'
+              placeholder='Search clients...'
+              className='pl-10 w-64'
+            />
+          </form>
           <Button onClick={() => setIsModalOpen(true)} className='gap-2'>
             <UserPlus className='size-4' />
             Send Request

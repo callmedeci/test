@@ -44,13 +44,16 @@ function ProfileForm({
   user: User;
   profile: BaseProfileData;
 }) {
+  const { user_role, ...formData } = profile;
+  console.log(user_role);
+
   const { toast } = useToast();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(ProfileFormSchema),
     defaultValues: {
-      ...profile,
-      name: user.user_metadata.name,
+      ...formData,
+      name: user.user_metadata.full_name,
     },
   });
 
@@ -58,7 +61,7 @@ function ProfileForm({
     const { name, ...newProfile } = data;
 
     try {
-      await editProfile(newProfile, { data: { name } });
+      await editProfile(newProfile, { data: { full_name: name } });
 
       return toast({
         title: 'Profile Updated',

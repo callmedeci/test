@@ -27,14 +27,15 @@ function ApproveButton({
     startTransition(async () => {
       try {
         const result = await grantAccessAction(userId, coachId, reqId, token);
-        
+
         if (result.success) {
           toast({
             title: 'Access Granted Successfully!',
-            description: 'You have successfully granted coaching access. Your coach can now help you with your nutrition journey.',
+            description:
+              'You have successfully granted coaching access. Your coach can now help you with your nutrition journey.',
             variant: 'default',
           });
-          
+
           // Redirect to dashboard after success
           setTimeout(() => {
             router.push('/dashboard');
@@ -42,7 +43,8 @@ function ApproveButton({
         } else {
           toast({
             title: 'Failed to Grant Access',
-            description: result.error || 'Something went wrong. Please try again.',
+            description:
+              result.error || 'Something went wrong. Please try again.',
             variant: 'destructive',
           });
         }

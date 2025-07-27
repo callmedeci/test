@@ -89,7 +89,7 @@ function FinalMacrosOverview({ calculatedSplit }: FinalMacroProps) {
                   <TableCell className='px-2 py-1 text-right'>
                     <Link
                       href={{
-                        pathname: '/tools/meal-suggestions',
+                        pathname: '/dashboard/tools/meal-suggestions',
                         query: {
                           mealName: mealData.mealName,
                           calories: mealData.Calories.toString(),

@@ -1174,45 +1174,4 @@ export type SuggestIngredientSwapOutput = z.infer<
   typeof SuggestIngredientSwapOutputSchema
 >;
 
-// Coach and Client Relationship Schemas
-export const CoachSchema = z.object({
-  id: z.number(),
-  user_id: z.string().uuid(),
-  professional_description: z.string().nullable(),
-  certification: z.array(z.string()).nullable(),
-  years_of_experience: z.number().min(0).nullable(),
-  total_clients: z.number().default(0),
-  joined_date: z.string().datetime(),
-  status: z.enum(['pending_approval', 'approved', 'suspended']).default('pending_approval'),
-  created_at: z.string().datetime(),
-  updated_at: z.string().datetime(),
-});
-export type Coach = z.infer<typeof CoachSchema>;
-
-export const CoachClientSchema = z.object({
-  id: z.number(),
-  coach_id: z.string().uuid(),
-  client_id: z.string(),
-  status: z.enum(['pending', 'accepted', 'declined']).default('pending'),
-  status_message: z.string().nullable(),
-  requested_at: z.string().datetime(),
-  responded_at: z.string().datetime().nullable(),
-  created_at: z.string().datetime(),
-});
-export type CoachClient = z.infer<typeof CoachClientSchema>;
-
-export const CoachClientRequestSchema = z.object({
-  id: z.number(),
-  coach_id: z.string().uuid(),
-  client_email: z.string().email(),
-  request_message: z.string().nullable(),
-  status: z.enum(['pending', 'accepted', 'declined']).default('pending'),
-  approval_token: z.string().uuid().nullable(),
-  requested_at: z.string().datetime(),
-  responded_at: z.string().datetime().nullable(),
-  response_message: z.string().nullable(),
-  created_at: z.string().datetime(),
-});
-export type CoachClientRequest = z.infer<typeof CoachClientRequestSchema>;
-
 export type FullUserProfileType = UserPlanType & MealPlans & BaseProfileData;

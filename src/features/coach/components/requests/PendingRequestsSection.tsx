@@ -1,11 +1,12 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCoachClientRequests } from '../../lib/data-service';
+import { getPendingClientRequests } from '../../lib/data-service';
 import RequestsList from './RequestsList';
+import { Suspense } from 'react';
 
 export async function PendingRequestsSection() {
-  const requests = await getCoachClientRequests();
-  if (!requests?.length) return <p>No pending requests</p>;
+  const pendingRequests = await getPendingClientRequests();
+  if (!pendingRequests?.length) return <p>No pending requests</p>;
 
   return (
     <Card className='border border-border/50'>
@@ -15,13 +16,15 @@ export async function PendingRequestsSection() {
             Pending Requests
           </CardTitle>
           <Badge variant='secondary' className='text-xs'>
-            {requests.length} pending
+            {pendingRequests.length} pending
           </Badge>
         </div>
       </CardHeader>
 
       <CardContent>
-        <RequestsList requests={requests} />
+        <Suspense fallback={<p>Loading...</p>}>
+          <RequestsList requests={pendingRequests} />
+        </Suspense>
       </CardContent>
     </Card>
   );

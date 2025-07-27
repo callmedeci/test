@@ -28,6 +28,8 @@ export async function editProfile(newProfile: any, newUser?: UserAttributes) {
         `Profile update failed: ${error.code} - ${error.message}`
       );
 
+    console.log();
+
     if (newUser) {
       const { error: userError } = await supabase.auth.updateUser({
         ...newUser,

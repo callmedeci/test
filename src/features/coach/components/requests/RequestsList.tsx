@@ -1,22 +1,35 @@
+'use client';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useQueryParams } from '@/hooks/useQueryParams';
 import { getTimeAgo } from '@/lib/utils';
-import { Clock, X } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 type RequestType = {
   requests: {
-    status: any;
-    requested_at: any;
-    client_email: any;
-    id: any;
+    status: 'pending';
+    requested_at: Date;
+    client_email: string;
+    id: string;
   }[];
 };
 
 function RequestsList({ requests }: RequestType) {
+  const { getQueryParams } = useQueryParams();
+
+  const searchedClient = getQueryParams('client');
+  const searchedReq = searchedClient
+    ? requests.filter((request) =>
+        request.client_email.includes(searchedClient)
+      )
+    : requests;
+
+  if (searchedReq.length <= 0) return <p>No requests found</p>;
+
   return (
     <ul className='space-y-4'>
-      {requests.map((request) => {
+      {searchedReq.map((request) => {
         return (
           <li
             key={request.id}
@@ -50,18 +63,20 @@ function RequestsList({ requests }: RequestType) {
             <div className='flex items-center gap-2'>
               <Badge
                 variant='outline'
-                className='text-xs bg-yellow-50 text-yellow-700 border-yellow-200'
+                className='text-xs bg-yellow-50 text-yellow-700 border-yellow-200 capitalize'
               >
-                Pending
+                {request.status}
               </Badge>
-              <Button
+
+              {/* WILL BE ADDED */}
+              {/* <Button
                 variant='outline'
                 size='sm'
                 className='gap-2 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 bg-transparent'
               >
                 <X className='h-4 w-4' />
                 Cancel
-              </Button>
+              </Button> */}
             </div>
           </li>
         );
