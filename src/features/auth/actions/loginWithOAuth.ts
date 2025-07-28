@@ -3,8 +3,6 @@ import { getURL } from '@/lib/utils';
 
 export async function loginWithGoogle() {
   const redirectTo = `${getURL()}api/auth/callback`;
-  console.log('⛔⛔⛔', getURL(), '⛔⛔⛔');
-  console.log('✅✅✅', redirectTo, '✅✅✅');
 
   const supabase = createClient();
   const { error } = await supabase.auth.signInWithOAuth({
