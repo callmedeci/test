@@ -24,7 +24,7 @@ export async function editPlan(newPlan: any, clientId?: string) {
     }
 
     const { error } = await supabase
-      .from('smart_plan')
+      .from('user_plan')
       .update(newPlan)
       .eq('user_id', targetUserId);
 

@@ -4,31 +4,28 @@ import {
   mealNames,
 } from '@/lib/constants';
 import {
-  BaseProfileData,
-  FullUserProfileType,
+  UserProfile,
   WeeklyMealPlan,
 } from '@/lib/schemas';
 import { DailyTargetsTypes, MealToOptimizeTypes } from '../types';
 import { requiredFields } from './config';
 
-export function mapProfileToMealPlanInput(profile: FullUserProfileType) {
+export function mapProfileToMealPlanInput(profile: any) {
   const input = profile;
   Object.keys(input).forEach(
-    (key) =>
-      !input[key as keyof BaseProfileData] &&
-      delete input[key as keyof BaseProfileData]
+    (key) => !input[key] && delete input[key]
   );
 
   return input;
 }
 
 export function getAdjustedMealInput(
-  profileData: Partial<BaseProfileData>,
+  profileData: Partial<UserProfile>,
   dailyTargets: DailyTargetsTypes,
   mealToOptimize: MealToOptimizeTypes
 ) {
   let mealDistribution;
-  const userMealDistributions = profileData.meal_distributions;
+  const userMealDistributions = (profileData as any).meal_distributions;
   if (!userMealDistributions)
     mealDistribution = defaultMacroPercentages[mealToOptimize.name];
   else
@@ -73,14 +70,14 @@ export function getAdjustedMealInput(
       primary_diet_goal: profileData.primary_diet_goal ?? undefined,
       preferred_diet: profileData.preferred_diet ?? undefined,
       allergies: profileData.allergies ?? [],
-      dispreferrred_ingredients: profileData.dispreferrred_ingredients ?? [],
-      preferred_ingredients: profileData.preferred_ingredients ?? [],
+      medical_conditions: profileData.medical_conditions ?? [],
+      medications: profileData.medications ?? [],
     },
   };
 }
 export function getMissingProfileFields(
-  profile: Partial<BaseProfileData>
-): (keyof Partial<BaseProfileData>)[] {
+  profile: Partial<UserProfile>
+): (keyof Partial<UserProfile>)[] {
   return requiredFields.filter((field) => !profile[field]);
 }
 
