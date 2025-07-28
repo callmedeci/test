@@ -5,9 +5,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import LoadingScreen from '@/components/ui/LoadingScreen';
+import PageLoadingSpinner from '@/components/ui/PageLoadingSpinner';
 import SectionHeader from '@/components/ui/SectionHeader';
-import Spinner from '@/components/ui/Spinner';
 import CustomizePlanSection from '@/features/tools/components/calorie-planner/CustomizePlanSection';
 import PlannerSection from '@/features/tools/components/calorie-planner/PlannerSection';
 import { checkCoachAccess } from '@/lib/utils/access-control';
@@ -36,7 +35,11 @@ async function CoachSmartCaloriePlannerPage({
         />
 
         <CardContent>
-          <Suspense fallback={<LoadingScreen />}>
+          <Suspense
+            fallback={
+              <PageLoadingSpinner message='Loading planner section...' />
+            }
+          >
             <PlannerSection clientId={clientId} />
           </Suspense>
 
@@ -54,10 +57,7 @@ async function CoachSmartCaloriePlannerPage({
             <CardContent>
               <Suspense
                 fallback={
-                  <div className='flex items-start justify-center w-full gap-1 my-10'>
-                    <Spinner />
-                    <span>Loding...</span>
-                  </div>
+                  <PageLoadingSpinner message='Loading customization tools...' />
                 }
               >
                 <CustomizePlanSection clientId={clientId} />
