@@ -1,3 +1,4 @@
+import LoadingScreen from '@/components/ui/LoadingScreen';
 import PDFSection from '@/features/tools/components/pdf-preview/PDFSection';
 import { Suspense } from 'react';
 
@@ -9,7 +10,9 @@ async function CoachReportspage({
   const { clientId } = await params;
 
   return (
-    <Suspense>
+    <Suspense
+      fallback={<LoadingScreen loadingLabel='Loading client reports...' />}
+    >
       <PDFSection clientId={clientId} />
     </Suspense>
   );

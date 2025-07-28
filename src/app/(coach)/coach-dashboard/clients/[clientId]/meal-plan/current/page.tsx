@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import LoadingScreen from '@/components/ui/LoadingScreen';
+import PageLoadingSpinner from '@/components/ui/PageLoadingSpinner';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { CoachClientMealPlan } from '@/features/coach/components/client-dashboard/CoachClientMealPlan';
 import { checkCoachAccess } from '@/lib/utils/access-control';
@@ -16,8 +16,6 @@ export default async function CoachClientMealPlanPage({
   searchParams,
 }: CoachClientMealPlanPageProps) {
   const { clientId } = await params;
-
-  // Verify coach has access to this client
   const { hasAccess, isCoach } = await checkCoachAccess(clientId);
 
   if (!isCoach || !hasAccess) notFound();
@@ -31,7 +29,11 @@ export default async function CoachClientMealPlanPage({
           description="View and monitor your client's weekly meal schedule"
         />
         <CardContent>
-          <Suspense fallback={<LoadingScreen />}>
+          <Suspense
+            fallback={
+              <PageLoadingSpinner message="Loading client's meal plan..." />
+            }
+          >
             <CoachClientMealPlan
               searchParams={searchParams}
               clientId={clientId}

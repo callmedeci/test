@@ -1,31 +1,34 @@
-
+import PageLoadingSpinner from '@/components/ui/PageLoadingSpinner';
 import { CoachDashboardHeader } from '@/features/coach/components/dashboard/CoachDashboardHeader';
 import { CoachStatsCards } from '@/features/coach/components/dashboard/CoachStatsCards';
 import { QuickActionsSection } from '@/features/coach/components/dashboard/QuickActionsSection';
 import { RecentActivitySection } from '@/features/coach/components/dashboard/RecentActivitySection';
-import ErrorMessage from '@/components/ui/ErrorMessage';
+import { Suspense } from 'react';
 
-export default async function CoachDashboardPage() {
-  try {
-    return (
-      <div className='space-y-8'>
+export default function CoachDashboardPage() {
+  return (
+    <div className='space-y-8'>
+      <Suspense
+        fallback={<PageLoadingSpinner message='Loading dashboard header...' />}
+      >
         <CoachDashboardHeader />
-        <CoachStatsCards />
+      </Suspense>
 
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
+      <Suspense
+        fallback={<PageLoadingSpinner message='Loading your stats...' />}
+      >
+        <CoachStatsCards />
+      </Suspense>
+
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
+        <Suspense
+          fallback={<PageLoadingSpinner message='Loading recent activity...' />}
+        >
           <RecentActivitySection />
-          <QuickActionsSection />
-        </div>
+        </Suspense>
+
+        <QuickActionsSection />
       </div>
-    );
-  } catch (error) {
-    return (
-      <ErrorMessage
-        title="Dashboard Error"
-        message={error instanceof Error ? error.message : 'Failed to load dashboard'}
-        showRetry={true}
-        onRetry={() => window.location.reload()}
-      />
-    );
-  }
+    </div>
+  );
 }

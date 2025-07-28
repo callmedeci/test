@@ -22,7 +22,9 @@ async function CoachOptimizedMealPlanPage({
           icon={<ChefHat className='mr-3 h-8 w-8 text-primary' />}
         />
 
-        <Suspense fallback={<LoadingScreen />}>
+        <Suspense
+          fallback={<LoadingScreen loadingLabel='Generating AI meal plan...' />}
+        >
           <AiPlanSection clientId={clientId} />
         </Suspense>
       </Card>

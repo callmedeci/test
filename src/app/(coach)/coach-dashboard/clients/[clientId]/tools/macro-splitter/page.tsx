@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import LoadingScreen from '@/components/ui/LoadingScreen';
+import PageLoadingSpinner from '@/components/ui/PageLoadingSpinner';
 import SectionHeader from '@/components/ui/SectionHeader';
 import Spinner from '@/components/ui/Spinner';
 import DailyMacroSummary from '@/features/tools/components/macro-splitter/DailyMacroSummary';
@@ -34,7 +34,7 @@ async function CoachMacroSplitterPage({
             <CardContent>
               <div className='w-full flex items-center justify-center gap-1 p-4 border rounded-md bg-muted/50'>
                 <Spinner />
-                <p>Loading your data...</p>
+                <p>Loading daily macro summary...</p>
               </div>
             </CardContent>
           }
@@ -43,7 +43,11 @@ async function CoachMacroSplitterPage({
         </Suspense>
       </Card>
 
-      <Suspense fallback={<LoadingScreen />}>
+      <Suspense
+        fallback={
+          <PageLoadingSpinner message='Loading macro distribution section...' />
+        }
+      >
         <MacroSection clientId={clientId} />
       </Suspense>
     </div>
