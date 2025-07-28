@@ -9,9 +9,7 @@ export async function loginWithGoogle() {
   const supabase = createClient();
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: {
-      redirectTo: 'https://test-siah-lashkar.vercel.app/api/auth/callback',
-    },
+    options: { redirectTo },
   });
 
   if (error) throw new Error(`Google sign-in failed: ${error.message}`);
