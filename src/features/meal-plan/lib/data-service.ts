@@ -3,7 +3,7 @@
 import { getUser } from '@/features/profile/lib/data-services';
 import {
   GeneratePersonalizedMealPlanOutput,
-  MealPlans,
+  UserMealPlan,
   WeeklyMealPlan,
 } from '@/lib/schemas';
 import { createClient } from '@/lib/supabase/client';
@@ -12,14 +12,14 @@ import { revalidatePath } from 'next/cache';
 export async function editMealPlan(
   mealPlan: { meal_data: WeeklyMealPlan },
   userId?: string
-): Promise<MealPlans> {
+): Promise<UserMealPlan> {
   const supabase = createClient();
   const targetUserId = userId || (await getUser()).id;
 
   if (!targetUserId) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
-    .from('meal_plans')
+    .from('user_meal_plan')
     .update(mealPlan)
     .eq('user_id', targetUserId)
     .select()
@@ -36,7 +36,7 @@ export async function editMealPlan(
   }
 
   revalidatePath('/meal-plan/current');
-  return data as MealPlans;
+  return data as UserMealPlan;
 }
 
 export async function editAiPlan(
@@ -44,14 +44,14 @@ export async function editAiPlan(
     ai_plan: GeneratePersonalizedMealPlanOutput;
   },
   userId?: string
-): Promise<MealPlans> {
+): Promise<UserMealPlan> {
   const supabase = createClient();
   const targetUserId = userId || (await getUser()).id;
 
   if (!targetUserId) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
-    .from('meal_plans')
+    .from('user_meal_plan')
     .update(aiPlan)
     .eq('user_id', targetUserId)
     .select()
@@ -67,5 +67,5 @@ export async function editAiPlan(
     throw new Error(`Failed to update AI-generated plan: ${error.message}`);
   }
 
-  return data as MealPlans;
+  return data as UserMealPlan;
 }

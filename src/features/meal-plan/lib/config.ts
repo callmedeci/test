@@ -1,5 +1,5 @@
 import { ChartConfig } from '@/components/ui/chart';
-import { BaseProfileData } from '@/lib/schemas';
+import { UserProfile } from '@/lib/schemas';
 
 export const chartConfig: ChartConfig = {
   calories: { label: 'Calories (kcal)', color: 'hsl(var(--chart-1))' },
@@ -8,7 +8,7 @@ export const chartConfig: ChartConfig = {
   carbs: { label: 'Carbs (g)', color: 'hsl(var(--chart-4))' },
 };
 
-export const requiredFields: (keyof BaseProfileData)[] = [
+export const requiredFields: (keyof UserProfile)[] = [
   'age',
   'biological_sex',
   'current_weight_kg',

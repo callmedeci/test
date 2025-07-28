@@ -94,7 +94,7 @@ export async function getCoachProfile(): Promise<CoachProfile> {
 
   const profile = await getProfileById(
     coach.user_id,
-    'coach',
+    'client',
     'user_id, age, biological_sex'
   );
   const userData = await getUserDataById(coach.user_id);
@@ -184,13 +184,14 @@ export async function checkCoachAccess(clientId: string): Promise<{
 
     if (!user) return { hasAccess: false, isCoach: false };
 
-    const { data: profile } = await supabase
-      .from('profile')
-      .select('user_role')
+    // Check if user is a coach by looking in coaches table
+    const { data: coachData } = await supabase
+      .from('coaches')
+      .select('user_id')
       .eq('user_id', user.id)
       .single();
 
-    if (!profile || profile.user_role !== 'coach') {
+    if (!coachData) {
       return { hasAccess: false, isCoach: false };
     }
 
