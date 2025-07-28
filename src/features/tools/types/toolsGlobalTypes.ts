@@ -1,15 +1,10 @@
-import { BaseProfileData } from '@/lib/schemas';
+import { UserProfile } from '@/lib/schemas';
 import { z } from 'zod';
 import { customizePlanFormSchema } from '../lib/schema';
 
 export type MealInputTypes = {
   preferredDiet?: string | undefined;
   allergies?: string[] | undefined;
-  preferredCuisines?: string[] | undefined;
-  dispreferredCuisines?: string[] | undefined;
-  preferredIngredients?: string[] | undefined;
-  dispreferredIngredients?: string[] | undefined;
-  preferredMicronutrients?: string[] | undefined;
   medicalConditions?: string[] | undefined;
   medications?: string[] | undefined;
 };
@@ -38,7 +33,7 @@ export type AiMealInputTypes = {
     carbs: number;
     fat: number;
   };
-  profile: Partial<BaseProfileData>;
+  profile: Partial<UserProfile>;
 };
 
 export type customizePlanFormValues = z.infer<typeof customizePlanFormSchema>;

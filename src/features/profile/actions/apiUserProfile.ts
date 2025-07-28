@@ -29,17 +29,9 @@ export async function editProfile(
       targetUserId = user.id;
     }
 
-    // Filter out null, undefined, and empty string values to prevent enum validation errors
-    const filteredProfile = Object.entries(newProfile).reduce((acc, [key, value]) => {
-      if (value !== null && value !== undefined && value !== '') {
-        acc[key] = value;
-      }
-      return acc;
-    }, {} as Record<string, any>);
-
     const { error } = await supabase
-      .from('profile')
-      .update(filteredProfile)
+      .from('user_profile')
+      .update(newProfile)
       .eq('user_id', targetUserId)
       .single();
 
@@ -80,7 +72,7 @@ export async function resetProfile() {
     if (!user) throw new Error('Unauthorized access!');
 
     const { data: userProfile, error: userError } = await supabase
-      .from('profile')
+      .from('user_profile')
       .select('*')
       .eq('user_id', user.id)
       .single();
@@ -90,7 +82,7 @@ export async function resetProfile() {
     if (!userProfile) throw new Error('User profile not found');
 
     const { data: plan, error: planError } = await supabase
-      .from('smart_plan')
+      .from('user_plan')
       .select('*')
       .eq('user_id', user.id)
       .single();
@@ -99,7 +91,7 @@ export async function resetProfile() {
       throw new Error(`Failed to fetch user plan: ${planError.message}`);
     if (!plan) throw new Error('User plan not found');
 
-    const protectedFields = ['id', 'user_id', 'created_at'];
+    const protectedFields = ['id', 'user_id', 'created_at', 'updated_at'];
 
     const updateProfile: Record<string, any> = {};
     const updatePlan: Record<string, any> = {};
@@ -112,9 +104,8 @@ export async function resetProfile() {
       if (!protectedFields.includes(key)) updatePlan[key] = null;
     });
 
-    updatePlan.updated_at = new Date().toISOString();
 
-    // Reset profile
+    // // Reset profile
     await editProfile({ ...updateProfile, is_onboarding_complete: false });
 
     // Reset plan

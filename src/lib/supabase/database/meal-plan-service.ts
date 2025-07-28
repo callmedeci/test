@@ -1,12 +1,12 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import type { MealPlans, WeeklyMealPlan, GeneratePersonalizedMealPlanOutput } from "@/lib/schemas"
+import type { UserMealPlan, WeeklyMealPlan, GeneratePersonalizedMealPlanOutput } from "@/lib/schemas"
 
-export async function getMealPlan(userId: string): Promise<MealPlans> {
+export async function getMealPlan(userId: string): Promise<UserMealPlan> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.from("meal_plans").select("*").eq("user_id", userId).single()
+  const { data, error } = await supabase.from("user_meal_plan").select("*").eq("user_id", userId).single()
 
   if (error) {
     if (error.code === "PGRST116") {
@@ -15,24 +15,24 @@ export async function getMealPlan(userId: string): Promise<MealPlans> {
     throw new Error(`Failed to fetch meal plan: ${error.message}`)
   }
 
-  return data as MealPlans
+  return data as UserMealPlan
 }
 
-export async function getMealPlanOrDefault(userId: string): Promise<MealPlans> {
+export async function getMealPlanOrDefault(userId: string): Promise<UserMealPlan> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.from("meal_plans").select("*").eq("user_id", userId).single()
+  const { data, error } = await supabase.from("user_meal_plan").select("*").eq("user_id", userId).single()
 
   if (error)  throw new Error(`Failed to fetch meal plan: ${error.message}`)
   
 
-  return data as MealPlans
+  return data as UserMealPlan
 }
 
 export async function updateMealPlan(userId: string, mealData: { meal_data: WeeklyMealPlan }): Promise<void> {
   const supabase = await createClient()
 
-  const { error } = await supabase.from("meal_plans").update(mealData).eq("user_id", userId)
+  const { error } = await supabase.from("user_meal_plan").update(mealData).eq("user_id", userId)
 
   if (error) {
     if (error.code === "23505") {
@@ -48,7 +48,7 @@ export async function updateAiPlan(
 ): Promise<void> {
   const supabase = await createClient()
 
-  const { error } = await supabase.from("meal_plans").update(aiPlan).eq("user_id", userId)
+  const { error } = await supabase.from("user_meal_plan").update(aiPlan).eq("user_id", userId)
 
   if (error) {
     if (error.code === "23505") {
@@ -58,10 +58,10 @@ export async function updateAiPlan(
   }
 }
 
-export async function createMealPlan(userId: string, mealPlanData: Partial<MealPlans>): Promise<void> {
+export async function createMealPlan(userId: string, mealPlanData: Partial<UserMealPlan>): Promise<void> {
   const supabase = await createClient()
 
-  const { error } = await supabase.from("meal_plans").insert({
+  const { error } = await supabase.from("user_meal_plan").insert({
     user_id: userId,
     ...mealPlanData,
   })
@@ -77,7 +77,7 @@ export async function createMealPlan(userId: string, mealPlanData: Partial<MealP
 export async function deleteMealPlan(userId: string): Promise<void> {
   const supabase = await createClient()
 
-  const { error } = await supabase.from("meal_plans").delete().eq("user_id", userId)
+  const { error } = await supabase.from("user_meal_plan").delete().eq("user_id", userId)
 
   if (error) {
     throw new Error(`Failed to delete meal plan: ${error.message}`)
