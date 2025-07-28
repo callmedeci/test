@@ -30,6 +30,16 @@ import {
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import React from 'react';
+import {
+  Calculator,
+  CircleUser,
+  Dumbbell,
+  House,
+  MessageCircle,
+  PieChart,
+  Target,
+  Utensils,
+} from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -53,6 +63,8 @@ const navItems = [
     icon: NotebookText,
   },
   { href: '/meal-plan/optimized', label: 'AI Meal Plan', icon: Bot },
+  { section: 'Exercise Planning' },
+  { href: '/tools/workout-planner', label: 'AI Exercise Planner', icon: Dumbbell },
   { section: 'Support' },
   {
     href: '/support/chatbot',

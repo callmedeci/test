@@ -29,9 +29,17 @@ export async function editProfile(
       targetUserId = user.id;
     }
 
+    // Filter out null, undefined, and empty string values to prevent enum validation errors
+    const filteredProfile = Object.entries(newProfile).reduce((acc, [key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
     const { error } = await supabase
       .from('profile')
-      .update(newProfile)
+      .update(filteredProfile)
       .eq('user_id', targetUserId)
       .single();
 
@@ -106,7 +114,7 @@ export async function resetProfile() {
 
     updatePlan.updated_at = new Date().toISOString();
 
-    // // Reset profile
+    // Reset profile
     await editProfile({ ...updateProfile, is_onboarding_complete: false });
 
     // Reset plan

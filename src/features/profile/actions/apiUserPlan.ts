@@ -23,9 +23,27 @@ export async function editPlan(newPlan: any, clientId?: string) {
       targetUserId = user.id;
     }
 
+    // First check if profile exists
+    const { data: profileExists } = await supabase
+      .from('profile')
+      .select('user_id')
+      .eq('user_id', targetUserId)
+
+    if (!profileExists) {
+      throw new Error('Profile must be created before saving plan');
+    }
+
+    // Filter out null, undefined, and empty string values
+    const filteredPlan = Object.entries(newPlan).reduce((acc, [key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
     const { error } = await supabase
       .from('smart_plan')
-      .update(newPlan)
+      .update(filteredPlan)
       .eq('user_id', targetUserId);
 
     if (error) throw new Error(`Plan update failed: ${error.message}`);
