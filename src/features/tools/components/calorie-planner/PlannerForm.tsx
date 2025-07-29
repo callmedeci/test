@@ -63,43 +63,43 @@ function PlannerForm({ plan, profile, clientId }: PlannerFormProps) {
 
   async function handleSmartPlannerReset() {
     form.reset({
-      age: null,
-      biological_sex: null,
-      height_cm: null,
-      current_weight_kg: null,
-      target_weight_1month_kg: null,
-      long_term_goal_weight_kg: null,
+      age: undefined,
+      biological_sex: undefined,
+      height_cm: undefined,
+      current_weight_kg: undefined,
+      target_weight_1month_kg: undefined,
+      long_term_goal_weight_kg: undefined,
       physical_activity_level: 'moderate',
       primary_diet_goal: 'fat_loss',
-      bf_current: null,
-      bf_target: null,
-      bf_ideal: null,
-      mm_current: null,
-      mm_target: null,
-      mm_ideal: null,
-      bw_current: null,
-      bw_target: null,
-      bw_ideal: null,
-      waist_current: null,
-      waist_goal_1m: null,
-      waist_ideal: null,
-      hips_current: null,
-      hips_goal_1m: null,
-      hips_ideal: null,
-      right_leg_current: null,
-      right_leg_goal_1m: null,
-      right_leg_ideal: null,
-      left_leg_current: null,
-      left_leg_goal_1m: null,
-      left_leg_ideal: null,
-      right_arm_current: null,
-      right_arm_goal_1m: null,
-      right_arm_ideal: null,
-      left_arm_current: null,
-      left_arm_goal_1m: null,
-      left_arm_ideal: null,
-      custom_total_calories: null,
-      custom_protein_per_kg: null,
+      bf_current: undefined,
+      bf_target: undefined,
+      bf_ideal: undefined,
+      mm_current: undefined,
+      mm_target: undefined,
+      mm_ideal: undefined,
+      bw_current: undefined,
+      bw_target: undefined,
+      bw_ideal: undefined,
+      waist_current: undefined,
+      waist_goal_1m: undefined,
+      waist_ideal: undefined,
+      hips_current: undefined,
+      hips_goal_1m: undefined,
+      hips_ideal: undefined,
+      right_leg_current: undefined,
+      right_leg_goal_1m: undefined,
+      right_leg_ideal: undefined,
+      left_leg_current: undefined,
+      left_leg_goal_1m: undefined,
+      left_leg_ideal: undefined,
+      right_arm_current: undefined,
+      right_arm_goal_1m: undefined,
+      right_arm_ideal: undefined,
+      left_arm_current: undefined,
+      left_arm_goal_1m: undefined,
+      left_arm_ideal: undefined,
+      custom_total_calories: undefined,
+      custom_protein_per_kg: undefined,
       remaining_calories_carb_pct: 50,
     });
 
@@ -112,13 +112,21 @@ function PlannerForm({ plan, profile, clientId }: PlannerFormProps) {
       ...newProfile
     } = form.getValues();
 
+    // Convert null values to undefined for the profile update
+    const profileUpdate = Object.fromEntries(
+      Object.entries(newProfile).map(([key, value]) => [
+        key,
+        value === null ? undefined : value,
+      ])
+    ) as Partial<BaseProfileData>;
+
     try {
-      await editProfile(newProfile, undefined, clientId);
+      await editProfile(profileUpdate, undefined, clientId);
       await editPlan(
         {
           custom_protein_per_kg,
           custom_total_calories,
-          remaining_calories_carb_pct,
+          remaining_calories_carbs_percentage,
         },
         clientId
       );
@@ -287,14 +295,22 @@ function PlannerForm({ plan, profile, clientId }: PlannerFormProps) {
       current_weight_for_custom_calc: data.current_weight_kg,
     };
 
-    const { remaining_calories_carb_pct, ...newProfile } = data;
+    const { remaining_calories_carbs_percentage, ...newProfile } = data;
+
+    // Convert null values to undefined for the profile update
+    const profileUpdate = Object.fromEntries(
+      Object.entries(newProfile).map(([key, value]) => [
+        key,
+        value === null ? undefined : value,
+      ])
+    ) as Partial<BaseProfileData>;
 
     try {
-      await editProfile(newProfile, undefined, clientId);
+      await editProfile(profileUpdate, undefined, clientId);
       await editPlan(
         {
           ...newPlan,
-          remaining_calories_carb_pct,
+          remaining_calories_carbs_percentage,
         },
         clientId
       );
@@ -323,15 +339,15 @@ function PlannerForm({ plan, profile, clientId }: PlannerFormProps) {
   useEffect(
     function () {
       const estimated_weekly_weight_change_kg =
-        ((plan.maintenance_calories_tdee! - plan.target_daily_calories) * 7) /
+        ((plan.maintenance_calories_tdee! - plan.target_daily_calories!) * 7) /
         7700;
 
       const proteinCalories =
-        (plan.target_protein_percentage * plan.target_daily_calories) / 100;
+        (plan.target_protein_percentage! * plan.target_daily_calories!) / 100;
       const carbCalories =
-        (plan.target_carbs_percentage * plan.target_daily_calories) / 100;
+        (plan.target_carbs_percentage! * plan.target_daily_calories!) / 100;
       const fatCalories =
-        (plan.target_fat_percentage * plan.target_daily_calories) / 100;
+        (plan.target_fat_percentage! * plan.target_daily_calories!) / 100;
 
       setResults({
         ...plan,

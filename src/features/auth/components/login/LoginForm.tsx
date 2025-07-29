@@ -14,7 +14,6 @@ import { loginSchema } from '../../schemas/authSchema';
 import LoginWithGoogleButton from '../shared/LoginWithGoogleButton';
 import SubmitButton from '@/components/ui/SubmitButton';
 import { loginAction } from '../../actions/login';
-import { SubmitHandler } from 'react-hook-form';
 
 type LoginFormValues = {
   email: string;

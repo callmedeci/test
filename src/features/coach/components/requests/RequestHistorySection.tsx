@@ -2,7 +2,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, XCircle, Clock } from "lucide-react"
-import { mockRequestHistory } from "@/features/coach/lib/mockData"
+
+const mockRequestHistory = [
+  {
+    id: 'hist_001',
+    client_name: 'John Smith',
+    email_address: 'john.smith@email.com',
+    status: 'accepted' as const,
+    action_date: '2 days ago',
+  },
+];
 
 const statusIcons = {
   accepted: CheckCircle,

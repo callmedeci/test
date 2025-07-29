@@ -30,7 +30,7 @@ export function getAdjustedMealInput(
     mealDistribution = defaultMacroPercentages[mealToOptimize.name];
   else
     mealDistribution = userMealDistributions.filter(
-      (meal) => meal.mealName === mealToOptimize.name
+      (meal: any) => meal.mealName === mealToOptimize.name
     )[0];
 
   const targetMacrosForMeal = {

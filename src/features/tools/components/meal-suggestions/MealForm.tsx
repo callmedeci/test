@@ -23,8 +23,8 @@ import { useToast } from '@/hooks/use-toast';
 import { preferredDiets } from '@/lib/constants';
 import {
   BaseProfileData,
-  MealSuggestionPreferencesSchema,
-  type MealSuggestionPreferencesValues,
+  UserProfileSchema,
+  type UserProfile,
 } from '@/lib/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Save } from 'lucide-react';
@@ -34,14 +34,22 @@ import PreferenceTextarea from './PreferenceTextarea';
 function MealForm({ profile }: { profile: BaseProfileData }) {
   const { toast } = useToast();
 
-  const form = useForm<MealSuggestionPreferencesValues>({
-    resolver: zodResolver(MealSuggestionPreferencesSchema),
+  const form = useForm<Partial<UserProfile>>({
+    resolver: zodResolver(UserProfileSchema.partial()),
     defaultValues: profile,
   });
 
-  const handleSavePreferences: SubmitHandler<MealSuggestionPreferencesValues> = async (data) => {
+  const handleSavePreferences: SubmitHandler<Partial<UserProfile>> = async (data) => {
+    // Convert null values to undefined for the profile update
+    const profileUpdate = Object.fromEntries(
+      Object.entries(data).map(([key, value]) => [
+        key,
+        value === null ? undefined : value,
+      ])
+    ) as Partial<BaseProfileData>;
+
     try {
-      await editProfile(data);
+      await editProfile(profileUpdate);
 
       toast({
         title: 'Preferences Saved',

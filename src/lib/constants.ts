@@ -74,6 +74,12 @@ export const exerciseFrequencies = [
   { value: 'daily', label: 'Daily' },
 ];
 
+export const exerciseIntensities = [
+  { value: 'light', label: 'Light' },
+  { value: 'moderate', label: 'Moderate' },
+  { value: 'vigorous', label: 'Vigorous' },
+];
+
 export const subscriptionStatuses = [
   { value: 'free', label: 'Free Tier' },
   { value: 'premium', label: 'Premium Monthly' },

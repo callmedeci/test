@@ -163,7 +163,7 @@ function EditMealDialog({
   }, [meal?.ingredients]);
 
   useEffect(function () {
-    const selectedDay = mealPlan.meal_data.days
+    const selectedDay = mealPlan.meal_data?.days
       .filter((plan) => plan.day_of_week === getQueryParams('selected_day'))
       .at(0);
     const selectedMeal = selectedDay?.meals

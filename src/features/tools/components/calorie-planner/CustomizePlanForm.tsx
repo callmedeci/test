@@ -156,9 +156,9 @@ function CustomizePlanForm({
 
     const defaultProteinPerKg =
       plan.target_protein_g &&
-      plan.current_weight_for_custom_calc &&
-      plan.current_weight_for_custom_calc > 0
-        ? plan.target_protein_g / plan.current_weight_for_custom_calc
+      profile.current_weight_kg &&
+      profile.current_weight_kg > 0
+        ? plan.target_protein_g / profile.current_weight_kg
         : 1.6;
 
     const effectiveProteinPerKg =
@@ -305,11 +305,7 @@ function CustomizePlanForm({
                   <CustomizeToolTip
                     message={` Set your desired protein intake in grams per kg of your current body weight (
                       ${
-                        plan?.current_weight_for_custom_calc
-                          ? formatNumber(plan.current_weight_for_custom_calc, {
-                              maximumFractionDigits: 1,
-                            })
-                          : profile?.current_weight_kg
+                        profile?.current_weight_kg
                           ? formatNumber(profile.current_weight_kg, {
                               maximumFractionDigits: 1,
                             })
@@ -317,12 +313,12 @@ function CustomizePlanForm({
                       } kg). Affects protein, carbs, and fat distribution.
                       Original estimate:
                       ${
-                        plan?.current_weight_for_custom_calc &&
-                        plan?.current_weight_for_custom_calc > 0 &&
+                        profile?.current_weight_kg &&
+                        profile?.current_weight_kg > 0 &&
                         plan?.target_protein_g
                           ? formatNumber(
                               plan.target_protein_g /
-                                plan.current_weight_for_custom_calc,
+                                profile.current_weight_kg,
                               { maximumFractionDigits: 1 }
                             )
                           : 'N/A'
@@ -334,12 +330,12 @@ function CustomizePlanForm({
                     <Input
                       type='number'
                       placeholder={`e.g., ${
-                        plan?.current_weight_for_custom_calc &&
-                        plan?.current_weight_for_custom_calc > 0 &&
+                        profile?.current_weight_kg &&
+                        profile?.current_weight_kg > 0 &&
                         plan?.target_protein_g
                           ? formatNumber(
                               plan.target_protein_g /
-                                plan.current_weight_for_custom_calc,
+                                profile.current_weight_kg,
                               { maximumFractionDigits: 1 }
                             )
                           : '1.6'

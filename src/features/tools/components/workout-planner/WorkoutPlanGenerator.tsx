@@ -83,8 +83,8 @@ export default function WorkoutPlanGenerator({ profile }: WorkoutPlanGeneratorPr
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          fitness_level: profile.workout_experience || 'Beginner',
-          exercise_experience: [profile.preferred_workout_type || 'Mixed'],
+          fitness_level: 'Beginner',
+          exercise_experience: ['Mixed'],
           primary_goal: 'Build muscle',
           exercise_days_per_week: 3,
           available_time_per_session: 30,
@@ -92,7 +92,7 @@ export default function WorkoutPlanGenerator({ profile }: WorkoutPlanGeneratorPr
           available_equipment: ['Dumbbells'],
           existing_medical_conditions: [],
           injuries_or_limitations: '',
-          job_type: profile.activity_level || 'Moderate',
+          job_type: profile.physical_activity_level || 'Moderate',
           preferred_difficulty_level: 'Medium'
         }),
       });
@@ -109,13 +109,13 @@ export default function WorkoutPlanGenerator({ profile }: WorkoutPlanGeneratorPr
         },
         body: JSON.stringify({
           prompt: `Generate a comprehensive 7-day English workout plan for:
-          - Experience: ${profile.workout_experience || 'Beginner'}
+          - Experience: ${'Beginner'}
           - Goal: Build muscle and improve fitness
           - Age: ${profile.age || 25}
-          - Activity Level: ${profile.activity_level || 'Moderate'}
-          - Preferred Type: ${profile.preferred_workout_type || 'Mixed'}`,
+          - Activity Level: ${profile.physical_activity_level || 'Moderate'}
+          - Preferred Type: ${'Mixed'}`,
           preferences: {
-            fitness_level: profile.workout_experience || 'Beginner',
+            fitness_level: 'Beginner',
             primary_goal: 'Build muscle',
             exercise_days_per_week: 7,
             available_time_per_session: 45
@@ -191,7 +191,7 @@ export default function WorkoutPlanGenerator({ profile }: WorkoutPlanGeneratorPr
                     <p className="text-sm font-medium text-green-700">Experience Level</p>
                   </div>
                   <Badge variant="secondary" className="bg-green-100 text-green-800 px-3 py-1 font-semibold">
-                    {profile.workout_experience || 'Beginner'}
+                    {'Beginner'}
                   </Badge>
                 </div>
                 <div className="text-center p-4 bg-white/70 rounded-lg backdrop-blur-sm shadow-md">
@@ -200,7 +200,7 @@ export default function WorkoutPlanGenerator({ profile }: WorkoutPlanGeneratorPr
                     <p className="text-sm font-medium text-blue-700">Preferred Type</p>
                   </div>
                   <Badge variant="secondary" className="bg-blue-100 text-blue-800 px-3 py-1 font-semibold">
-                    {profile.preferred_workout_type || 'Mixed'}
+                    {'Mixed'}
                   </Badge>
                 </div>
                 <div className="text-center p-4 bg-white/70 rounded-lg backdrop-blur-sm shadow-md">
@@ -209,7 +209,7 @@ export default function WorkoutPlanGenerator({ profile }: WorkoutPlanGeneratorPr
                     <p className="text-sm font-medium text-purple-700">Activity Level</p>
                   </div>
                   <Badge variant="secondary" className="bg-purple-100 text-purple-800 px-3 py-1 font-semibold">
-                    {profile.activity_level || 'Moderate'}
+                    {profile.physical_activity_level || 'Moderate'}
                   </Badge>
                 </div>
                 <div className="text-center p-4 bg-white/70 rounded-lg backdrop-blur-sm shadow-md">

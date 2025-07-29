@@ -61,8 +61,16 @@ function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
   const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     const { name, ...newProfile } = data;
 
+    // Convert null values to undefined for the profile update
+    const profileUpdate = Object.fromEntries(
+      Object.entries(newProfile).map(([key, value]) => [
+        key,
+        value === null ? undefined : value,
+      ])
+    ) as Partial<BaseProfileData>;
+
     try {
-      await editProfile(newProfile, { data: { full_name: name } }, clientId);
+      await editProfile(profileUpdate, { data: { full_name: name } }, clientId);
 
       return toast({
         title: 'Profile Updated',

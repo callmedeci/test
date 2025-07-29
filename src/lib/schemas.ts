@@ -127,6 +127,7 @@ export const UserPlanSchema = z.object({
   custom_fat_g: z.number().nullable().optional(),
   custom_fat_percentage: z.number().nullable().optional(),
   remaining_calories_carb_pct: z.number().nullable().optional(),
+  current_weight_for_custom_calc: z.number().nullable().optional(),
 });
 
 export type UserPlan = z.infer<typeof UserPlanSchema>;

@@ -106,7 +106,7 @@ export default function ClientOnboardingForm() {
         height_cm: data.height_cm,
         physical_activity_level: data.physical_activity_level,
         primary_diet_goal: data.primary_diet_goal,
-        long_term_goal_weight_kg: data.target_weight_1month_kg,
+        target_weight_kg: data.target_weight_1month_kg,
       });
 
       if (
@@ -213,11 +213,6 @@ export default function ClientOnboardingForm() {
 
     const arrayLikeFields: (keyof OnboardingFormValues)[] = [
       'allergies',
-      'preferred_cuisines',
-      'dispreferrred_cuisines',
-      'preferred_ingredients',
-      'dispreferrred_ingredients',
-      'preferred_micronutrients',
       'medical_conditions',
       'medications',
     ];
@@ -244,17 +239,24 @@ export default function ClientOnboardingForm() {
       }
     });
 
+    // Convert null values to undefined for the profile update
+    const profileData = Object.fromEntries(
+      Object.entries({
+        is_onboarding_complete: true,
+        user_role: processedData.user_role,
+        age: processedData.age,
+        biological_sex: processedData.biological_sex,
+        height_cm: processedData.height_cm,
+        current_weight_kg: processedData.current_weight_kg,
+        target_weight_1month_kg: processedData.target_weight_1month_kg,
+        long_term_goal_weight_kg: processedData.long_term_goal_weight_kg,
+        physical_activity_level: processedData.physical_activity_level,
+        primary_diet_goal: processedData.primary_diet_goal,
+      }).map(([key, value]) => [key, value === null ? undefined : value])
+    );
+
     const profileToEdit = {
-      is_onboarding_complete: true,
-      user_role: processedData.user_role,
-      age: processedData.age,
-      biological_sex: processedData.biological_sex,
-      height_cm: processedData.height_cm,
-      current_weight_kg: processedData.current_weight_kg,
-      target_weight_1month_kg: processedData.target_weight_1month_kg,
-      long_term_goal_weight_kg: processedData.long_term_goal_weight_kg,
-      physical_activity_level: processedData.physical_activity_level,
-      primary_diet_goal: processedData.primary_diet_goal,
+      ...profileData,
     };
 
     const planToEdit = {

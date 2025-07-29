@@ -118,10 +118,10 @@ function MacroForm({ plan, profile, clientId }: MacroFormProps) {
     const fat = plan.custom_fat_g ?? plan.target_fat_g;
 
     const macroTargets = {
-      calories: totalCalories,
-      protein_g: protein,
-      carbs_g: carbs,
-      fat_g: fat,
+      calories: totalCalories || 0,
+      protein_g: protein || 0,
+      carbs_g: carbs || 0,
+      fat_g: fat || 0,
     };
 
     const result = customMacroSplit(macroTargets, data.meal_distributions);

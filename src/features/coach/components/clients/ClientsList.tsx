@@ -6,7 +6,7 @@ import Link from 'next/link';
 interface ClientData {
   user_id: string;
   full_name: string;
-  email: string;
+  email?: string;
   age: number;
   biological_sex: string;
   primary_diet_goal: string;
@@ -40,7 +40,7 @@ function ClientsList({ clients }: { clients: ClientData[] }) {
               </div>
 
               <div className='flex items-center gap-4 text-sm text-muted-foreground'>
-                <span>{client.email}</span>
+                <span>{client.email || 'No email'}</span>
                 <span>•</span>
                 <span>{client.age} years old</span>
                 <span>•</span>
