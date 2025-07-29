@@ -111,20 +111,14 @@ export async function updateSession(request: NextRequest) {
   if (user && AUTH_ROUTES.some((route) => pathname.startsWith(route))) {
     // Get user profile to determine redirect destination
     const { data: profile } = await supabase
-      .from('user_profile')
+      .from('profile')
       .select('user_role, is_onboarding_complete')
       .eq('user_id', user.id)
       .single();
 
     if (profile?.is_onboarding_complete) {
-      // Check if user is a coach by looking in coaches table
-      const { data: coachData } = await supabase
-        .from('coaches')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .single();
-
-      const redirectUrl = coachData ? '/coach-dashboard' : '/dashboard';
+      const redirectUrl =
+        profile.user_role === 'coach' ? '/coach-dashboard' : '/dashboard';
       return NextResponse.redirect(new URL(redirectUrl, request.url));
     }
 
@@ -140,47 +134,38 @@ export async function updateSession(request: NextRequest) {
       pathname.startsWith('/coach-dashboard'))
   ) {
     const { data: profile } = await supabase
-      .from('user_profile')
+      .from('profile')
       .select('user_role, is_onboarding_complete')
       .eq('user_id', user.id)
       .single();
 
-    if (!profile?.is_onboarding_complete && !pathname.startsWith('/onboarding'))
+    console.log('Profile data:', profile);
+
+    if (!profile) return supabaseRes;
+
+    if (!profile.is_onboarding_complete && !pathname.startsWith('/onboarding'))
       return NextResponse.redirect(new URL('/onboarding', request.url));
 
-    if (profile?.is_onboarding_complete) {
+    if (profile.is_onboarding_complete) {
       if (pathname.startsWith('/onboarding')) {
-        // Check if user is a coach by looking in coaches table
-        const { data: coachData } = await supabase
-          .from('coaches')
-          .select('user_id')
-          .eq('user_id', user.id)
-          .single();
-
-        const redirectUrl = coachData ? '/coach-dashboard' : '/dashboard';
+        const redirectUrl =
+          profile.user_role === 'coach' ? '/coach-dashboard' : '/dashboard';
         return NextResponse.redirect(new URL(redirectUrl, request.url));
       }
 
-      // Check if user is a coach and redirect appropriately
-      const { data: coachData } = await supabase
-        .from('coaches')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .single();
+      if (
+        profile.user_role === 'coach' &&
+        pathname.startsWith('/dashboard') &&
+        !pathname.startsWith('/coach-dashboard')
+      ) {
+        return NextResponse.redirect(new URL('/coach-dashboard', request.url));
+      }
 
-      if (coachData) {
-        if (
-          pathname.startsWith('/dashboard') &&
-          !pathname.startsWith('/coach-dashboard')
-        ) {
-          return NextResponse.redirect(
-            new URL('/coach-dashboard', request.url)
-          );
-        }
-      } else {
-        if (pathname.startsWith('/coach-dashboard')) {
-          return NextResponse.redirect(new URL('/dashboard', request.url));
-        }
+      if (
+        profile.user_role === 'client' &&
+        pathname.startsWith('/coach-dashboard')
+      ) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
       }
     }
   }

@@ -196,7 +196,7 @@ function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
               placeholder='e.g., Knee pain, Limited shoulder range'
               control={form.control}
             />
-            {/* <CommaSeparatedInput
+            <CommaSeparatedInput
               fieldName='injuries'
               label='Injuries (comma-separated, Optional)'
               placeholder='e.g., ACL tear, Rotator cuff'
@@ -208,7 +208,7 @@ function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
               label='Surgeries (comma-separated, Optional)'
               placeholder='e.g., Knee replacement, Appendix removal'
               control={form.control}
-            /> */}
+            />
           </ProfileAccordionItem>
 
           <ProfileAccordionItem
@@ -258,7 +258,7 @@ function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
                 </FormItem>
               )}
             />
-            {/* <FormField
+            <FormField
               control={form.control}
               name='typical_exercise_intensity'
               render={({ field }) => (
@@ -286,7 +286,7 @@ function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
                   <FormMessage />
                 </FormItem>
               )}
-            /> */}
+            />
 
             <CommaSeparatedInput
               fieldName='equipment_access'

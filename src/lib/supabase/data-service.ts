@@ -20,7 +20,7 @@ export async function getUserProfile(
   const targetUserId = userId || (await getUser()).id;
 
   const { data } = await supabase
-    .from('user_profile')
+    .from('profile')
     .select('*')
     .eq('user_id', targetUserId)
     .single();
@@ -37,7 +37,7 @@ export async function getMealPlan(userId?: string): Promise<MealPlans> {
   if (!targetUserId) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
-    .from('user_meal_plan')
+    .from('meal_plans')
     .select('*')
     .eq('user_id', targetUserId)
     .single();
@@ -58,7 +58,7 @@ export async function getUserPlan(userId?: string): Promise<UserPlanType> {
   if (!targetUserId) throw new Error('User not authenticated');
 
   const { data } = await supabase
-    .from('user_plan')
+    .from('smart_plan')
     .select('*')
     .eq('user_id', targetUserId)
     .single();
@@ -75,9 +75,10 @@ export async function getProfileById(
 ): Promise<BaseProfileData> {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from('user_profile')
+    .from('profile')
     .select(select)
     .eq('user_id', userId)
+    .eq('user_role', userRole)
     .single<BaseProfileData>();
 
   if (!data || error) throw new Error('User profile not found');
