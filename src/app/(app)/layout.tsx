@@ -93,7 +93,7 @@ export default async function AppLayout({
                   </React.Fragment>
                 );
               }
-              const IconComponent = item.icon; // Get the icon component
+              const IconComponent = item.icon!; // Get the icon component
               return (
                 <SidebarMenuItem key={item.label}>
                   <Link href={item.href!} passHref>

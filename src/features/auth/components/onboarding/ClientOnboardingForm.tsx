@@ -68,7 +68,7 @@ export default function ClientOnboardingForm() {
       biological_sex: undefined,
       height_cm: undefined,
       current_weight_kg: undefined,
-      target_weight_kg: undefined,
+      target_weight_1month_kg: undefined,
       long_term_goal_weight_kg: undefined,
       physical_activity_level: undefined,
       primary_diet_goal: 'fat_loss',
@@ -83,7 +83,7 @@ export default function ClientOnboardingForm() {
     'custom_protein_per_kg',
     'remaining_calories_carbs_percentage',
     'current_weight_kg',
-  ]);
+  ] as const);
 
   const activeStepData = onboardingStepsData.find(
     (s) => s.stepNumber === currentStep

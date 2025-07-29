@@ -196,19 +196,6 @@ function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
               placeholder='e.g., Knee pain, Limited shoulder range'
               control={form.control}
             />
-            <CommaSeparatedInput
-              fieldName='injuries'
-              label='Injuries (comma-separated, Optional)'
-              placeholder='e.g., ACL tear, Rotator cuff'
-              control={form.control}
-            />
-
-            <CommaSeparatedInput
-              fieldName='surgeries'
-              label='Surgeries (comma-separated, Optional)'
-              placeholder='e.g., Knee replacement, Appendix removal'
-              control={form.control}
-            />
           </ProfileAccordionItem>
 
           <ProfileAccordionItem
@@ -250,35 +237,6 @@ function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
                       {exerciseFrequencies.map((ef) => (
                         <SelectItem key={ef.value} value={ef.value}>
                           {ef.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='typical_exercise_intensity'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Typical Exercise Intensity (Optional)</FormLabel>
-                  <Select
-                    value={field.value ?? undefined}
-                    onValueChange={(value) => value && field.onChange(value)}
-                  >
-                    <FormControl>
-                      <div>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select intensity' />
-                        </SelectTrigger>
-                      </div>
-                    </FormControl>
-                    <SelectContent>
-                      {exerciseIntensities.map((ei) => (
-                        <SelectItem key={ei.value} value={ei.value}>
-                          {ei.label}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -384,9 +384,15 @@ export const ProfileFormSchema = z.object({
     .max(300)
     .nullable()
     .optional(),
-  target_weight_kg: z.coerce
+  target_weight_1month_kg: z.coerce
     .number()
     .min(20, 'Target weight must be at least 20kg')
+    .max(500)
+    .nullable()
+    .optional(),
+  long_term_goal_weight_kg: z.coerce
+    .number()
+    .min(20, 'Long-term goal weight must be at least 20kg')
     .max(500)
     .nullable()
     .optional(),
@@ -400,10 +406,13 @@ export const ProfileFormSchema = z.object({
     .optional(),
   // Medical Info & Physical Limitations
   pain_mobility_issues: z.array(z.string()).nullable().optional(),
+  injuries: z.array(z.string()).nullable().optional(),
+  surgeries: z.array(z.string()).nullable().optional(),
   // Exercise Preferences
   exercise_goals: z.array(z.string()).nullable().optional(),
   preferred_exercise_types: z.array(z.string()).nullable().optional(),
   exercise_frequency: z.string().nullable().optional(),
+  typical_exercise_intensity: z.string().nullable().optional(),
   equipment_access: z.array(z.string()).nullable().optional(),
   // Diet and health
   preferred_diet: z.string().nullable().optional(),
@@ -678,6 +687,7 @@ export interface GlobalCalculatedTargets {
   target_carbs_g?: number | null;
   target_fat_g?: number | null;
   custom_total_calories?: number | null;
+  custom_protein_per_kg?: number | null;
   custom_protein_g?: number | null;
   custom_carbs_g?: number | null;
   custom_fat_g?: number | null;
@@ -760,10 +770,16 @@ export const OnboardingFormSchema = z.object({
     .number()
     .min(20, 'Weight must be at least 20kg')
     .max(500),
-  target_weight_kg: z.coerce
+  target_weight_1month_kg: z.coerce
     .number()
     .min(20, 'Target weight must be at least 20kg')
     .max(500),
+  long_term_goal_weight_kg: z.coerce
+    .number()
+    .min(20, 'Long-term goal weight must be at least 20kg')
+    .max(500)
+    .optional()
+    .nullable(),
   physical_activity_level: z.enum(
     ['sedentary', 'light', 'moderate', 'active', 'extra_active'],
     { required_error: 'Activity level is required.' }
@@ -798,6 +814,13 @@ export const OnboardingFormSchema = z.object({
       .positive('Custom calories must be positive if provided.')
       .optional()
   ),
+  custom_protein_per_kg: z.preprocess(
+    preprocessOptionalNumber,
+    z.coerce
+      .number()
+      .min(0, 'Protein per kg must be non-negative if provided.')
+      .optional()
+  ),
   custom_protein_g: z.preprocess(
     preprocessOptionalNumber,
     z.coerce
@@ -815,6 +838,16 @@ export const OnboardingFormSchema = z.object({
   custom_fat_g: z.preprocess(
     preprocessOptionalNumber,
     z.coerce.number().min(0, 'Fat must be non-negative if provided.').optional()
+  ),
+  remaining_calories_carbs_percentage: z.preprocess(
+    preprocessOptionalNumber,
+    z.coerce
+      .number()
+      .int('Carb percentage must be a whole number.')
+      .min(0, 'Carb percentage must be between 0 and 100.')
+      .max(100, 'Carb percentage must be between 0 and 100.')
+      .default(50)
+      .optional()
   ),
   systemCalculatedTargets: z.any().optional(),
   userCustomizedTargets: z.any().optional(),
