@@ -1,4 +1,4 @@
-import { UserProfile } from '@/lib/schemas';
+import { BaseProfileData } from '@/lib/schemas';
 import { z } from 'zod';
 import { customizePlanFormSchema } from '../lib/schema';
 
@@ -33,7 +33,7 @@ export type AiMealInputTypes = {
     carbs: number;
     fat: number;
   };
-  profile: Partial<UserProfile>;
+  profile: Partial<BaseProfileData>;
 };
 
-export type customizePlanFormValues = z.infer<typeof customizePlanFormSchema>;
+export type CustomizePlanFormValues = z.infer<typeof customizePlanFormSchema>;

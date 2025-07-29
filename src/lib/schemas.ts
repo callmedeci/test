@@ -37,26 +37,64 @@ export const UserProfileSchema = z.object({
   id: z.number().optional(),
   user_id: z.string(),
   created_at: z.string().optional(),
+  updated_at: z.string().optional(),
   is_onboarding_complete: z.boolean().default(false),
+  user_role: z.enum(['client', 'coach']).nullable().optional(),
   age: z.number().int().min(1).max(120).nullable().optional(),
   biological_sex: z.enum(['male', 'female', 'other']).nullable().optional(),
   height_cm: z.number().min(50).max(300).nullable().optional(),
   current_weight_kg: z.number().min(20).max(500).nullable().optional(),
-  target_weight_kg: z.number().min(20).max(500).nullable().optional(),
+  target_weight_1month_kg: z.number().min(20).max(500).nullable().optional(),
+  long_term_goal_weight_kg: z.number().min(20).max(500).nullable().optional(),
   physical_activity_level: z.enum(['sedentary', 'light', 'moderate', 'active', 'extra_active']).nullable().optional(),
   primary_diet_goal: z.enum(['fat_loss', 'muscle_gain', 'recomp']).nullable().optional(),
   pain_mobility_issues: z.array(z.string()).nullable().optional(),
+  injuries: z.array(z.string()).nullable().optional(),
+  surgeries: z.array(z.string()).nullable().optional(),
   exercise_goals: z.array(z.string()).nullable().optional(),
   preferred_exercise_types: z.array(z.string()).nullable().optional(),
   exercise_frequency: z.enum(['1-2_days', '3-4_days', '5-6_days', 'daily']).nullable().optional(),
+  typical_exercise_intensity: z.enum(['light', 'moderate', 'vigorous']).nullable().optional(),
   equipment_access: z.array(z.string()).nullable().optional(),
   subscription_status: z.enum(['free', 'premium', 'premium_annual', 'trial', 'trial_ended']).nullable().optional(),
   bf_current: z.number().min(0).max(100).nullable().optional(),
   bf_target: z.number().min(0).max(100).nullable().optional(),
+  bf_ideal: z.number().min(0).max(100).nullable().optional(),
+  mm_current: z.number().min(0).max(100).nullable().optional(),
+  mm_target: z.number().min(0).max(100).nullable().optional(),
+  mm_ideal: z.number().min(0).max(100).nullable().optional(),
+  bw_current: z.number().min(0).max(100).nullable().optional(),
+  bw_target: z.number().min(0).max(100).nullable().optional(),
+  bw_ideal: z.number().min(0).max(100).nullable().optional(),
   waist_current: z.number().min(0).nullable().optional(),
-  waist_target: z.number().min(0).nullable().optional(),
+  waist_goal_1m: z.number().min(0).nullable().optional(),
+  waist_ideal: z.number().min(0).nullable().optional(),
+  hips_current: z.number().min(0).nullable().optional(),
+  hips_goal_1m: z.number().min(0).nullable().optional(),
+  hips_ideal: z.number().min(0).nullable().optional(),
+  right_leg_current: z.number().min(0).nullable().optional(),
+  right_leg_goal_1m: z.number().min(0).nullable().optional(),
+  right_leg_ideal: z.number().min(0).nullable().optional(),
+  left_leg_current: z.number().min(0).nullable().optional(),
+  left_leg_goal_1m: z.number().min(0).nullable().optional(),
+  left_leg_ideal: z.number().min(0).nullable().optional(),
+  right_arm_current: z.number().min(0).nullable().optional(),
+  right_arm_goal_1m: z.number().min(0).nullable().optional(),
+  right_arm_ideal: z.number().min(0).nullable().optional(),
+  left_arm_current: z.number().min(0).nullable().optional(),
+  left_arm_goal_1m: z.number().min(0).nullable().optional(),
+  left_arm_ideal: z.number().min(0).nullable().optional(),
+  meal_distributions: z.array(z.object({
+    mealName: z.string(),
+    calories_pct: z.number(),
+  })).nullable().optional(),
   preferred_diet: z.string().nullable().optional(),
+  preferred_cuisines: z.array(z.string()).nullable().optional(),
+  dispreferrred_cuisines: z.array(z.string()).nullable().optional(),
+  preferred_ingredients: z.array(z.string()).nullable().optional(),
+  dispreferrred_ingredients: z.array(z.string()).nullable().optional(),
   allergies: z.array(z.string()).nullable().optional(),
+  preferred_micronutrients: z.array(z.string()).nullable().optional(),
   medical_conditions: z.array(z.string()).nullable().optional(),
   medications: z.array(z.string()).nullable().optional(),
 });
@@ -73,12 +111,22 @@ export const UserPlanSchema = z.object({
   maintenance_calories_tdee: z.number().nullable().optional(),
   target_daily_calories: z.number().nullable().optional(),
   target_protein_g: z.number().nullable().optional(),
+  target_protein_percentage: z.number().nullable().optional(),
   target_carbs_g: z.number().nullable().optional(),
+  target_carbs_percentage: z.number().nullable().optional(),
   target_fat_g: z.number().nullable().optional(),
+  target_fat_percentage: z.number().nullable().optional(),
   custom_total_calories: z.number().nullable().optional(),
+  custom_protein_per_kg: z.number().nullable().optional(),
+  remaining_calories_carbs_percentage: z.number().nullable().optional(),
+  custom_total_calories_final: z.number().nullable().optional(),
   custom_protein_g: z.number().nullable().optional(),
+  custom_protein_percentage: z.number().nullable().optional(),
   custom_carbs_g: z.number().nullable().optional(),
+  custom_carbs_percentage: z.number().nullable().optional(),
   custom_fat_g: z.number().nullable().optional(),
+  custom_fat_percentage: z.number().nullable().optional(),
+  remaining_calories_carb_pct: z.number().nullable().optional(),
 });
 
 export type UserPlan = z.infer<typeof UserPlanSchema>;
@@ -372,11 +420,6 @@ export type ProfileFormValues = z.infer<typeof ProfileFormSchema>;
 
 // Smart Calorie Planner Form Schema
 export const SmartCaloriePlannerFormSchema = z.object({
-  user_role: z
-    .enum(['client', 'coach'], {
-      required_error: 'User role is required.',
-    })
-    .nullable(),
   age: z.coerce
     .number()
     .int('Age must be a whole number (e.g., 30, not 30.5).')
@@ -395,9 +438,14 @@ export const SmartCaloriePlannerFormSchema = z.object({
     .number()
     .positive('Current weight must be a positive number.')
     .nullable(),
-  target_weight_kg: z.coerce
+  target_weight_1month_kg: z.coerce
     .number()
     .positive('Target weight must be a positive number.')
+    .nullable(),
+  long_term_goal_weight_kg: z.coerce
+    .number()
+    .positive('Long-term goal weight must be a positive number.')
+    .optional()
     .nullable(),
   physical_activity_level: z
     .enum(['sedentary', 'light', 'moderate', 'active', 'extra_active'], {
@@ -429,10 +477,128 @@ export const SmartCaloriePlannerFormSchema = z.object({
         .optional()
     )
     .nullable(),
+  bf_ideal: z
+    .preprocess(
+      preprocessOptionalNumber,
+      z.coerce
+        .number()
+        .min(0, 'Must be >= 0')
+        .max(100, 'Ideal body fat % must be between 0 and 100.')
+        .optional()
+    )
+    .nullable(),
+  mm_current: z
+    .preprocess(
+      preprocessOptionalNumber,
+      z.coerce
+        .number()
+        .min(0, 'Must be >= 0')
+        .max(100, 'Muscle mass % must be between 0 and 100.')
+        .optional()
+    )
+    .nullable(),
+  mm_target: z
+    .preprocess(
+      preprocessOptionalNumber,
+      z.coerce
+        .number()
+        .min(0, 'Must be >= 0')
+        .max(100, 'Target muscle mass % must be between 0 and 100.')
+        .optional()
+    )
+    .nullable(),
+  mm_ideal: z
+    .preprocess(
+      preprocessOptionalNumber,
+      z.coerce
+        .number()
+        .min(0, 'Must be >= 0')
+        .max(100, 'Ideal muscle mass % must be between 0 and 100.')
+        .optional()
+    )
+    .nullable(),
+  bw_current: z
+    .preprocess(
+      preprocessOptionalNumber,
+      z.coerce
+        .number()
+        .min(0, 'Must be >= 0')
+        .max(100, 'Body water % must be between 0 and 100.')
+        .optional()
+    )
+    .nullable(),
+  bw_target: z
+    .preprocess(
+      preprocessOptionalNumber,
+      z.coerce
+        .number()
+        .min(0, 'Must be >= 0')
+        .max(100, 'Target body water % must be between 0 and 100.')
+        .optional()
+    )
+    .nullable(),
+  bw_ideal: z
+    .preprocess(
+      preprocessOptionalNumber,
+      z.coerce
+        .number()
+        .min(0, 'Must be >= 0')
+        .max(100, 'Ideal body water % must be between 0 and 100.')
+        .optional()
+    )
+    .nullable(),
   waist_current: z
     .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
     .nullable(),
-  waist_target: z
+  waist_goal_1m: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  waist_ideal: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  hips_current: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  hips_goal_1m: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  hips_ideal: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  right_leg_current: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  right_leg_goal_1m: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  right_leg_ideal: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  left_leg_current: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  left_leg_goal_1m: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  left_leg_ideal: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  right_arm_current: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  right_arm_goal_1m: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  right_arm_ideal: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  left_arm_current: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  left_arm_goal_1m: z
+    .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
+    .nullable(),
+  left_arm_ideal: z
     .preprocess(preprocessOptionalNumber, z.coerce.number().min(0).optional())
     .nullable(),
   custom_total_calories: z.preprocess(
@@ -443,25 +609,21 @@ export const SmartCaloriePlannerFormSchema = z.object({
       .positive('Custom calories must be positive if provided.')
       .optional()
   ),
-  custom_protein_g: z.preprocess(
+  custom_protein_per_kg: z.preprocess(
     preprocessOptionalNumber,
     z.coerce
       .number()
-      .min(0, 'Protein must be non-negative if provided.')
+      .min(0, 'Protein per kg must be non-negative if provided.')
       .optional()
   ),
-  custom_carbs_g: z.preprocess(
+  remaining_calories_carbs_percentage: z.preprocess(
     preprocessOptionalNumber,
     z.coerce
       .number()
-      .min(0, 'Carbs must be non-negative if provided.')
-      .optional()
-  ),
-  custom_fat_g: z.preprocess(
-    preprocessOptionalNumber,
-    z.coerce
-      .number()
-      .min(0, 'Fat must be non-negative if provided.')
+      .int('Carb percentage must be a whole number.')
+      .min(0, 'Carb percentage must be between 0 and 100.')
+      .max(100, 'Carb percentage must be between 0 and 100.')
+      .default(50)
       .optional()
   ),
 });

@@ -18,14 +18,22 @@ import { useToast } from '@/hooks/use-toast';
 import { mockCoachProfile } from '@/features/coach/lib/mockData';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Save } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import {
   CoachProfileFormSchema,
   CoachProfileFormValues,
 } from '../../schemas/coachSchemas';
 import { saveCoachProfile } from '../../actions/coachProfile';
 
-export function CoachProfileForm({ coach }: { coach: any }) {
+interface CoachData {
+  full_name: string;
+  age: number;
+  description: string;
+  certification: string[];
+  years_experience: number;
+}
+
+export function CoachProfileForm({ coach }: { coach: CoachData }) {
   const { toast } = useToast();
 
   const [firstName, lastName] = coach.full_name.split(' ');
@@ -41,7 +49,7 @@ export function CoachProfileForm({ coach }: { coach: any }) {
     },
   });
 
-  async function handleSubmit(data: CoachProfileFormValues) {
+  const handleSubmit: SubmitHandler<CoachProfileFormValues> = async (data) => {
     try {
       await saveCoachProfile(data);
 
@@ -57,9 +65,9 @@ export function CoachProfileForm({ coach }: { coach: any }) {
         variant: 'destructive',
       });
     }
-  }
+  };
 
-  async function handleReset() {
+  const handleReset = async () => {
     form.reset({
       first_name: mockCoachProfile.first_name,
       last_name: mockCoachProfile.last_name,
@@ -73,7 +81,7 @@ export function CoachProfileForm({ coach }: { coach: any }) {
       title: 'Form Reset',
       description: 'Form has been reset to original values.',
     });
-  }
+  };
 
   return (
     <Card className='border border-border/50'>

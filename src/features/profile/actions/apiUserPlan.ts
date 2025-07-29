@@ -2,8 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { UserPlanType } from '@/lib/schemas';
 
-export async function editPlan(newPlan: any, clientId?: string) {
+export async function editPlan(newPlan: Partial<UserPlanType>, clientId?: string) {
   try {
     const supabase = await createClient();
 

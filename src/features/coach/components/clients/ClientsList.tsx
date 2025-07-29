@@ -3,10 +3,22 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
-function ClientsList({ clients }: { clients: any }) {
+interface ClientData {
+  user_id: string;
+  full_name: string;
+  email: string;
+  age: number;
+  biological_sex: string;
+  primary_diet_goal: string;
+  created_at: string;
+  avatar_url?: string;
+  client_id?: string;
+}
+
+function ClientsList({ clients }: { clients: ClientData[] }) {
   return (
     <ul className='space-y-4'>
-      {clients.map((client: any) => (
+      {clients.map((client) => (
         <li
           key={client.user_id}
           className='flex flex-col lg:flex-row gap-5 lg:items-center justify-between p-4 rounded-lg border border-border/30 hover:border-border/60 transition-all duration-200 hover:shadow-sm'

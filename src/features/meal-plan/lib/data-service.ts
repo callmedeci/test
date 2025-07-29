@@ -3,7 +3,7 @@
 import { getUser } from '@/features/profile/lib/data-services';
 import {
   GeneratePersonalizedMealPlanOutput,
-  UserMealPlan,
+  MealPlans,
   WeeklyMealPlan,
 } from '@/lib/schemas';
 import { createClient } from '@/lib/supabase/client';
@@ -12,7 +12,7 @@ import { revalidatePath } from 'next/cache';
 export async function editMealPlan(
   mealPlan: { meal_data: WeeklyMealPlan },
   userId?: string
-): Promise<UserMealPlan> {
+): Promise<MealPlans> {
   const supabase = createClient();
   const targetUserId = userId || (await getUser()).id;
 
@@ -36,7 +36,7 @@ export async function editMealPlan(
   }
 
   revalidatePath('/meal-plan/current');
-  return data as UserMealPlan;
+  return data as MealPlans;
 }
 
 export async function editAiPlan(
@@ -44,7 +44,7 @@ export async function editAiPlan(
     ai_plan: GeneratePersonalizedMealPlanOutput;
   },
   userId?: string
-): Promise<UserMealPlan> {
+): Promise<MealPlans> {
   const supabase = createClient();
   const targetUserId = userId || (await getUser()).id;
 
@@ -67,5 +67,5 @@ export async function editAiPlan(
     throw new Error(`Failed to update AI-generated plan: ${error.message}`);
   }
 
-  return data as UserMealPlan;
+  return data as MealPlans;
 }

@@ -28,7 +28,7 @@ import {
 } from '@/lib/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Save } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import PreferenceTextarea from './PreferenceTextarea';
 
 function MealForm({ profile }: { profile: BaseProfileData }) {
@@ -39,9 +39,9 @@ function MealForm({ profile }: { profile: BaseProfileData }) {
     defaultValues: profile,
   });
 
-  async function handleSavePreferences() {
+  const handleSavePreferences: SubmitHandler<MealSuggestionPreferencesValues> = async (data) => {
     try {
-      await editProfile(form.getValues());
+      await editProfile(data);
 
       toast({
         title: 'Preferences Saved',
@@ -55,7 +55,7 @@ function MealForm({ profile }: { profile: BaseProfileData }) {
         variant: 'destructive',
       });
     }
-  }
+  };
 
   return (
     <Form {...form}>

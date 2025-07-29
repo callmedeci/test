@@ -1,6 +1,6 @@
 'use server';
 
-import { UserProfile, UserMealPlan, UserPlan } from '@/lib/schemas';
+import { UserProfile, UserMealPlan, UserPlan, BaseProfileData, UserPlanType, MealPlans } from '@/lib/schemas';
 import { User } from '@supabase/supabase-js';
 import { createClient } from './server';
 
@@ -15,7 +15,7 @@ export async function getUser(): Promise<User> {
 }
 export async function getUserProfile(
   userId?: string
-): Promise<UserProfile> {
+): Promise<BaseProfileData> {
   const supabase = await createClient();
   const targetUserId = userId || (await getUser()).id;
 
@@ -27,10 +27,10 @@ export async function getUserProfile(
 
   if (!data) throw new Error('User profile not found');
 
-  return data as UserProfile;
+  return data as BaseProfileData;
 }
 
-export async function getMealPlan(userId?: string): Promise<UserMealPlan> {
+export async function getMealPlan(userId?: string): Promise<MealPlans> {
   const supabase = await createClient();
   const targetUserId = userId || (await getUser()).id;
 
@@ -49,9 +49,9 @@ export async function getMealPlan(userId?: string): Promise<UserMealPlan> {
     throw new Error(`Failed to fetch meal plan: ${error.message}`);
   }
 
-  return data as UserMealPlan;
+  return data as MealPlans;
 }
-export async function getUserPlan(userId?: string): Promise<UserPlan> {
+export async function getUserPlan(userId?: string): Promise<UserPlanType> {
   const supabase = await createClient();
   const targetUserId = userId || (await getUser()).id;
 
@@ -65,20 +65,20 @@ export async function getUserPlan(userId?: string): Promise<UserPlan> {
 
   if (!data) throw new Error('User plan not found');
 
-  return data as UserPlan;
+  return data as UserPlanType;
 }
 
 export async function getProfileById(
   userId: string,
   userRole: 'client' | 'coach' = 'client',
   select: string = '*'
-): Promise<UserProfile> {
+): Promise<BaseProfileData> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('user_profile')
     .select(select)
     .eq('user_id', userId)
-    .single<UserProfile>();
+    .single<BaseProfileData>();
 
   if (!data || error) throw new Error('User profile not found');
 

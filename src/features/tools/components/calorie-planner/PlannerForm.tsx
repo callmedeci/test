@@ -44,7 +44,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Calculator, RefreshCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { FieldPath, useForm } from 'react-hook-form';
+import { FieldPath, useForm, SubmitHandler } from 'react-hook-form';
 
 type PlannerFormProps = {
   plan: UserPlanType;
@@ -136,7 +136,7 @@ function PlannerForm({ plan, profile, clientId }: PlannerFormProps) {
     }
   }
 
-  async function onSubmit(data: SmartCaloriePlannerFormValues) {
+  const onSubmit: SubmitHandler<SmartCaloriePlannerFormValues> = async (data) => {
     const activity = activityLevels.find(
       (al) => al.value === data.physical_activity_level
     );
@@ -318,7 +318,7 @@ function PlannerForm({ plan, profile, clientId }: PlannerFormProps) {
         variant: 'destructive',
       });
     }
-  }
+  };
 
   useEffect(
     function () {

@@ -47,7 +47,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, CheckCircle, Leaf } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { type FieldPath, useForm } from 'react-hook-form';
+import { type FieldPath, useForm, SubmitHandler } from 'react-hook-form';
 
 export default function ClientOnboardingForm() {
   const router = useRouter();
@@ -208,7 +208,7 @@ export default function ClientOnboardingForm() {
       setCurrentStep((prev) => prev + 1);
   };
 
-  const processAndSaveData = async (data: OnboardingFormValues) => {
+  const processAndSaveData: SubmitHandler<OnboardingFormValues> = async (data) => {
     const processedData: Record<string, any> = { ...data };
 
     const arrayLikeFields: (keyof OnboardingFormValues)[] = [

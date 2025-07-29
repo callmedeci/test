@@ -3,7 +3,15 @@ import { Badge } from '@/components/ui/badge';
 import { formatDate } from 'date-fns';
 import { Calendar } from 'lucide-react';
 
-export function CoachProfileHeader({ coach }: { coach: any }) {
+interface CoachHeaderData {
+  full_name: string;
+  email: string;
+  joined_date: string;
+  certification: string[];
+  avatar_url?: string;
+}
+
+export function CoachProfileHeader({ coach }: { coach: CoachHeaderData }) {
   return (
     <div className='flex items-start justify-between'>
       <div className='flex items-start gap-6'>

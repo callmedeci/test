@@ -1,6 +1,7 @@
 import {
   SuggestMealsForMacrosInput,
   type MacroSplitterFormValues,
+  BaseProfileData,
 } from '@/lib/schemas';
 import {
   AiMealInputTypes,
@@ -32,12 +33,7 @@ export function customMacroSplit(
 }
 
 export function getMealMacroStats(
-  form: UseFormReturn<{
-    meal_distributions: {
-      mealName: string;
-      calories_pct: number;
-    }[];
-  }>
+  form: UseFormReturn<MacroSplitterFormValues>
 ) {
   const watchedMealDistributions = form.watch('meal_distributions');
   const calculateColumnSum = (

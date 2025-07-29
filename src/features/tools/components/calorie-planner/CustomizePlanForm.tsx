@@ -24,10 +24,11 @@ import { RefreshCcw, Save } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { customizePlanFormSchema } from '../../lib/schema';
-import { customizePlanFormValues } from '../../types/toolsGlobalTypes';
+import { CustomizePlanFormValues } from '../../types/toolsGlobalTypes';
 import CustomizePlanTable from './CustomizePlanTable';
 import CustomizeToolTip from './CustomizeToolTip';
 import { editPlan } from '@/features/profile/actions/apiUserPlan';
+import { SubmitHandler } from 'react-hook-form';
 
 type CustomizePlanFormProps = {
   plan: UserPlanType;
@@ -42,7 +43,7 @@ function CustomizePlanForm({
 }: CustomizePlanFormProps) {
   const { toast } = useToast();
 
-  const form = useForm<customizePlanFormValues>({
+  const form = useForm<CustomizePlanFormValues>({
     resolver: zodResolver(customizePlanFormSchema),
     defaultValues: {
       ...plan,
@@ -104,7 +105,7 @@ function CustomizePlanForm({
     });
   }
 
-  async function onSubmit(formData: customizePlanFormValues) {
+  const onSubmit: SubmitHandler<CustomizePlanFormValues> = async (formData) => {
     if (!customPlanResults) return;
 
     const updateObj: GlobalCalculatedTargets = {};
@@ -142,7 +143,7 @@ function CustomizePlanForm({
         variant: 'destructive',
       });
     }
-  }
+  };
 
   useEffect(() => {
     const [customTotalCalories, customProteinPerKg, remainingCarbPct] =

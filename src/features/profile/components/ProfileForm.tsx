@@ -34,7 +34,7 @@ import {
 } from '@/lib/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserMetadata } from '@supabase/supabase-js';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { editProfile } from '../actions/apiUserProfile';
 
 type ProfileFormProps = {
@@ -58,7 +58,7 @@ function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
     },
   });
 
-  async function onSubmit(data: ProfileFormValues) {
+  const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     const { name, ...newProfile } = data;
 
     try {
@@ -75,7 +75,7 @@ function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
         variant: 'destructive',
       });
     }
-  }
+  };
 
   return (
     <Form {...form}>

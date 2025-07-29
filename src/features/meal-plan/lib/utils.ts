@@ -4,13 +4,13 @@ import {
   mealNames,
 } from '@/lib/constants';
 import {
-  UserProfile,
+  BaseProfileData,
   WeeklyMealPlan,
 } from '@/lib/schemas';
 import { DailyTargetsTypes, MealToOptimizeTypes } from '../types';
 import { requiredFields } from './config';
 
-export function mapProfileToMealPlanInput(profile: any) {
+export function mapProfileToMealPlanInput(profile: Record<string, any>) {
   const input = profile;
   Object.keys(input).forEach(
     (key) => !input[key] && delete input[key]
@@ -20,7 +20,7 @@ export function mapProfileToMealPlanInput(profile: any) {
 }
 
 export function getAdjustedMealInput(
-  profileData: Partial<UserProfile>,
+  profileData: Partial<BaseProfileData>,
   dailyTargets: DailyTargetsTypes,
   mealToOptimize: MealToOptimizeTypes
 ) {
@@ -76,8 +76,8 @@ export function getAdjustedMealInput(
   };
 }
 export function getMissingProfileFields(
-  profile: Partial<UserProfile>
-): (keyof Partial<UserProfile>)[] {
+  profile: Partial<BaseProfileData>
+): (keyof Partial<BaseProfileData>)[] {
   return requiredFields.filter((field) => !profile[field]);
 }
 

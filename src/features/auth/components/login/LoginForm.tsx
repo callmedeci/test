@@ -14,16 +14,22 @@ import { loginSchema } from '../../schemas/authSchema';
 import LoginWithGoogleButton from '../shared/LoginWithGoogleButton';
 import SubmitButton from '@/components/ui/SubmitButton';
 import { loginAction } from '../../actions/login';
+import { SubmitHandler } from 'react-hook-form';
+
+type LoginFormValues = {
+  email: string;
+  password: string;
+};
 
 function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const { formState, handleSubmit, register } = useForm({
+  const { formState, handleSubmit, register } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
 
   const isLoading = formState.isSubmitting;
-  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+  const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
     const { email, password } = data;
 
     const { isSuccess, error } = await loginAction({
