@@ -52,7 +52,7 @@ export function MacronutrientTargets({ userPlan }: MacronutrientTargetsProps) {
                   <div className={`w-3 h-3 rounded-full ${macro.color}`} />
                   {macro.name}
                 </span>
-                <span className='font-mono text-primary'>
+                <span className='font-mono'>
                   {formatValue(macro.grams?.toFixed(1), 'g')} (
                   {formatValue(macro.percentage?.toFixed(1), '%')})
                 </span>

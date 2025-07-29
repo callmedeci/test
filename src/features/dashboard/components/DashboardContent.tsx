@@ -1,7 +1,6 @@
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TabsContent } from '@/components/ui/tabs';
 import { BaseProfileData, UserPlanType } from '@/lib/schemas';
-import { Dumbbell, Heart } from 'lucide-react';
 import { MacronutrientTargets } from './MacronutrientTargets';
 import { NutritionStatsCards } from './NutritionStatsCards';
 import { ProgressSection } from './ProgressSection';
@@ -36,24 +35,7 @@ const workoutPlan = {
 
 export function DashboardContent({ profile, userPlan }: DashboardContentProps) {
   return (
-    <Tabs defaultValue='nutrition' className='w-full'>
-      <TabsList className='grid w-full grid-cols-2 bg-card backdrop-blur-sm shadow-sm border border-border/50'>
-        <TabsTrigger
-          value='nutrition'
-          className='data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200'
-        >
-          <Heart className='w-4 h-4 mr-2' />
-          Nutrition Plan
-        </TabsTrigger>
-        <TabsTrigger
-          value='workout'
-          className='data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200'
-        >
-          <Dumbbell className='w-4 h-4 mr-2' />
-          Workout Plan
-        </TabsTrigger>
-      </TabsList>
-
+    <>
       {/* Nutrition Tab */}
       <TabsContent value='nutrition' className='space-y-6 mt-6'>
         <NutritionStatsCards profile={profile} userPlan={userPlan} />
@@ -70,7 +52,7 @@ export function DashboardContent({ profile, userPlan }: DashboardContentProps) {
               Enhanced Workout Tracking
             </span>
           </div>
-          <p className='text-sm text-emerald-700'>
+          <p className='text-sm text-primary'>
             Full workout tracking and progress monitoring features are in
             development. Current data shows example fitness metrics.
           </p>
@@ -80,6 +62,6 @@ export function DashboardContent({ profile, userPlan }: DashboardContentProps) {
         <WorkoutProgressCharts workoutPlan={workoutPlan} />
         <WeeklyWorkoutTargets workoutPlan={workoutPlan} />
       </TabsContent>
-    </Tabs>
+    </>
   );
 }

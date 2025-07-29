@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Dumbbell, Target, TrendingUp } from 'lucide-react';
 
@@ -47,11 +46,7 @@ export function WorkoutStatsCards({ workoutPlan }: WorkoutStatsCardsProps) {
     },
     {
       title: 'Progress',
-      value: (
-        <Badge variant='secondary' className='font-semibold'>
-          {workoutPlan?.fitnessGoalProgress || 0}%
-        </Badge>
-      ),
+      value: `${workoutPlan?.fitnessGoalProgress || 0}%`,
       subtitle: 'Overall fitness progress',
       icon: TrendingUp,
     },

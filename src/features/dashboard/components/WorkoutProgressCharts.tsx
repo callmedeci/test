@@ -47,7 +47,7 @@ export function WorkoutProgressCharts({
           </div>
           <Progress
             value={workoutPlan?.fitnessGoalProgress || 0}
-            className='h-3'
+            className='h-2'
           />
           <p className='text-xs text-muted-foreground'>
             Long-term goal: Monthly fitness improvement

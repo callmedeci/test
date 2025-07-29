@@ -27,10 +27,16 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
           <div className='space-y-2'>
             <div className='flex justify-between text-sm text-primary'>
               <span>
-                Current: {formatValue(profile?.current_weight_kg, ' kg')}
+                Current:{' '}
+                <span className='font-medium'>
+                  {formatValue(profile?.current_weight_kg, ' kg')}
+                </span>
               </span>
               <span>
-                Target: {formatValue(profile?.target_weight_1month_kg, ' kg')}
+                Target:
+                <span className='font-medium'>
+                  {formatValue(profile?.target_weight_1month_kg, ' kg')}
+                </span>
               </span>
             </div>
             <Progress
@@ -38,7 +44,7 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
                 profile?.current_weight_kg,
                 profile?.target_weight_1month_kg
               )}
-              className='h-3'
+              className='h-2'
             />
           </div>
           <p className='text-xs text-muted-foreground'>
@@ -59,7 +65,7 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
           <div className='space-y-2'>
             <div className='flex justify-between text-sm text-primary'>
               <span>Body Fat</span>
-              <span>
+              <span className='font-medium'>
                 {formatValue(profile?.bf_current, '%')} /{' '}
                 {formatValue(profile?.bf_target, '%')}
               </span>
@@ -73,20 +79,20 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
                     )
                   : 0
               }
-              className='h-3'
+              className='h-2'
             />
           </div>
           <div className='space-y-2'>
             <div className='flex justify-between text-sm text-primary'>
               <span>Muscle Mass</span>
-              <span>
+              <span className='font-medium'>
                 {formatValue(profile?.mm_current, '%')} /{' '}
                 {formatValue(profile?.mm_target, '%')}
               </span>
             </div>
             <Progress
               value={calculateProgress(profile?.mm_current, profile?.mm_target)}
-              className='h-3'
+              className='h-2'
             />
           </div>
         </CardContent>
