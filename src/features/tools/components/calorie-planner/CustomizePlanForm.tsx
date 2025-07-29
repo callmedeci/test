@@ -317,8 +317,7 @@ function CustomizePlanForm({
                         profile?.current_weight_kg > 0 &&
                         plan?.target_protein_g
                           ? formatNumber(
-                              plan.target_protein_g /
-                                profile.current_weight_kg,
+                              plan.target_protein_g / profile.current_weight_kg,
                               { maximumFractionDigits: 1 }
                             )
                           : 'N/A'
@@ -334,8 +333,7 @@ function CustomizePlanForm({
                         profile?.current_weight_kg > 0 &&
                         plan?.target_protein_g
                           ? formatNumber(
-                              plan.target_protein_g /
-                                profile.current_weight_kg,
+                              plan.target_protein_g / profile.current_weight_kg,
                               { maximumFractionDigits: 1 }
                             )
                           : '1.6'

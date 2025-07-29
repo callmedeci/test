@@ -22,9 +22,10 @@ function ResetPasswordForn() {
   const searchParams = useSearchParams();
 
   const { toast } = useToast();
-  const { handleSubmit, formState, register } = useForm<ResetPasswordFormValues>({
-    resolver: zodResolver(newPasswordSchema),
-  });
+  const { handleSubmit, formState, register } =
+    useForm<ResetPasswordFormValues>({
+      resolver: zodResolver(newPasswordSchema),
+    });
 
   const token = searchParams.get('token_hash');
   const isLoading = formState.isSubmitting;

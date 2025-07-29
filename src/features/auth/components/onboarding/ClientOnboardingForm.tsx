@@ -106,7 +106,7 @@ export default function ClientOnboardingForm() {
         height_cm: data.height_cm,
         physical_activity_level: data.physical_activity_level,
         primary_diet_goal: data.primary_diet_goal,
-        target_weight_kg: data.target_weight_kg,
+        target_weight_kg: data.target_weight_1month_kg,
       });
 
       if (

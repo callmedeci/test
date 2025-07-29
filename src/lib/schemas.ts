@@ -356,7 +356,7 @@ export type MealPlans = UserMealPlan;
 
 // Form Schemas for UI components
 export const ProfileFormSchema = z.object({
-  name: z.string().min(1, 'Name is required.').optional(),
+  full_name: z.string().min(1, 'Name is required.').optional(),
   user_role: z
     .enum(['client', 'coach'], {
       required_error: 'User role is required.',

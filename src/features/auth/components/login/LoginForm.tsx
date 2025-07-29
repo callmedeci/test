@@ -7,13 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
-import { FieldValues, SubmitHandler, useForm } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 
+import SubmitButton from '@/components/ui/SubmitButton';
 import { useRouter } from 'next/navigation';
+import { loginAction } from '../../actions/login';
 import { loginSchema } from '../../schemas/authSchema';
 import LoginWithGoogleButton from '../shared/LoginWithGoogleButton';
-import SubmitButton from '@/components/ui/SubmitButton';
-import { loginAction } from '../../actions/login';
 
 type LoginFormValues = {
   email: string;

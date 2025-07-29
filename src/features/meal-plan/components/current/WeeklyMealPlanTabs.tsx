@@ -35,7 +35,7 @@ function WeeklyMealPlanTabs({
 
   async function handleOptimizeMeal(dayIndex: number, mealIndex: number) {
     const meal_data = mealPlan.meal_data;
-    
+
     if (!meal_data) {
       toast({
         title: 'Error',

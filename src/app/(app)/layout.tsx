@@ -20,6 +20,7 @@ import {
   Bot,
   BrainCircuit,
   ChefHat,
+  Dumbbell,
   HelpCircle,
   LayoutDashboard,
   MessageSquareQuote,
@@ -53,6 +54,12 @@ const navItems = [
     icon: NotebookText,
   },
   { href: '/meal-plan/optimized', label: 'AI Meal Plan', icon: Bot },
+  { section: 'Exercise Planning' },
+  {
+    href: '/tools/workout-planner',
+    label: 'AI Exercise Planner',
+    icon: Dumbbell,
+  },
   { section: 'Support' },
   {
     href: '/support/chatbot',
@@ -102,6 +109,7 @@ export default async function AppLayout({
                       tooltip={item.label}
                     >
                       <IconComponent className='h-5 w-5' />{' '}
+                      {/* Render the icon component */}
                       <span>{item.label}</span>
                     </SidebarMenuButton>
                   </Link>

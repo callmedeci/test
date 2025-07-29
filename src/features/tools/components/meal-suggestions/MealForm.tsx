@@ -39,7 +39,9 @@ function MealForm({ profile }: { profile: BaseProfileData }) {
     defaultValues: profile,
   });
 
-  const handleSavePreferences: SubmitHandler<Partial<UserProfile>> = async (data) => {
+  const handleSavePreferences: SubmitHandler<Partial<UserProfile>> = async (
+    data
+  ) => {
     // Convert null values to undefined for the profile update
     const profileUpdate = Object.fromEntries(
       Object.entries(data).map(([key, value]) => [

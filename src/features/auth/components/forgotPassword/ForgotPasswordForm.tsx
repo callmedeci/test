@@ -21,12 +21,15 @@ type ForgotPasswordFormValues = {
 function ForgotPasswordForm() {
   const [message, setMessage] = useState<string>('');
   const { toast } = useToast();
-  const { formState, handleSubmit, register } = useForm<ForgotPasswordFormValues>({
-    resolver: zodResolver(forgotPasswordSchema),
-  });
+  const { formState, handleSubmit, register } =
+    useForm<ForgotPasswordFormValues>({
+      resolver: zodResolver(forgotPasswordSchema),
+    });
 
   const isLoading = formState.isSubmitting;
-  const onSubmit: SubmitHandler<ForgotPasswordFormValues> = async (formData) => {
+  const onSubmit: SubmitHandler<ForgotPasswordFormValues> = async (
+    formData
+  ) => {
     const { email } = formData;
     const { isSuccess, message, userError } = await forgotPasswordAction(email);
 

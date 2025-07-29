@@ -105,8 +105,8 @@ export default function WorkoutPlanGenerator({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            fitness_level: 'Beginner',
-            exercise_experience: ['Mixed'],
+            fitness_level: profile.workout_experience || 'Beginner',
+            exercise_experience: [profile.preferred_workout_type || 'Mixed'],
             primary_goal: 'Build muscle',
             exercise_days_per_week: 3,
             available_time_per_session: 30,
@@ -132,13 +132,13 @@ export default function WorkoutPlanGenerator({
         },
         body: JSON.stringify({
           prompt: `Generate a comprehensive 7-day English workout plan for:
-          - Experience: ${'Beginner'}
+          - Experience: ${profile.workout_experience || 'Beginner'}
           - Goal: Build muscle and improve fitness
           - Age: ${profile.age || 25}
           - Activity Level: ${profile.physical_activity_level || 'Moderate'}
-          - Preferred Type: ${'Mixed'}`,
+          - Preferred Type: ${profile.preferred_workout_type || 'Mixed'}`,
           preferences: {
-            fitness_level: 'Beginner',
+            fitness_level: profile.workout_experience || 'Beginner',
             primary_goal: 'Build muscle',
             exercise_days_per_week: 7,
             available_time_per_session: 45,
@@ -223,7 +223,7 @@ export default function WorkoutPlanGenerator({
                     variant='secondary'
                     className='bg-green-100 text-green-800 px-3 py-1 font-semibold'
                   >
-                    {'Beginner'}
+                    {profile.workout_experience || 'Beginner'}
                   </Badge>
                 </div>
                 <div className='text-center p-4 bg-white/70 rounded-lg backdrop-blur-sm shadow-md'>
@@ -237,7 +237,7 @@ export default function WorkoutPlanGenerator({
                     variant='secondary'
                     className='bg-blue-100 text-blue-800 px-3 py-1 font-semibold'
                   >
-                    {'Mixed'}
+                    {profile.preferred_workout_type || 'Mixed'}
                   </Badge>
                 </div>
                 <div className='text-center p-4 bg-white/70 rounded-lg backdrop-blur-sm shadow-md'>

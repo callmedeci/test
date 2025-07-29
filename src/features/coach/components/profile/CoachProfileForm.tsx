@@ -15,15 +15,14 @@ import SubmitButton from '@/components/ui/SubmitButton';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
-import { mockCoachProfile } from '@/features/coach/lib/mockData';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Save } from 'lucide-react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { saveCoachProfile } from '../../actions/coachProfile';
 import {
   CoachProfileFormSchema,
   CoachProfileFormValues,
 } from '../../schemas/coachSchemas';
-import { saveCoachProfile } from '../../actions/coachProfile';
 
 interface CoachData {
   full_name: string;
@@ -69,12 +68,12 @@ export function CoachProfileForm({ coach }: { coach: CoachData }) {
 
   const handleReset = async () => {
     form.reset({
-      first_name: mockCoachProfile.first_name,
-      last_name: mockCoachProfile.last_name,
-      age: mockCoachProfile.age,
-      description: mockCoachProfile.description,
-      certification: mockCoachProfile.certification,
-      years_experience: mockCoachProfile.years_experience,
+      first_name: '',
+      last_name: '',
+      age: 20,
+      description: '',
+      certification: [],
+      years_experience: 2,
     });
 
     toast({

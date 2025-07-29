@@ -1,14 +1,14 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { UserAttributes } from '@supabase/supabase-js';
+import { UserAttributes, UserMetadata } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { BaseProfileData } from '@/lib/schemas';
 import { editPlan } from './apiUserPlan';
 
 export async function editProfile(
   newProfile: Partial<BaseProfileData>,
-  newUser?: UserAttributes,
+  newUser?: UserAttributes | UserMetadata,
   userId?: string
 ) {
   try {
@@ -31,7 +31,7 @@ export async function editProfile(
     }
 
     const { error } = await supabase
-      .from('user_profile')
+      .from('profile')
       .update(newProfile)
       .eq('user_id', targetUserId)
       .single();
@@ -41,12 +41,16 @@ export async function editProfile(
         `Profile update failed: ${error.code} - ${error.message}`
       );
 
-    console.log();
+    console.log('NEW USER ✅', newUser);
 
     if (newUser) {
-      const { error: userError } = await supabase.auth.updateUser({
-        ...newUser,
-      });
+      const { data, error: userError } =
+        await supabase.auth.admin.updateUserById(targetUserId, {
+          ...newUser,
+        });
+
+      console.log('DATA ✅', data.user?.user_metadata);
+
       if (userError)
         throw new Error(
           `User update failed: ${userError.code} - ${userError.message}`
@@ -73,7 +77,7 @@ export async function resetProfile() {
     if (!user) throw new Error('Unauthorized access!');
 
     const { data: userProfile, error: userError } = await supabase
-      .from('user_profile')
+      .from('profile')
       .select('*')
       .eq('user_id', user.id)
       .single();
@@ -83,7 +87,7 @@ export async function resetProfile() {
     if (!userProfile) throw new Error('User profile not found');
 
     const { data: plan, error: planError } = await supabase
-      .from('user_plan')
+      .from('smart_plan')
       .select('*')
       .eq('user_id', user.id)
       .single();
@@ -104,7 +108,6 @@ export async function resetProfile() {
     Object.keys(plan).forEach((key) => {
       if (!protectedFields.includes(key)) updatePlan[key] = null;
     });
-
 
     // // Reset profile
     await editProfile({ ...updateProfile, is_onboarding_complete: false });

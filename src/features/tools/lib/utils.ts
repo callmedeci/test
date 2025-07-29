@@ -1,15 +1,14 @@
+import { defaultMacroPercentages } from '@/lib/constants';
 import {
   SuggestMealsForMacrosInput,
   type MacroSplitterFormValues,
-  BaseProfileData,
 } from '@/lib/schemas';
+import { UseFormReturn } from 'react-hook-form';
 import {
   AiMealInputTypes,
   CalculatedMealMacros,
   TotalMacros,
 } from '../types/toolsGlobalTypes';
-import { UseFormReturn } from 'react-hook-form';
-import { defaultMacroPercentages } from '@/lib/constants';
 
 export function customMacroSplit(
   totalMacros: TotalMacros,
@@ -36,9 +35,7 @@ export function getMealMacroStats(
   form: UseFormReturn<MacroSplitterFormValues>
 ) {
   const watchedMealDistributions = form.watch('meal_distributions');
-  const calculateColumnSum = (
-    macroKey: 'calories_pct'
-  ) => {
+  const calculateColumnSum = (macroKey: 'calories_pct') => {
     return watchedMealDistributions.reduce(
       (sum, meal) => sum + (Number(meal[macroKey]) || 0),
       0

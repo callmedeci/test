@@ -4,7 +4,10 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { UserPlanType } from '@/lib/schemas';
 
-export async function editPlan(newPlan: Partial<UserPlanType>, clientId?: string) {
+export async function editPlan(
+  newPlan: Partial<UserPlanType>,
+  clientId?: string
+) {
   try {
     const supabase = await createClient();
 
@@ -25,7 +28,7 @@ export async function editPlan(newPlan: Partial<UserPlanType>, clientId?: string
     }
 
     const { error } = await supabase
-      .from('user_plan')
+      .from('smart_plan')
       .update(newPlan)
       .eq('user_id', targetUserId);
 

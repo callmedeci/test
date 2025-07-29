@@ -33,33 +33,29 @@ import {
   type ProfileFormValues,
 } from '@/lib/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserMetadata } from '@supabase/supabase-js';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { User } from '@supabase/supabase-js';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { editProfile } from '../actions/apiUserProfile';
 
 type ProfileFormProps = {
-  user: UserMetadata;
+  user: User;
   profile: BaseProfileData;
   clientId?: string;
 };
 
 function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
-  const { user_role, ...formData } = profile;
-  console.log(user_role);
-
-  const isCoachView = Boolean(clientId);
   const { toast } = useToast();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(ProfileFormSchema),
     defaultValues: {
-      ...formData,
-      name: user.user_metadata.full_name,
+      ...profile,
+      full_name: user.user_metadata.full_name,
     },
   });
 
   const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
-    const { name, ...newProfile } = data;
+    const { full_name, ...newProfile } = data;
 
     // Convert null values to undefined for the profile update
     const profileUpdate = Object.fromEntries(
@@ -70,7 +66,11 @@ function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
     ) as Partial<BaseProfileData>;
 
     try {
-      await editProfile(profileUpdate, { data: { full_name: name } }, clientId);
+      await editProfile(
+        profileUpdate,
+        { user_metadata: { full_name } },
+        clientId
+      );
 
       return toast({
         title: 'Profile Updated',
@@ -97,42 +97,38 @@ function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
             label='Account Information'
             value='account-info'
           >
-            {!isCoachView && (
-              <>
-                <FormField
-                  control={form.control}
-                  name='name'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <div>
-                          <Input
-                            placeholder='Your full name'
-                            {...field}
-                            value={field.value ?? ''}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+            <FormField
+              control={form.control}
+              name='full_name'
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <Input
-                    value={user?.email ?? 'N/A'}
-                    readOnly
-                    disabled
-                    className='bg-muted/50'
-                  />
-                  <FormDescription>
-                    Your email address cannot be changed here.
-                  </FormDescription>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <div>
+                      <Input
+                        placeholder='Your full name'
+                        {...field}
+                        value={field.value ?? ''}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
-              </>
-            )}
+              )}
+            />
+
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <Input
+                value={user?.email ?? 'N/A'}
+                readOnly
+                disabled
+                className='bg-muted/50'
+              />
+              <FormDescription>
+                Your email address cannot be changed here.
+              </FormDescription>
+            </FormItem>
 
             <FormField
               control={form.control}

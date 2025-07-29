@@ -14,9 +14,7 @@ export const headerLabels = [
   { key: 'f_g', label: 'F(g)', className: 'text-right min-w-[60px]' },
 ];
 
-export const macroPctKeys: ('calories_pct')[] = [
-  'calories_pct',
-];
+export const macroPctKeys: 'calories_pct'[] = ['calories_pct'];
 
 export const macroColumns = [
   {

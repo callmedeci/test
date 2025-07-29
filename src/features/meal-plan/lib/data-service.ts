@@ -19,7 +19,7 @@ export async function editMealPlan(
   if (!targetUserId) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
-    .from('user_meal_plan')
+    .from('meal_plans')
     .update(mealPlan)
     .eq('user_id', targetUserId)
     .select()
@@ -51,7 +51,7 @@ export async function editAiPlan(
   if (!targetUserId) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
-    .from('user_meal_plan')
+    .from('meal_plans')
     .update(aiPlan)
     .eq('user_id', targetUserId)
     .select()

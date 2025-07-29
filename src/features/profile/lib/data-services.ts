@@ -19,7 +19,7 @@ export async function getUserProfile(): Promise<UserProfile> {
   const user = await getUser();
 
   const { data } = await supabase
-    .from('user_profile')
+    .from('profile')
     .select('*')
     .eq('user_id', user.id)
     .single();
@@ -34,7 +34,7 @@ export async function getUserPlan(): Promise<UserPlan> {
   const user = await getUser();
 
   const { data } = await supabase
-    .from('user_plan')
+    .from('smart_plan')
     .select('*')
     .eq('user_id', user.id)
     .single();

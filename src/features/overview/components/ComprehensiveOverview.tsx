@@ -1,15 +1,14 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { getUserProfile, getUserPlan } from '@/lib/supabase/data-service';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { getUserPlan, getUserProfile } from '@/lib/supabase/data-service';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
-  Calculator,
-  Calendar,
-  Dumbbell,
   Heart,
+  Dumbbell,
   Target,
   TrendingUp,
+  Calendar,
   User,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -17,6 +16,11 @@ import Link from 'next/link';
 export default async function ComprehensiveOverview() {
   const profile = await getUserProfile();
   const userPlan = await getUserPlan();
+
+  const calculateAge = (birthDate: number | null) => {
+    if (!birthDate) return null;
+    return new Date().getFullYear() - birthDate;
+  };
 
   const getBMIStatus = (height: number | null, weight: number | null) => {
     if (!height || !weight) return null;
@@ -32,10 +36,7 @@ export default async function ComprehensiveOverview() {
     return { value: bmi, status: 'Obese', color: 'text-red-600' };
   };
 
-  const bmiData = getBMIStatus(
-    profile?.height_cm ?? null,
-    profile?.current_weight_kg ?? null
-  );
+  const bmiData = getBMIStatus(profile?.height_cm, profile?.current_weight);
 
   return (
     <div className='max-w-7xl mx-auto p-6 space-y-8'>
@@ -61,7 +62,9 @@ export default async function ComprehensiveOverview() {
           <div className='grid grid-cols-1 md:grid-cols-6 gap-4'>
             <div className='text-center'>
               <p className='text-sm text-green-600'>Name</p>
-              <p className='font-semibold text-green-800'>{'Not set'}</p>
+              <p className='font-semibold text-green-800'>
+                {profile?.full_name || 'Not set'}
+              </p>
             </div>
             <div className='text-center'>
               <p className='text-sm text-green-600'>Age</p>
@@ -72,7 +75,7 @@ export default async function ComprehensiveOverview() {
             <div className='text-center'>
               <p className='text-sm text-green-600'>Gender</p>
               <p className='font-semibold text-green-800'>
-                {profile?.biological_sex || 'N/A'}
+                {profile?.gender || 'N/A'}
               </p>
             </div>
             <div className='text-center'>
@@ -87,7 +90,7 @@ export default async function ComprehensiveOverview() {
                 variant='secondary'
                 className='bg-green-100 text-green-800'
               >
-                {'Beginner'}
+                {profile?.workout_experience || 'Beginner'}
               </Badge>
             </div>
             <div className='text-center'>
@@ -96,7 +99,7 @@ export default async function ComprehensiveOverview() {
                 variant='secondary'
                 className='bg-green-100 text-green-800'
               >
-                {profile?.physical_activity_level || 'Moderate'}
+                {profile?.activity_level || 'Moderate'}
               </Badge>
             </div>
           </div>
@@ -149,7 +152,7 @@ export default async function ComprehensiveOverview() {
                 />
                 <p className='text-xs text-green-600 text-center'>
                   {Math.abs(
-                    profile.current_weight_kg - profile.target_weight_1month_kg
+                    profile.current_weight - profile.target_weight
                   ).toFixed(1)}{' '}
                   kg to goal
                 </p>
@@ -167,23 +170,25 @@ export default async function ComprehensiveOverview() {
             <CardTitle className='text-green-800'>Body Fat Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            {profile?.bf_current && profile?.bf_target ? (
+            {profile?.body_fat_percentage && profile?.target_body_fat ? (
               <div className='space-y-2'>
                 <div className='flex justify-between text-sm'>
-                  <span>Current: {profile.bf_current}%</span>
-                  <span>Target: {profile.bf_target}%</span>
+                  <span>Current: {profile.body_fat_percentage}%</span>
+                  <span>Target: {profile.target_body_fat}%</span>
                 </div>
                 <Progress
                   value={Math.abs(
-                    ((profile.bf_current - profile.bf_target) /
-                      profile.bf_current) *
+                    ((profile.body_fat_percentage - profile.target_body_fat) /
+                      profile.body_fat_percentage) *
                       100
                   )}
                   className='h-3'
                 />
                 <p className='text-xs text-green-600 text-center'>
-                  {Math.abs(profile.bf_current - profile.bf_target).toFixed(1)}%
-                  to goal
+                  {Math.abs(
+                    profile.body_fat_percentage - profile.target_body_fat
+                  ).toFixed(1)}
+                  % to goal
                 </p>
               </div>
             ) : (
@@ -209,13 +214,13 @@ export default async function ComprehensiveOverview() {
             <div className='grid grid-cols-2 gap-4'>
               <div className='text-center p-4 bg-green-50 rounded-lg'>
                 <div className='text-2xl font-bold text-green-800'>
-                  {userPlan?.target_daily_calories || 0}
+                  {userPlan?.daily_calories || 0}
                 </div>
                 <p className='text-sm text-green-600'>Daily Calories</p>
               </div>
               <div className='text-center p-4 bg-green-50 rounded-lg'>
                 <div className='text-2xl font-bold text-green-800'>
-                  {userPlan?.target_protein_g || 0}g
+                  {userPlan?.protein_grams || 0}g
                 </div>
                 <p className='text-sm text-green-600'>Protein Target</p>
               </div>
@@ -226,13 +231,13 @@ export default async function ComprehensiveOverview() {
                 <div className='flex justify-between text-sm mb-1'>
                   <span className='text-green-700'>Protein</span>
                   <span className='text-green-700'>
-                    {userPlan?.target_protein_g || 0}g
+                    {userPlan?.protein_grams || 0}g
                   </span>
                 </div>
                 <Progress
                   value={
-                    userPlan?.target_protein_g
-                      ? (userPlan.target_protein_g / 200) * 100
+                    userPlan?.protein_grams
+                      ? (userPlan.protein_grams / 200) * 100
                       : 0
                   }
                   className='h-2'
@@ -242,13 +247,13 @@ export default async function ComprehensiveOverview() {
                 <div className='flex justify-between text-sm mb-1'>
                   <span className='text-green-700'>Carbs</span>
                   <span className='text-green-700'>
-                    {userPlan?.target_carbs_g || 0}g
+                    {userPlan?.carbs_grams || 0}g
                   </span>
                 </div>
                 <Progress
                   value={
-                    userPlan?.target_carbs_g
-                      ? (userPlan.target_carbs_g / 300) * 100
+                    userPlan?.carbs_grams
+                      ? (userPlan.carbs_grams / 300) * 100
                       : 0
                   }
                   className='h-2'
@@ -258,14 +263,12 @@ export default async function ComprehensiveOverview() {
                 <div className='flex justify-between text-sm mb-1'>
                   <span className='text-green-700'>Fat</span>
                   <span className='text-green-700'>
-                    {userPlan?.target_fat_g || 0}g
+                    {userPlan?.fat_grams || 0}g
                   </span>
                 </div>
                 <Progress
                   value={
-                    userPlan?.target_fat_g
-                      ? (userPlan.target_fat_g / 100) * 100
-                      : 0
+                    userPlan?.fat_grams ? (userPlan.fat_grams / 100) * 100 : 0
                   }
                   className='h-2'
                 />
@@ -295,13 +298,13 @@ export default async function ComprehensiveOverview() {
             <div className='grid grid-cols-2 gap-4'>
               <div className='text-center p-4 bg-green-50 rounded-lg'>
                 <div className='text-2xl font-bold text-green-800'>
-                  {'Beginner'}
+                  {profile?.workout_experience || 'Beginner'}
                 </div>
                 <p className='text-sm text-green-600'>Experience Level</p>
               </div>
               <div className='text-center p-4 bg-green-50 rounded-lg'>
                 <div className='text-2xl font-bold text-green-800'>
-                  {'Mixed'}
+                  {profile?.preferred_workout_type || 'Mixed'}
                 </div>
                 <p className='text-sm text-green-600'>Preferred Type</p>
               </div>
@@ -332,7 +335,7 @@ export default async function ComprehensiveOverview() {
             </div>
 
             <div className='pt-4'>
-              <Link href='/overview'>
+              <Link href='/tools/workout-planner'>
                 <Button className='w-full bg-green-600 hover:bg-green-700'>
                   <Dumbbell className='w-4 h-4 mr-2' />
                   Create Workout Plan
@@ -400,12 +403,12 @@ export default async function ComprehensiveOverview() {
                   Nutrition Recommendations:
                 </h4>
                 <ul className='space-y-2 text-sm text-green-700'>
-                  {!userPlan?.target_daily_calories && (
+                  {!userPlan?.daily_calories && (
                     <li>• Set up your calorie targets for better tracking</li>
                   )}
-                  {profile.preferred_diet && (
+                  {profile.dietary_preferences && (
                     <li>
-                      • Your dietary preferences: {profile.preferred_diet}
+                      • Your dietary preferences: {profile.dietary_preferences}
                     </li>
                   )}
                   {profile.allergies && (
@@ -420,19 +423,17 @@ export default async function ComprehensiveOverview() {
                   Fitness Recommendations:
                 </h4>
                 <ul className='space-y-2 text-sm text-green-700'>
-                  {profile.physical_activity_level === 'sedentary' && (
+                  {profile.workout_experience === 'Beginner' && (
                     <li>• Start with 2-3 workout days per week</li>
                   )}
-                  {profile.pain_mobility_issues &&
-                    profile.pain_mobility_issues.length > 0 && (
-                      <li>
-                        • Consider limitations:{' '}
-                        {profile.pain_mobility_issues.join(', ')}
-                      </li>
-                    )}
+                  {profile.injuries_limitations && (
+                    <li>
+                      • Consider limitations: {profile.injuries_limitations}
+                    </li>
+                  )}
                   <li>• Aim for 150 minutes of moderate cardio weekly</li>
                   <li>• Include strength training 2-3 times per week</li>
-                  <li>• Don&apos;t forget flexibility and recovery days</li>
+                  <li>• Don't forget flexibility and recovery days</li>
                 </ul>
               </div>
             </div>

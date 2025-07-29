@@ -12,7 +12,7 @@ export async function getUserPlan(userId?: string): Promise<UserPlan> {
     const targetUserId = userId || (await getUser()).id;
 
     const { data, error } = await supabase
-      .from('user_plan')
+      .from('smart_plan')
       .select('*')
       .eq('user_id', targetUserId)
       .single();
@@ -45,7 +45,7 @@ export async function updateUserPlan(
     const targetUserId = userId || (await getUser()).id;
 
     const { error } = await supabase
-      .from('user_plan')
+      .from('smart_plan')
       .update(planData)
       .eq('user_id', targetUserId);
 
@@ -76,7 +76,7 @@ export async function createUserPlan(
     const supabase = await createClient();
     const targetUserId = userId || (await getUser()).id;
 
-    const { error } = await supabase.from('user_plan').insert({
+    const { error } = await supabase.from('smart_plan').insert({
       user_id: targetUserId,
       ...planData,
     });
@@ -104,7 +104,7 @@ export async function resetUserPlan(userId?: string): Promise<void> {
   const supabase = await createClient();
 
   const { error } = await supabase
-    .from('user_plan')
+    .from('smart_plan')
     .update({
       bmr_kcal: null,
       maintenance_calories_tdee: null,

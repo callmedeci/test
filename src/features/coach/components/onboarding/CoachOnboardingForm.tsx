@@ -118,7 +118,9 @@ export function CoachOnboardingForm() {
     }
   }
 
-  const handleSubmit: SubmitHandler<CoachOnboardingFormValues> = async (data) => {
+  const handleSubmit: SubmitHandler<CoachOnboardingFormValues> = async (
+    data
+  ) => {
     try {
       await saveCoachOnboarding(data);
 
