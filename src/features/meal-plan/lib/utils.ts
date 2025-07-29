@@ -5,18 +5,19 @@ import {
 } from '@/lib/constants';
 import {
   BaseProfileData,
+  GeneratePersonalizedMealPlanInput,
   WeeklyMealPlan,
 } from '@/lib/schemas';
 import { DailyTargetsTypes, MealToOptimizeTypes } from '../types';
 import { requiredFields } from './config';
 
-export function mapProfileToMealPlanInput(profile: Record<string, any>) {
+export function mapProfileToMealPlanInput(
+  profile: Record<string, any>
+): GeneratePersonalizedMealPlanInput {
   const input = profile;
-  Object.keys(input).forEach(
-    (key) => !input[key] && delete input[key]
-  );
+  Object.keys(input).forEach((key) => !input[key] && delete input[key]);
 
-  return input;
+  return input as GeneratePersonalizedMealPlanInput;
 }
 
 export function getAdjustedMealInput(

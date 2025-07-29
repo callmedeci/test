@@ -102,7 +102,6 @@ export default async function AppLayout({
                       tooltip={item.label}
                     >
                       <IconComponent className='h-5 w-5' />{' '}
-                      {/* Render the icon component */}
                       <span>{item.label}</span>
                     </SidebarMenuButton>
                   </Link>

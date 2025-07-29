@@ -145,20 +145,10 @@ export async function updateSession(request: NextRequest) {
       .eq('user_id', user.id)
       .single();
 
-    console.log('Profile data:', profile);
-      // Check if user is a coach by looking in coaches table
-      const { data: coachData } = await supabase
-        .from('coaches')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .single();
-
-      const redirectUrl = coachData ? '/coach-dashboard' : '/dashboard';
-
-    if (!profile.is_onboarding_complete && !pathname.startsWith('/onboarding'))
+    if (!profile?.is_onboarding_complete && !pathname.startsWith('/onboarding'))
       return NextResponse.redirect(new URL('/onboarding', request.url));
 
-    if (profile.is_onboarding_complete) {
+    if (profile?.is_onboarding_complete) {
       if (pathname.startsWith('/onboarding')) {
         // Check if user is a coach by looking in coaches table
         const { data: coachData } = await supabase
@@ -179,8 +169,13 @@ export async function updateSession(request: NextRequest) {
         .single();
 
       if (coachData) {
-        if (pathname.startsWith('/dashboard') && !pathname.startsWith('/coach-dashboard')) {
-          return NextResponse.redirect(new URL('/coach-dashboard', request.url));
+        if (
+          pathname.startsWith('/dashboard') &&
+          !pathname.startsWith('/coach-dashboard')
+        ) {
+          return NextResponse.redirect(
+            new URL('/coach-dashboard', request.url)
+          );
         }
       } else {
         if (pathname.startsWith('/coach-dashboard')) {

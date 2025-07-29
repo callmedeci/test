@@ -100,7 +100,7 @@ function PlannerForm({ plan, profile, clientId }: PlannerFormProps) {
       left_arm_ideal: undefined,
       custom_total_calories: undefined,
       custom_protein_per_kg: undefined,
-      remaining_calories_carb_pct: 50,
+      remaining_calories_carbs_percentage: 50,
     });
 
     setResults(null);
@@ -108,7 +108,7 @@ function PlannerForm({ plan, profile, clientId }: PlannerFormProps) {
     const {
       custom_protein_per_kg,
       custom_total_calories,
-      remaining_calories_carb_pct,
+      remaining_calories_carbs_percentage,
       ...newProfile
     } = form.getValues();
 
@@ -144,7 +144,9 @@ function PlannerForm({ plan, profile, clientId }: PlannerFormProps) {
     }
   }
 
-  const onSubmit: SubmitHandler<SmartCaloriePlannerFormValues> = async (data) => {
+  const onSubmit: SubmitHandler<SmartCaloriePlannerFormValues> = async (
+    data
+  ) => {
     const activity = activityLevels.find(
       (al) => al.value === data.physical_activity_level
     );

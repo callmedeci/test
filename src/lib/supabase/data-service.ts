@@ -1,6 +1,6 @@
 'use server';
 
-import { UserProfile, UserMealPlan, UserPlan, BaseProfileData, UserPlanType, MealPlans } from '@/lib/schemas';
+import { BaseProfileData, MealPlans, UserPlanType } from '@/lib/schemas';
 import { User } from '@supabase/supabase-js';
 import { createClient } from './server';
 

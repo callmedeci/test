@@ -68,7 +68,7 @@ export default function ClientOnboardingForm() {
       biological_sex: undefined,
       height_cm: undefined,
       current_weight_kg: undefined,
-      target_weight_1month_kg: undefined,
+      target_weight_kg: undefined,
       long_term_goal_weight_kg: undefined,
       physical_activity_level: undefined,
       primary_diet_goal: 'fat_loss',
@@ -106,7 +106,7 @@ export default function ClientOnboardingForm() {
         height_cm: data.height_cm,
         physical_activity_level: data.physical_activity_level,
         primary_diet_goal: data.primary_diet_goal,
-        target_weight_kg: data.target_weight_1month_kg,
+        target_weight_kg: data.target_weight_kg,
       });
 
       if (
@@ -208,7 +208,9 @@ export default function ClientOnboardingForm() {
       setCurrentStep((prev) => prev + 1);
   };
 
-  const processAndSaveData: SubmitHandler<OnboardingFormValues> = async (data) => {
+  const processAndSaveData: SubmitHandler<OnboardingFormValues> = async (
+    data
+  ) => {
     const processedData: Record<string, any> = { ...data };
 
     const arrayLikeFields: (keyof OnboardingFormValues)[] = [

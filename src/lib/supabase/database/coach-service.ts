@@ -1,8 +1,11 @@
-
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { getUser, getProfileById, getUserDataById } from '@/lib/supabase/data-service';
+import {
+  getUser,
+  getProfileById,
+  getUserDataById,
+} from '@/lib/supabase/data-service';
 
 export interface CoachProfile {
   user_id: string;
@@ -19,7 +22,7 @@ export interface CoachClient {
   user_id: string;
   age: number;
   biological_sex: string;
-  primary_diet_goal: string;
+  primary_diet_goal?: 'fat_loss' | 'muscle_gain' | 'recomp' | null;
   created_at: string;
   full_name: string;
 }
@@ -84,12 +87,18 @@ export async function getCoachProfile(): Promise<CoachProfile> {
 
   const { data: coach, error: coachError } = await supabase
     .from('coaches')
-    .select('user_id, certification, joined_date, description, years_experience')
+    .select(
+      'user_id, certification, joined_date, description, years_experience'
+    )
     .eq('user_id', user.id)
     .single();
 
   if (!coach || coachError) {
-    throw new Error(`Failed to fetch coach profile: ${coachError?.message || 'Coach not found'}`);
+    throw new Error(
+      `Failed to fetch coach profile: ${
+        coachError?.message || 'Coach not found'
+      }`
+    );
   }
 
   const profile = await getProfileById(
@@ -107,7 +116,9 @@ export async function getCoachProfile(): Promise<CoachProfile> {
   };
 }
 
-export async function getRecentCoachClientRequests(limit: number = 5): Promise<CoachClientRequest[]> {
+export async function getRecentCoachClientRequests(
+  limit: number = 5
+): Promise<CoachClientRequest[]> {
   const supabase = await createClient();
   const user = await getUser();
 
@@ -125,7 +136,9 @@ export async function getRecentCoachClientRequests(limit: number = 5): Promise<C
   return requests || [];
 }
 
-export async function getPendingClientRequests(): Promise<PendingClientRequest[]> {
+export async function getPendingClientRequests(): Promise<
+  PendingClientRequest[]
+> {
   const supabase = await createClient();
   const user = await getUser();
 
@@ -143,7 +156,10 @@ export async function getPendingClientRequests(): Promise<PendingClientRequest[]
   return requests || [];
 }
 
-export async function verifyCoachClientAccess(coachId: string, clientId: string): Promise<boolean> {
+export async function verifyCoachClientAccess(
+  coachId: string,
+  clientId: string
+): Promise<boolean> {
   const supabase = await createClient();
 
   const { data, error } = await supabase

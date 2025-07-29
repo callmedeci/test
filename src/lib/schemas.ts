@@ -1,5 +1,4 @@
 import * as z from 'zod';
-import { User } from '@supabase/supabase-js';
 
 export const preprocessOptionalNumber = (val: unknown) => {
   if (val === '' || val === null || val === undefined) {
@@ -36,27 +35,42 @@ export function preprocessDataForFirestore(
 export const UserProfileSchema = z.object({
   id: z.number().optional(),
   user_id: z.string(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
   is_onboarding_complete: z.boolean().default(false),
   user_role: z.enum(['client', 'coach']).nullable().optional(),
-  age: z.number().int().min(1).max(120).nullable().optional(),
-  biological_sex: z.enum(['male', 'female', 'other']).nullable().optional(),
+  age: z.number().int().min(1).max(120),
+  biological_sex: z.enum(['male', 'female', 'other']),
   height_cm: z.number().min(50).max(300).nullable().optional(),
   current_weight_kg: z.number().min(20).max(500).nullable().optional(),
   target_weight_1month_kg: z.number().min(20).max(500).nullable().optional(),
   long_term_goal_weight_kg: z.number().min(20).max(500).nullable().optional(),
-  physical_activity_level: z.enum(['sedentary', 'light', 'moderate', 'active', 'extra_active']).nullable().optional(),
-  primary_diet_goal: z.enum(['fat_loss', 'muscle_gain', 'recomp']).nullable().optional(),
+  physical_activity_level: z
+    .enum(['sedentary', 'light', 'moderate', 'active', 'extra_active'])
+    .nullable()
+    .optional(),
+  primary_diet_goal: z
+    .enum(['fat_loss', 'muscle_gain', 'recomp'])
+    .nullable()
+    .optional(),
   pain_mobility_issues: z.array(z.string()).nullable().optional(),
   injuries: z.array(z.string()).nullable().optional(),
   surgeries: z.array(z.string()).nullable().optional(),
   exercise_goals: z.array(z.string()).nullable().optional(),
   preferred_exercise_types: z.array(z.string()).nullable().optional(),
-  exercise_frequency: z.enum(['1-2_days', '3-4_days', '5-6_days', 'daily']).nullable().optional(),
-  typical_exercise_intensity: z.enum(['light', 'moderate', 'vigorous']).nullable().optional(),
+  exercise_frequency: z
+    .enum(['1-2_days', '3-4_days', '5-6_days', 'daily'])
+    .nullable()
+    .optional(),
+  typical_exercise_intensity: z
+    .enum(['light', 'moderate', 'vigorous'])
+    .nullable()
+    .optional(),
   equipment_access: z.array(z.string()).nullable().optional(),
-  subscription_status: z.enum(['free', 'premium', 'premium_annual', 'trial', 'trial_ended']).nullable().optional(),
+  subscription_status: z
+    .enum(['free', 'premium', 'premium_annual', 'trial', 'trial_ended'])
+    .nullable()
+    .optional(),
   bf_current: z.number().min(0).max(100).nullable().optional(),
   bf_target: z.number().min(0).max(100).nullable().optional(),
   bf_ideal: z.number().min(0).max(100).nullable().optional(),
@@ -84,10 +98,15 @@ export const UserProfileSchema = z.object({
   left_arm_current: z.number().min(0).nullable().optional(),
   left_arm_goal_1m: z.number().min(0).nullable().optional(),
   left_arm_ideal: z.number().min(0).nullable().optional(),
-  meal_distributions: z.array(z.object({
-    mealName: z.string(),
-    calories_pct: z.number(),
-  })).nullable().optional(),
+  meal_distributions: z
+    .array(
+      z.object({
+        mealName: z.string(),
+        calories_pct: z.number(),
+      })
+    )
+    .nullable()
+    .optional(),
   preferred_diet: z.string().nullable().optional(),
   preferred_cuisines: z.array(z.string()).nullable().optional(),
   dispreferrred_cuisines: z.array(z.string()).nullable().optional(),
@@ -291,7 +310,9 @@ export const CoachSchema = z.object({
   certification: z.array(z.string()).nullable().optional(),
   years_experience: z.number().min(0).nullable().optional(),
   joined_date: z.string().optional(),
-  status: z.enum(['pending_approval', 'approved', 'suspended']).default('pending_approval'),
+  status: z
+    .enum(['pending_approval', 'approved', 'suspended'])
+    .default('pending_approval'),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
 });
@@ -350,10 +371,7 @@ export const ProfileFormSchema = z.object({
     .max(120)
     .nullable()
     .optional(),
-  biological_sex: z
-    .enum(['male', 'female', 'other'])
-    .nullable()
-    .optional(),
+  biological_sex: z.enum(['male', 'female', 'other']).nullable().optional(),
   current_weight_kg: z.coerce
     .number()
     .min(20, 'Weight must be at least 20kg')
@@ -405,16 +423,8 @@ export const ProfileFormSchema = z.object({
     .max(100, 'Target body fat % must be between 0 and 100.')
     .nullable()
     .optional(),
-  waist_current: z.coerce
-    .number()
-    .min(0)
-    .nullable()
-    .optional(),
-  waist_target: z.coerce
-    .number()
-    .min(0)
-    .nullable()
-    .optional(),
+  waist_current: z.coerce.number().min(0).nullable().optional(),
+  waist_target: z.coerce.number().min(0).nullable().optional(),
 });
 
 export type ProfileFormValues = z.infer<typeof ProfileFormSchema>;
@@ -629,7 +639,9 @@ export const SmartCaloriePlannerFormSchema = z.object({
   ),
 });
 
-export type SmartCaloriePlannerFormValues = z.infer<typeof SmartCaloriePlannerFormSchema>;
+export type SmartCaloriePlannerFormValues = z.infer<
+  typeof SmartCaloriePlannerFormSchema
+>;
 
 // Meal Suggestion Preferences Schema
 export const MealSuggestionPreferencesSchema = z.object({
@@ -639,7 +651,9 @@ export const MealSuggestionPreferencesSchema = z.object({
   medications: z.array(z.string()).nullable().optional(),
 });
 
-export type MealSuggestionPreferencesValues = z.infer<typeof MealSuggestionPreferencesSchema>;
+export type MealSuggestionPreferencesValues = z.infer<
+  typeof MealSuggestionPreferencesSchema
+>;
 
 // Macro Results Interface
 export interface MacroResults {
@@ -667,14 +681,14 @@ export interface GlobalCalculatedTargets {
   custom_protein_g?: number | null;
   custom_carbs_g?: number | null;
   custom_fat_g?: number | null;
-  
+
   // Additional calculated fields
   estimated_weekly_weight_change_kg?: number | null;
   protein_calories?: number | null;
   carb_calories?: number | null;
   fat_calories?: number | null;
   current_weight_for_custom_calc?: number | null;
-  
+
   // Percentage fields
   target_protein_percentage?: number | null;
   target_carbs_percentage?: number | null;
@@ -754,10 +768,9 @@ export const OnboardingFormSchema = z.object({
     ['sedentary', 'light', 'moderate', 'active', 'extra_active'],
     { required_error: 'Activity level is required.' }
   ),
-  primary_diet_goal: z.enum(
-    ['fat_loss', 'muscle_gain', 'recomp'],
-    { required_error: 'Diet goal is required.' }
-  ),
+  primary_diet_goal: z.enum(['fat_loss', 'muscle_gain', 'recomp'], {
+    required_error: 'Diet goal is required.',
+  }),
   bf_current: z.preprocess(
     preprocessOptionalNumber,
     z.coerce.number().min(0).max(100).optional()
@@ -801,10 +814,7 @@ export const OnboardingFormSchema = z.object({
   ),
   custom_fat_g: z.preprocess(
     preprocessOptionalNumber,
-    z.coerce
-      .number()
-      .min(0, 'Fat must be non-negative if provided.')
-      .optional()
+    z.coerce.number().min(0, 'Fat must be non-negative if provided.').optional()
   ),
   systemCalculatedTargets: z.any().optional(),
   userCustomizedTargets: z.any().optional(),
@@ -845,7 +855,9 @@ export const SuggestMealsForMacrosOutputSchema = z.object({
   suggestions: z.array(MealSuggestionSchema),
 });
 
-export type SuggestMealsForMacrosOutput = z.infer<typeof SuggestMealsForMacrosOutputSchema>;
+export type SuggestMealsForMacrosOutput = z.infer<
+  typeof SuggestMealsForMacrosOutputSchema
+>;
 
 export const SuggestMealsForMacrosInputSchema = z.object({
   meal_name: z.string(),
@@ -863,7 +875,9 @@ export const SuggestMealsForMacrosInputSchema = z.object({
   medications: z.array(z.string()).optional(),
 });
 
-export type SuggestMealsForMacrosInput = z.infer<typeof SuggestMealsForMacrosInputSchema>;
+export type SuggestMealsForMacrosInput = z.infer<
+  typeof SuggestMealsForMacrosInputSchema
+>;
 
 // AI Service Schemas
 export const AIServiceIngredientSchema = z.object({
@@ -910,14 +924,18 @@ export const AdjustMealIngredientsInputSchema = z.object({
   }),
 });
 
-export type AdjustMealIngredientsInput = z.infer<typeof AdjustMealIngredientsInputSchema>;
+export type AdjustMealIngredientsInput = z.infer<
+  typeof AdjustMealIngredientsInputSchema
+>;
 
 export const AdjustMealIngredientsOutputSchema = z.object({
   adjustedMeal: AIServiceMealSchema,
   explanation: z.string(),
 });
 
-export type AdjustMealIngredientsOutput = z.infer<typeof AdjustMealIngredientsOutputSchema>;
+export type AdjustMealIngredientsOutput = z.infer<
+  typeof AdjustMealIngredientsOutputSchema
+>;
 
 // AI Generated Meal Plan Schemas
 export const AIGeneratedIngredientSchema = z.object({
@@ -975,7 +993,9 @@ export const GeneratePersonalizedMealPlanInputSchema = z.object({
   meal_data: WeeklyMealPlanSchema,
 });
 
-export type GeneratePersonalizedMealPlanInput = z.infer<typeof GeneratePersonalizedMealPlanInputSchema>;
+export type GeneratePersonalizedMealPlanInput = z.infer<
+  typeof GeneratePersonalizedMealPlanInputSchema
+>;
 
 export const GeneratePersonalizedMealPlanOutputSchema = z.object({
   days: z.array(DayPlanSchema),
@@ -989,7 +1009,9 @@ export const GeneratePersonalizedMealPlanOutputSchema = z.object({
     .optional(),
 });
 
-export type GeneratePersonalizedMealPlanOutput = z.infer<typeof GeneratePersonalizedMealPlanOutputSchema>;
+export type GeneratePersonalizedMealPlanOutput = z.infer<
+  typeof GeneratePersonalizedMealPlanOutputSchema
+>;
 
 // Support Chatbot Schemas
 export const SupportChatbotInputSchema = z.object({
@@ -1027,7 +1049,9 @@ export const SuggestIngredientSwapInputSchema = z.object({
   }),
 });
 
-export type SuggestIngredientSwapInput = z.infer<typeof SuggestIngredientSwapInputSchema>;
+export type SuggestIngredientSwapInput = z.infer<
+  typeof SuggestIngredientSwapInputSchema
+>;
 
 export const SuggestIngredientSwapOutputSchema = z.array(
   z.object({
@@ -1036,7 +1060,9 @@ export const SuggestIngredientSwapOutputSchema = z.array(
   })
 );
 
-export type SuggestIngredientSwapOutput = z.infer<typeof SuggestIngredientSwapOutputSchema>;
+export type SuggestIngredientSwapOutput = z.infer<
+  typeof SuggestIngredientSwapOutputSchema
+>;
 
 // Full User Profile Type combining all user data
 export type FullUserProfileType = UserProfile & UserPlan & UserMealPlan;
