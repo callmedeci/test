@@ -25,41 +25,34 @@ interface WeeklyWorkoutTargetsProps {
   workoutPlan: WorkoutPlan;
 }
 
-export function WeeklyWorkoutTargets({ workoutPlan }: WeeklyWorkoutTargetsProps) {
+export function WeeklyWorkoutTargets({
+  workoutPlan,
+}: WeeklyWorkoutTargetsProps) {
   const workoutTypes = [
     {
       name: 'Cardio',
       value: workoutPlan?.weeklyTargets.cardio || 0,
       icon: Activity,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
-      progressColor: 'bg-red-500',
     },
     {
       name: 'Strength',
       value: workoutPlan?.weeklyTargets.strength || 0,
       icon: Dumbbell,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      progressColor: 'bg-blue-500',
     },
     {
       name: 'Flexibility',
       value: workoutPlan?.weeklyTargets.flexibility || 0,
       icon: Zap,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      progressColor: 'bg-purple-500',
     },
   ];
 
   return (
-    <Card className='border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 hover:shadow-md transition-shadow duration-200'>
+    <Card>
       <CardHeader>
-        <CardTitle className='text-emerald-800 flex items-center gap-2'>
+        <CardTitle className='flex items-center gap-2'>
           Weekly Workout Targets
         </CardTitle>
-        <p className='text-sm text-emerald-600'>
+        <p className='text-sm text-muted-foreground'>
           Your personalized workout breakdown
         </p>
       </CardHeader>
@@ -69,22 +62,19 @@ export function WeeklyWorkoutTargets({ workoutPlan }: WeeklyWorkoutTargetsProps)
             <div key={workout.name} className='space-y-3'>
               <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-2'>
-                  <div className={`p-2 rounded-lg ${workout.bgColor}`}>
-                    <workout.icon className={`h-4 w-4 ${workout.color}`} />
+                  <div className='p-2 rounded-lg'>
+                    <workout.icon className='h-4 w-4 text-primary' />
                   </div>
-                  <span className='text-emerald-700 font-medium text-sm'>
+                  <span className='text-primary font-medium text-sm'>
                     {workout.name}
                   </span>
                 </div>
-                <span className='text-emerald-700 font-bold text-sm'>
+                <span className='text-primary font-bold text-sm'>
                   {workout.value} min
                 </span>
               </div>
-              <Progress
-                value={(workout.value || 0) / 2}
-                className='h-2'
-              />
-              <p className='text-xs text-emerald-600'>Weekly target</p>
+              <Progress value={(workout.value || 0) / 2} className='h-2' />
+              <p className='text-xs text-muted-foreground'>Weekly target</p>
             </div>
           ))}
         </div>

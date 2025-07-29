@@ -1,6 +1,7 @@
 import LoadingScreen from '@/components/ui/LoadingScreen';
 import { DashboardHeader } from '@/features/dashboard/components/DashboardHeader';
 import { DashboardSection } from '@/features/dashboard/components/DashboardSection';
+import { QuickActionsSection } from '@/features/dashboard/components/QuickActionsSection';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
@@ -18,10 +19,17 @@ export default async function DashboardPage() {
   return (
     <div className='max-w-7xl mx-auto space-y-6'>
       <DashboardHeader />
-      
-      <Suspense fallback={<LoadingScreen loadingLabel='Loading your dashboard...' />}>
+
+      <Suspense
+        fallback={<LoadingScreen loadingLabel='Loading your dashboard...' />}
+      >
         <DashboardSection />
       </Suspense>
+
+      {/* Quick Actions - shown on both tabs */}
+      <div className='mt-8'>
+        <QuickActionsSection />
+      </div>
     </div>
   );
 }

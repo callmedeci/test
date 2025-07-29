@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { BaseProfileData } from '@/lib/schemas';
 import { calculateProgress, formatValue } from '@/lib/utils';
@@ -10,18 +16,16 @@ interface ProgressSectionProps {
 export function ProgressSection({ profile }: ProgressSectionProps) {
   return (
     <div className='grid gap-4 md:grid-cols-2'>
-      <Card className='border-border/50 hover:shadow-md transition-shadow duration-200'>
+      <Card className='border-border/50 transition-shadow duration-200'>
         <CardHeader>
           <CardTitle className='text-primary flex items-center gap-2'>
             Weight Progress
           </CardTitle>
-          <CardDescription>
-            Progress towards your 1-month goal
-          </CardDescription>
+          <CardDescription>Progress towards your 1-month goal</CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
           <div className='space-y-2'>
-            <div className='flex justify-between text-sm'>
+            <div className='flex justify-between text-sm text-primary'>
               <span>
                 Current: {formatValue(profile?.current_weight_kg, ' kg')}
               </span>
@@ -38,23 +42,22 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
             />
           </div>
           <p className='text-xs text-muted-foreground'>
-            Long-term goal: {formatValue(profile?.long_term_goal_weight_kg, ' kg')}
+            Long-term goal:{' '}
+            {formatValue(profile?.long_term_goal_weight_kg, ' kg')}
           </p>
         </CardContent>
       </Card>
 
-      <Card className='border-border/50 hover:shadow-md transition-shadow duration-200'>
+      <Card className='border-border/50 transition-shadow duration-200'>
         <CardHeader>
           <CardTitle className='text-primary flex items-center gap-2'>
             Body Composition
           </CardTitle>
-          <CardDescription>
-            Body fat and muscle mass targets
-          </CardDescription>
+          <CardDescription>Body fat and muscle mass targets</CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
           <div className='space-y-2'>
-            <div className='flex justify-between text-sm'>
+            <div className='flex justify-between text-sm text-primary'>
               <span>Body Fat</span>
               <span>
                 {formatValue(profile?.bf_current, '%')} /{' '}
@@ -74,7 +77,7 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
             />
           </div>
           <div className='space-y-2'>
-            <div className='flex justify-between text-sm'>
+            <div className='flex justify-between text-sm text-primary'>
               <span>Muscle Mass</span>
               <span>
                 {formatValue(profile?.mm_current, '%')} /{' '}
@@ -82,10 +85,7 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
               </span>
             </div>
             <Progress
-              value={calculateProgress(
-                profile?.mm_current,
-                profile?.mm_target
-              )}
+              value={calculateProgress(profile?.mm_current, profile?.mm_target)}
               className='h-3'
             />
           </div>

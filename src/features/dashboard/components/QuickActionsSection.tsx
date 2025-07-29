@@ -1,15 +1,17 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  User, 
-  Target, 
-  Calendar, 
-  FileText, 
-  ChefHat, 
-  SplitSquareHorizontal,
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
   BrainCircuit,
   Dumbbell,
-  MessageSquareQuote
+  FileText,
+  MessageSquareQuote,
+  User,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -32,42 +34,6 @@ export function QuickActionsSection() {
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       hoverColor: 'hover:bg-green-100',
-    },
-    {
-      href: '/tools/macro-splitter',
-      icon: SplitSquareHorizontal,
-      label: 'Macro Splitter',
-      description: 'Distribute macros across meals',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      hoverColor: 'hover:bg-purple-100',
-    },
-    {
-      href: '/tools/meal-suggestions',
-      icon: ChefHat,
-      label: 'Meal Suggestions',
-      description: 'Get AI-powered meal ideas',
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      hoverColor: 'hover:bg-orange-100',
-    },
-    {
-      href: '/meal-plan/current',
-      icon: Calendar,
-      label: 'Current Meal Plan',
-      description: 'View your weekly meals',
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
-      hoverColor: 'hover:bg-indigo-100',
-    },
-    {
-      href: '/meal-plan/optimized',
-      icon: Target,
-      label: 'AI Meal Plan',
-      description: 'Generate optimized meal plans',
-      color: 'text-pink-600',
-      bgColor: 'bg-pink-50',
-      hoverColor: 'hover:bg-pink-100',
     },
     {
       href: '/tools/workout-planner',
@@ -112,16 +78,20 @@ export function QuickActionsSection() {
         <div className='grid gap-3 md:grid-cols-2 lg:grid-cols-3'>
           {quickActions.map((action) => (
             <Link key={action.href} href={action.href}>
-              <Button 
-                variant='outline' 
+              <Button
+                variant='outline'
                 className={`w-full justify-start h-auto p-4 ${action.hoverColor} border-border/50 hover:border-border transition-all duration-200 hover:shadow-sm`}
               >
                 <div className={`p-2 rounded-lg ${action.bgColor} mr-3`}>
                   <action.icon className={`h-4 w-4 ${action.color}`} />
                 </div>
                 <div className='text-left'>
-                  <div className='font-medium text-foreground'>{action.label}</div>
-                  <div className='text-xs text-muted-foreground'>{action.description}</div>
+                  <div className='font-medium text-foreground'>
+                    {action.label}
+                  </div>
+                  <div className='text-xs text-muted-foreground'>
+                    {action.description}
+                  </div>
                 </div>
               </Button>
             </Link>

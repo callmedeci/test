@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { UserPlanType } from '@/lib/schemas';
 import { formatValue } from '@/lib/utils';
@@ -30,14 +36,12 @@ export function MacronutrientTargets({ userPlan }: MacronutrientTargetsProps) {
   ];
 
   return (
-    <Card className='border-border/50 hover:shadow-md transition-shadow duration-200'>
+    <Card className='border-border/50 transition-shadow duration-200'>
       <CardHeader>
         <CardTitle className='text-primary'>
           Daily Macronutrient Targets
         </CardTitle>
-        <CardDescription>
-          Your personalized macro breakdown
-        </CardDescription>
+        <CardDescription>Your personalized macro breakdown</CardDescription>
       </CardHeader>
       <CardContent>
         <div className='grid gap-6 lg:grid-cols-3'>
@@ -48,15 +52,12 @@ export function MacronutrientTargets({ userPlan }: MacronutrientTargetsProps) {
                   <div className={`w-3 h-3 rounded-full ${macro.color}`} />
                   {macro.name}
                 </span>
-                <span className='font-mono'>
+                <span className='font-mono text-primary'>
                   {formatValue(macro.grams?.toFixed(1), 'g')} (
                   {formatValue(macro.percentage?.toFixed(1), '%')})
                 </span>
               </div>
-              <Progress
-                value={macro.percentage || 0}
-                className='h-2'
-              />
+              <Progress value={macro.percentage || 0} className='h-2' />
             </div>
           ))}
         </div>

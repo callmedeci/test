@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { Download } from 'lucide-react';
@@ -13,7 +12,7 @@ export function DashboardHeader() {
         description='Overview of your nutrition journey and progress'
       />
       <Link href='/pdf'>
-        <Button className='bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200'>
+        <Button>
           <Download className='h-4 w-4 mr-2' />
           Download PDF Report
         </Button>

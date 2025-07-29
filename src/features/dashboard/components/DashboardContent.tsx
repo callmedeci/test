@@ -5,7 +5,6 @@ import { Dumbbell, Heart } from 'lucide-react';
 import { MacronutrientTargets } from './MacronutrientTargets';
 import { NutritionStatsCards } from './NutritionStatsCards';
 import { ProgressSection } from './ProgressSection';
-import { QuickActionsSection } from './QuickActionsSection';
 import { WeeklyWorkoutTargets } from './WeeklyWorkoutTargets';
 import { WorkoutProgressCharts } from './WorkoutProgressCharts';
 import { WorkoutStatsCards } from './WorkoutStatsCards';
@@ -64,28 +63,23 @@ export function DashboardContent({ profile, userPlan }: DashboardContentProps) {
 
       {/* Workout Tab */}
       <TabsContent value='workout' className='space-y-6 mt-6'>
-        <div className='bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg p-4 mb-6'>
+        <div className='border border-primary rounded-lg p-4 mb-6'>
           <div className='flex items-center gap-2 mb-2'>
-            <Badge variant='secondary' className='bg-emerald-100 text-emerald-800'>
-              Coming Soon
-            </Badge>
-            <span className='text-sm font-medium text-emerald-800'>Enhanced Workout Tracking</span>
+            <Badge variant='secondary'>Coming Soon</Badge>
+            <span className='text-sm font-medium text-emerald-800'>
+              Enhanced Workout Tracking
+            </span>
           </div>
           <p className='text-sm text-emerald-700'>
-            Full workout tracking and progress monitoring features are in development. 
-            Current data shows example fitness metrics.
+            Full workout tracking and progress monitoring features are in
+            development. Current data shows example fitness metrics.
           </p>
         </div>
-        
+
         <WorkoutStatsCards workoutPlan={workoutPlan} />
         <WorkoutProgressCharts workoutPlan={workoutPlan} />
         <WeeklyWorkoutTargets workoutPlan={workoutPlan} />
       </TabsContent>
-
-      {/* Quick Actions - shown on both tabs */}
-      <div className='mt-8'>
-        <QuickActionsSection />
-      </div>
     </Tabs>
   );
 }
