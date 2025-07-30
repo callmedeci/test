@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/select';
 import SubmitButton from '@/components/ui/SubmitButton';
 import { editProfile } from '@/features/profile/actions/apiUserProfile';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { userRoles } from '@/lib/constants';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Leaf, UserCheck } from 'lucide-react';
@@ -45,8 +45,6 @@ interface UserRoleSelectionProps {
 }
 
 export function UserRoleSelection({ onRoleSelected }: UserRoleSelectionProps) {
-  const { toast } = useToast();
-
   const form = useForm<UserRoleSelectionValues>({
     resolver: zodResolver(UserRoleSelectionSchema),
     defaultValues: {
@@ -56,9 +54,6 @@ export function UserRoleSelection({ onRoleSelected }: UserRoleSelectionProps) {
 
   async function handleSubmit(data: UserRoleSelectionValues) {
     try {
-      // TODO: Save user role to database
-      console.log('Selected user role:', data.user_role);
-
       await editProfile({ user_role: data.user_role });
 
       toast({

@@ -18,18 +18,18 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { Textarea } from '@/components/ui/textarea';
 import SubmitButton from '@/components/ui/SubmitButton';
-import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 import {
   CoachOnboardingFormSchema,
   type CoachOnboardingFormValues,
 } from '@/features/coach/schemas/coachSchemas';
+import { toast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle, Leaf, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { saveCoachOnboarding } from '../../actions/coachProfile';
 
 const coachSteps = [
@@ -63,7 +63,6 @@ const coachSteps = [
 
 export function CoachOnboardingForm() {
   const router = useRouter();
-  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
 
   const form = useForm<CoachOnboardingFormValues>({

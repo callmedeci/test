@@ -47,3 +47,64 @@ export const macroColumns = [
       `${formatNumber(row.calories, { maximumFractionDigits: 0 })} kcal`,
   },
 ] as const;
+
+export const medicalConditions = [
+  'Asthma',
+  'Hypertension',
+  'Joint Issues',
+  'Heart Disease',
+  'Diabetes',
+  'Arthritis',
+  'Back Problems',
+  'None',
+  'Other',
+];
+
+export const exerciseExperiences = [
+  'Weightlifting',
+  'Cardio',
+  'HIIT',
+  'Yoga',
+  'Pilates',
+  'Running',
+  'Swimming',
+  'Cycling',
+  'None',
+  'Other',
+];
+
+export const commonMedications = [
+  'Blood Pressure Medications',
+  'Diabetes Medications',
+  'Heart Medications',
+  'Asthma Inhalers',
+  'Pain Relievers',
+  'Anti-inflammatories',
+  'Antidepressants',
+  'Thyroid Medications',
+  'None',
+  'Other',
+];
+
+export const muscleGroups = [
+  'Chest',
+  'Back',
+  'Shoulders',
+  'Arms',
+  'Legs',
+  'Core',
+  'Glutes',
+  'Full Body',
+];
+
+export const equipmentOptions = [
+  'Dumbbells',
+  'Resistance Bands',
+  'Barbell',
+  'Yoga Mat',
+  'Pull-up Bar',
+  'Kettlebells',
+  'Treadmill',
+  'None',
+  'Other',
+];

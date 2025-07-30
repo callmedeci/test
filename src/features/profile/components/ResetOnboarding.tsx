@@ -8,16 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { toast } from '@/hooks/use-toast';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { resetProfile } from '../actions/apiUserProfile';
-import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
 
 function ResetOnboarding() {
-  const { toast } = useToast();
   const router = useRouter();
-
   const [isLoading, startTransition] = useTransition();
 
   async function handleReset() {

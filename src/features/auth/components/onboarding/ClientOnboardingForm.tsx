@@ -30,7 +30,7 @@ import NumberField from '@/features/auth/components/shared/NumberField';
 import { default as SelectField } from '@/features/auth/components/shared/SelectField';
 import { editPlan } from '@/features/profile/actions/apiUserPlan';
 import { editProfile } from '@/features/profile/actions/apiUserProfile';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import {
   activityLevels,
   genders,
@@ -47,11 +47,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, CheckCircle, Leaf } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { type FieldPath, useForm, SubmitHandler } from 'react-hook-form';
+import { type FieldPath, SubmitHandler, useForm } from 'react-hook-form';
 
 export default function ClientOnboardingForm() {
   const router = useRouter();
-  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
 
   const [calculatedTargets, setCalculatedTargets] =

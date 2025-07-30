@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import MealPlanOverview from '@/features/meal-plan/components/optimized/MealPlanOverview';
 import { editAiPlan } from '@/features/meal-plan/lib/data-service';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import {
   BaseProfileData,
   GeneratePersonalizedMealPlanOutput,
@@ -26,8 +26,6 @@ function MealPlanGenerator({
   profile,
   userPlan,
 }: MealPlanGeneratorProps) {
-  const { toast } = useToast();
-
   const [isLoading, startTransition] = useTransition();
   const [meal, setMeal] = useState<GeneratePersonalizedMealPlanOutput | null>(
     null

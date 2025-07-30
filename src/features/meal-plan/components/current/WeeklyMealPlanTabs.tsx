@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MealCardItem from '@/features/meal-plan/components/current/MealCardItem';
 import { editMealPlan } from '@/features/meal-plan/lib/data-service';
 import { getAdjustedMealInput } from '@/features/meal-plan/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { useQueryParams } from '@/hooks/useQueryParams';
 import { daysOfWeek } from '@/lib/constants';
 import { BaseProfileData, MealPlans, UserPlanType } from '@/lib/schemas';
@@ -23,7 +23,6 @@ function WeeklyMealPlanTabs({
   mealPlan: MealPlans;
   userId?: string;
 }) {
-  const { toast } = useToast();
   const { getQueryParams, updateAndRemoveQueryParams } = useQueryParams();
 
   const [optimizingMealKey, setOptimizingMealKey] = useState<string | null>(

@@ -2,15 +2,15 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { KeyRound } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import SubmitButton from '../../../../components/ui/SubmitButton';
 import { resetPasswordAction } from '../../actions/resetPassword';
 import { newPasswordSchema } from '../../schemas/authSchema';
-import SubmitButton from '../../../../components/ui/SubmitButton';
 
 type ResetPasswordFormValues = {
   newPassword: string;
@@ -21,7 +21,6 @@ function ResetPasswordForn() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { toast } = useToast();
   const { handleSubmit, formState, register } =
     useForm<ResetPasswordFormValues>({
       resolver: zodResolver(newPasswordSchema),

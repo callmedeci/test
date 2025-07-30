@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { useQueryParams } from '@/hooks/useQueryParams';
 import type { Ingredient, Meal, MealPlans } from '@/lib/schemas';
 import { PlusCircle, Trash2 } from 'lucide-react';
@@ -26,8 +26,6 @@ function EditMealDialog({
   mealPlan: MealPlans;
   userId?: string;
 }) {
-  const { toast } = useToast();
-
   const { getQueryParams, removeQueryParams } = useQueryParams();
 
   const [meal, setMeal] = useState<Meal | null>(null);

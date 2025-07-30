@@ -19,7 +19,7 @@ import {
 
 import SubmitButton from '@/components/ui/SubmitButton';
 import { editProfile } from '@/features/profile/actions/apiUserProfile';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { preferredDiets } from '@/lib/constants';
 import {
   BaseProfileData,
@@ -28,12 +28,10 @@ import {
 } from '@/lib/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Save } from 'lucide-react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import PreferenceTextarea from './PreferenceTextarea';
 
 function MealForm({ profile }: { profile: BaseProfileData }) {
-  const { toast } = useToast();
-
   const form = useForm<Partial<UserProfile>>({
     resolver: zodResolver(UserProfileSchema.partial()),
     defaultValues: profile,

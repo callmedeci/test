@@ -2,7 +2,6 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LogIn } from 'lucide-react';
 import Link from 'next/link';
@@ -10,6 +9,7 @@ import { useEffect } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 import SubmitButton from '@/components/ui/SubmitButton';
+import { toast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { loginAction } from '../../actions/login';
 import { loginSchema } from '../../schemas/authSchema';
@@ -22,7 +22,6 @@ type LoginFormValues = {
 
 function LoginForm() {
   const router = useRouter();
-  const { toast } = useToast();
   const { formState, handleSubmit, register } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });

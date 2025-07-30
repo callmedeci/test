@@ -6,9 +6,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
@@ -26,213 +25,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Activity,
-  ArrowRight,
-  BarChart3,
-  Calendar,
-  CheckCircle,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  Dumbbell,
-  Heart,
-  Repeat,
-  Target,
-  Timer,
-  TrendingUp,
-  User,
-  Utensils,
-  Youtube,
-  Zap,
-} from 'lucide-react';
+  loadSavedPreferences,
+  savePreferences,
+} from '@/features/tools/actions/apiExercise';
+import GeneratedPlanSection from '@/features/tools/components/workout-planner/GeneratedPlanSection';
+import {
+  commonMedications,
+  equipmentOptions,
+  exerciseExperiences,
+  medicalConditions,
+  muscleGroups,
+} from '@/features/tools/lib/config';
+import { toast } from '@/hooks/use-toast';
+import { ExercisePlannerFormData, exercisePlannerSchema } from '@/lib/schemas';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Clock, Dumbbell, Heart, Target, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-
-const exercisePlannerSchema = z.object({
-  fitness_level: z
-    .enum(['Beginner', 'Intermediate', 'Advanced', ''])
-    .refine((val) => val !== '', { message: 'Please select a fitness level' }),
-  exercise_experience: z.array(z.string()).optional(),
-  exercise_experience_other: z.string().optional(),
-  existing_medical_conditions: z.array(z.string()).optional(),
-  existing_medical_conditions_other: z.string().optional(),
-  injuries_or_limitations: z.string().optional(),
-  current_medications: z.array(z.string()).optional(),
-  current_medications_other: z.string().optional(),
-  doctor_clearance: z.boolean(),
-  primary_goal: z
-    .enum([
-      'Lose fat',
-      'Build muscle',
-      'Increase endurance',
-      'Flexibility',
-      'General fitness',
-      '',
-    ])
-    .refine((val) => val !== '', { message: 'Please select a primary goal' }),
-  secondary_goal: z
-    .enum([
-      'Lose fat',
-      'Build muscle',
-      'Increase endurance',
-      'Flexibility',
-      'General fitness',
-      '',
-    ])
-    .optional(),
-  goal_timeline_weeks: z
-    .number()
-    .min(1, { message: 'Timeline must be at least 1 week' })
-    .max(52),
-  target_weight_kg: z.number().min(30).max(300).or(z.literal(0)).optional(),
-  muscle_groups_focus: z.array(z.string()).optional(),
-  exercise_days_per_week: z
-    .number()
-    .min(1, { message: 'Must exercise at least 1 day per week' })
-    .max(7),
-  available_time_per_session: z
-    .number()
-    .min(15, { message: 'Session must be at least 15 minutes' })
-    .max(180),
-  preferred_time_of_day: z
-    .enum(['Morning', 'Afternoon', 'Evening', ''])
-    .refine((val) => val !== '', { message: 'Please select preferred time' }),
-  exercise_location: z
-    .enum(['Home', 'Gym', 'Outdoor', ''])
-    .refine((val) => val !== '', {
-      message: 'Please select exercise location',
-    }),
-  daily_step_count_avg: z
-    .number()
-    .min(0)
-    .max(30000)
-    .or(z.literal(0))
-    .optional(),
-  job_type: z
-    .enum(['Desk job', 'Active job', 'Standing job', ''])
-    .refine((val) => val !== '', { message: 'Please select job type' }),
-  available_equipment: z.array(z.string()).optional(),
-  available_equipment_other: z.string().optional(),
-  machines_access: z.boolean().optional(),
-  space_availability: z
-    .enum(['Small room', 'Open area', 'Gym space', ''])
-    .refine((val) => val !== '', {
-      message: 'Please select space availability',
-    }),
-  want_to_track_progress: z.boolean(),
-  weekly_checkins_enabled: z.boolean(),
-  accountability_support: z.boolean(),
-  preferred_difficulty_level: z
-    .enum(['Low', 'Medium', 'High', ''])
-    .refine((val) => val !== '', { message: 'Please select difficulty level' }),
-  sleep_quality: z
-    .enum(['Poor', 'Average', 'Good', ''])
-    .refine((val) => val !== '', { message: 'Please select sleep quality' }),
-});
-
-type ExercisePlannerFormData = z.infer<typeof exercisePlannerSchema>;
-
-const medicalConditions = [
-  'Asthma',
-  'Hypertension',
-  'Joint Issues',
-  'Heart Disease',
-  'Diabetes',
-  'Arthritis',
-  'Back Problems',
-  'None',
-  'Other',
-];
-
-const exerciseExperiences = [
-  'Weightlifting',
-  'Cardio',
-  'HIIT',
-  'Yoga',
-  'Pilates',
-  'Running',
-  'Swimming',
-  'Cycling',
-  'None',
-  'Other',
-];
-
-const commonMedications = [
-  'Blood Pressure Medications',
-  'Diabetes Medications',
-  'Heart Medications',
-  'Asthma Inhalers',
-  'Pain Relievers',
-  'Anti-inflammatories',
-  'Antidepressants',
-  'Thyroid Medications',
-  'None',
-  'Other',
-];
-
-const muscleGroups = [
-  'Chest',
-  'Back',
-  'Shoulders',
-  'Arms',
-  'Legs',
-  'Core',
-  'Glutes',
-  'Full Body',
-];
-
-const equipmentOptions = [
-  'Dumbbells',
-  'Resistance Bands',
-  'Barbell',
-  'Yoga Mat',
-  'Pull-up Bar',
-  'Kettlebells',
-  'Treadmill',
-  'None',
-  'Other',
-];
 
 export default function ExercisePlannerPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [generatedPlan, setGeneratedPlan] = useState<any>(null);
-  const [expandedExercises, setExpandedExercises] = useState<{
-    [key: string]: boolean;
-  }>({});
+
   const [expandedDays, setExpandedDays] = useState<{ [key: string]: boolean }>(
     {}
   );
-
-  useEffect(() => {
-    const savedPlan = localStorage.getItem('generatedExercisePlan');
-    if (savedPlan) {
-      try {
-        const parsedPlan = JSON.parse(savedPlan);
-        setGeneratedPlan(parsedPlan);
-        if (
-          parsedPlan.weeklyPlan &&
-          typeof parsedPlan.weeklyPlan === 'object'
-        ) {
-          const allDays = Object.keys(parsedPlan.weeklyPlan);
-          const expandedDaysObject = allDays.reduce((acc, day) => {
-            acc[day] = true;
-            return acc;
-          }, {} as { [key: string]: boolean });
-          setExpandedDays(expandedDaysObject);
-        }
-      } catch (error) {
-        console.error('Error parsing saved exercise plan:', error);
-        localStorage.removeItem('generatedExercisePlan');
-      }
-    }
-  }, []);
 
   const form = useForm<ExercisePlannerFormData>({
     resolver: zodResolver(exercisePlannerSchema),
@@ -270,12 +90,11 @@ export default function ExercisePlannerPage() {
     mode: 'onChange',
   });
 
-  const toggleExerciseExpansion = (exerciseKey: string) => {
-    setExpandedExercises((prev) => ({
-      ...prev,
-      [exerciseKey]: !prev[exerciseKey],
-    }));
-  };
+  const selectedExerciseExperience = form.watch('exercise_experience') || [];
+  const selectedMedicalConditions =
+    form.watch('existing_medical_conditions') || [];
+  const selectedEquipment = form.watch('available_equipment') || [];
+  const selectedMedications = form.watch('current_medications') || [];
 
   const toggleDayExpansion = (dayKey: string) => {
     setExpandedDays((prev) => ({
@@ -284,138 +103,22 @@ export default function ExercisePlannerPage() {
     }));
   };
 
-  const loadSavedPreferences = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch('/api/exercise-planner/get-preferences', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && result.data) {
-          const savedData = result.data;
-          form.reset({
-            fitness_level: savedData.fitness_level || undefined,
-            exercise_experience: savedData.exercise_experience || [],
-            exercise_experience_other:
-              savedData.exercise_experience_other || '',
-            existing_medical_conditions:
-              savedData.existing_medical_conditions || [],
-            existing_medical_conditions_other:
-              savedData.existing_medical_conditions_other || '',
-            injuries_or_limitations: savedData.injuries_or_limitations || '',
-            current_medications: savedData.current_medications || [],
-            current_medications_other:
-              savedData.current_medications_other || '',
-            doctor_clearance: savedData.doctor_clearance || false,
-            primary_goal: savedData.primary_goal || undefined,
-            secondary_goal: savedData.secondary_goal || '',
-            goal_timeline_weeks: savedData.goal_timeline_weeks || 1,
-            target_weight_kg: savedData.target_weight_kg || 0,
-            muscle_groups_focus: savedData.muscle_groups_focus || [],
-            exercise_days_per_week: savedData.exercise_days_per_week || 1,
-            available_time_per_session:
-              savedData.available_time_per_session || 15,
-            preferred_time_of_day: savedData.preferred_time_of_day || undefined,
-            exercise_location: savedData.exercise_location || undefined,
-            daily_step_count_avg: savedData.daily_step_count_avg || 0,
-            job_type: savedData.job_type || undefined,
-            available_equipment: savedData.available_equipment || [],
-            available_equipment_other:
-              savedData.available_equipment_other || '',
-            machines_access: savedData.machines_access || false,
-            space_availability: savedData.space_availability || undefined,
-            want_to_track_progress: savedData.want_to_track_progress ?? true,
-            weekly_checkins_enabled: savedData.weekly_checkins_enabled ?? true,
-            accountability_support: savedData.accountability_support ?? true,
-            preferred_difficulty_level:
-              savedData.preferred_difficulty_level || undefined,
-            sleep_quality: savedData.sleep_quality || undefined,
-          });
-          console.log('Loaded saved preferences:', savedData);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading saved preferences:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadSavedPreferences();
-  }, []);
-
-  const selectedExerciseExperience = form.watch('exercise_experience') || [];
-  const selectedMedicalConditions =
-    form.watch('existing_medical_conditions') || [];
-  const selectedEquipment = form.watch('available_equipment') || [];
-  const selectedMedications = form.watch('current_medications') || [];
-
-  const savePreferences = async () => {
-    setIsSaving(true);
-    try {
-      const data = form.getValues();
-      const cleanedData = {
-        ...data,
-        target_weight_kg: data.target_weight_kg || null,
-        daily_step_count_avg: data.daily_step_count_avg || null,
-        secondary_goal: data.secondary_goal || null,
-        exercise_experience_other: data.exercise_experience_other || null,
-        existing_medical_conditions_other:
-          data.existing_medical_conditions_other || null,
-        injuries_or_limitations: data.injuries_or_limitations || null,
-        current_medications_other: data.current_medications_other || null,
-        available_equipment_other: data.available_equipment_other || null,
-      };
-
-      console.log('Saving preferences:', cleanedData);
-
-      const response = await fetch('/api/exercise-planner/save-preferences', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cleanedData),
-      });
-
-      const result = await response.json();
-      console.log(
-        'Response status:',
-        response.status,
-        'Response data:',
-        result
-      );
-
-      if (!response.ok) {
-        console.error('Server error response:', result);
-        const errorMessage =
-          result.details || result.error || 'Failed to save preferences';
-        throw new Error(errorMessage);
-      }
-
-      console.log('Preferences saved successfully:', result);
-      alert('Preferences saved successfully!');
-    } catch (error) {
-      console.error('Error saving preferences:', error);
-      alert(
-        `Error saving preferences: ${
-          error instanceof Error ? error.message : 'Please try again.'
-        }`
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   const onSubmit = async (data: ExercisePlannerFormData) => {
     setIsGenerating(true);
     try {
-      await savePreferences();
+      const { isSuccess, error } = await savePreferences(data);
+
+      if (isSuccess)
+        toast({
+          title: 'Success',
+          description: 'Preferences saved successfully!',
+        });
+      else
+        toast({
+          title: 'Error saving preferences',
+          description:
+            error instanceof Error ? error.message : 'Please try again.',
+        });
       console.log('Generating exercise plan with preferences:', data);
 
       const controller = new AbortController();
@@ -505,23 +208,73 @@ export default function ExercisePlannerPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className='min-h-screen bg-gradient-to-br from-green-50 to-yellow-50'>
-        <div className='max-w-4xl mx-auto p-6 space-y-8'>
-          <div className='text-center space-y-4'>
-            <h1 className='text-3xl font-bold text-green-800'>
-              AI Exercise Planner
-            </h1>
-            <p className='text-green-600'>Loading your saved preferences...</p>
-            <div className='flex justify-center'>
-              <div className='w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full animate-spin'></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const savedPlan = localStorage.getItem('generatedExercisePlan');
+    if (savedPlan) {
+      try {
+        const parsedPlan = JSON.parse(savedPlan);
+        setGeneratedPlan(parsedPlan);
+        if (
+          parsedPlan.weeklyPlan &&
+          typeof parsedPlan.weeklyPlan === 'object'
+        ) {
+          const allDays = Object.keys(parsedPlan.weeklyPlan);
+          const expandedDaysObject = allDays.reduce((acc, day) => {
+            acc[day] = true;
+            return acc;
+          }, {} as { [key: string]: boolean });
+          setExpandedDays(expandedDaysObject);
+        }
+      } catch (error) {
+        console.error('Error parsing saved exercise plan:', error);
+        localStorage.removeItem('generatedExercisePlan');
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    async function fetchPef() {
+      const { isSuccess, error, data } = await loadSavedPreferences();
+
+      if (isSuccess && !error) {
+        form.reset({
+          fitness_level: data.fitness_level || undefined,
+          exercise_experience: data.exercise_experience || [],
+          exercise_experience_other: data.exercise_experience_other || '',
+          existing_medical_conditions: data.existing_medical_conditions || [],
+          existing_medical_conditions_other:
+            data.existing_medical_conditions_other || '',
+          injuries_or_limitations: data.injuries_or_limitations || '',
+          current_medications: data.current_medications || [],
+          current_medications_other: data.current_medications_other || '',
+          doctor_clearance: data.doctor_clearance || false,
+          primary_goal: data.primary_goal || undefined,
+          secondary_goal: data.secondary_goal || '',
+          goal_timeline_weeks: data.goal_timeline_weeks || 1,
+          target_weight_kg: data.target_weight_kg || 0,
+          muscle_groups_focus: data.muscle_groups_focus || [],
+          exercise_days_per_week: data.exercise_days_per_week || 1,
+          available_time_per_session: data.available_time_per_session || 15,
+          preferred_time_of_day: data.preferred_time_of_day || undefined,
+          exercise_location: data.exercise_location || undefined,
+          daily_step_count_avg: data.daily_step_count_avg || 0,
+          job_type: data.job_type || undefined,
+          available_equipment: data.available_equipment || [],
+          available_equipment_other: data.available_equipment_other || '',
+          machines_access: data.machines_access || false,
+          space_availability: data.space_availability || undefined,
+          want_to_track_progress: data.want_to_track_progress ?? true,
+          weekly_checkins_enabled: data.weekly_checkins_enabled ?? true,
+          accountability_support: data.accountability_support ?? true,
+          preferred_difficulty_level:
+            data.preferred_difficulty_level || undefined,
+          sleep_quality: data.sleep_quality || undefined,
+        });
+      }
+    }
+
+    fetchPef();
+  }, [form, form.reset]);
 
   return (
     <div className='min-h-dvh'>
@@ -1525,7 +1278,7 @@ export default function ExercisePlannerPage() {
             <div className='flex flex-col sm:flex-row gap-4 justify-center pt-8'>
               <Button
                 type='button'
-                onClick={savePreferences}
+                onClick={() => savePreferences(form.getValues())}
                 disabled={isSaving}
                 className='bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 border border-blue-400'
               >
@@ -1615,555 +1368,11 @@ export default function ExercisePlannerPage() {
           </form>
         </Form>
 
-        {generatedPlan && (
-          <div className='mt-12 space-y-8'>
-            <div className='text-center space-y-4 bg-gradient-to-r from-green-600 to-blue-600 text-white py-12 px-8 rounded-2xl shadow-2xl'>
-              <div className='flex items-center justify-center gap-3 mb-4'>
-                <div className='p-3 bg-white/20 backdrop-blur-sm rounded-full'>
-                  <Zap className='w-8 h-8 text-white' />
-                </div>
-                <h2 className='text-4xl font-bold'>
-                  Your Personalized Exercise Plan
-                </h2>
-              </div>
-              <p className='text-xl text-white/90 max-w-3xl mx-auto'>
-                AI-generated workout plan based on your preferences and goals -
-                designed specifically for your fitness journey
-              </p>
-              <div className='flex flex-wrap justify-center gap-4 mt-6'>
-                <Badge
-                  variant='secondary'
-                  className='bg-white/20 text-white border-white/30 px-4 py-2 text-base'
-                >
-                  <Calendar className='w-4 h-4 mr-2' />
-                  Full Week Plan
-                </Badge>
-                <Badge
-                  variant='secondary'
-                  className='bg-white/20 text-white border-white/30 px-4 py-2 text-base'
-                >
-                  <User className='w-4 h-4 mr-2' />
-                  Personalized
-                </Badge>
-                <Badge
-                  variant='secondary'
-                  className='bg-white/20 text-white border-white/30 px-4 py-2 text-base'
-                >
-                  <BarChart3 className='w-4 h-4 mr-2' />
-                  Progress Tracking
-                </Badge>
-              </div>
-            </div>
-
-            {generatedPlan.error ? (
-              <Card className='border-red-200 bg-red-50'>
-                <CardContent className='p-8 text-center'>
-                  <div className='text-red-600 text-lg font-semibold'>
-                    {generatedPlan.error}
-                  </div>
-                </CardContent>
-              </Card>
-            ) : generatedPlan.weeklyPlan ? (
-              <div className='space-y-8'>
-                <Card className='border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50'>
-                  <CardHeader>
-                    <CardTitle className='text-2xl text-blue-800 flex items-center gap-2'>
-                      <Calendar className='w-6 h-6' />
-                      Weekly Schedule Overview
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-                      <div className='text-center space-y-2'>
-                        <div className='text-3xl font-bold text-blue-600'>
-                          {generatedPlan.weeklyPlan
-                            ? Object.keys(generatedPlan.weeklyPlan).length
-                            : 0}
-                        </div>
-                        <p className='text-blue-700 font-medium'>
-                          Workout Days
-                        </p>
-                      </div>
-                      <div className='text-center space-y-2'>
-                        <div className='text-3xl font-bold text-green-600'>
-                          {generatedPlan.weeklyPlan
-                            ? Object.values(generatedPlan.weeklyPlan).reduce(
-                                (total: number, day: any) =>
-                                  total + (day.duration || 0),
-                                0
-                              )
-                            : 0}
-                        </div>
-                        <p className='text-green-700 font-medium'>
-                          Total Minutes
-                        </p>
-                      </div>
-                      <div className='text-center space-y-2'>
-                        <div className='text-3xl font-bold text-purple-600'>
-                          {generatedPlan.weeklyPlan &&
-                          Object.keys(generatedPlan.weeklyPlan).length > 0
-                            ? Math.round(
-                                Object.values(generatedPlan.weeklyPlan).reduce(
-                                  (total: number, day: any) =>
-                                    total + (day.duration || 0),
-                                  0
-                                ) / Object.keys(generatedPlan.weeklyPlan).length
-                              )
-                            : 0}
-                        </div>
-                        <p className='text-purple-700 font-medium'>
-                          Avg Session
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <div className='space-y-6'>
-                  {generatedPlan.weeklyPlan &&
-                    Object.entries(generatedPlan.weeklyPlan).map(
-                      ([dayKey, dayPlan]: [string, any]) => (
-                        <Card
-                          key={dayKey}
-                          className='border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden'
-                        >
-                          <CardHeader
-                            className='bg-gradient-to-r from-green-500 to-blue-500 text-white cursor-pointer'
-                            onClick={() => toggleDayExpansion(dayKey)}
-                          >
-                            <div className='flex items-center justify-between'>
-                              <div className='flex items-center gap-4'>
-                                <div className='bg-white/20 backdrop-blur-sm rounded-full p-2'>
-                                  <Dumbbell className='w-6 h-6 text-white' />
-                                </div>
-                                <div>
-                                  <CardTitle className='text-2xl font-bold text-white'>
-                                    {dayPlan.dayName} - {dayPlan.focus}
-                                  </CardTitle>
-                                  <div className='flex items-center gap-4 mt-2'>
-                                    <Badge
-                                      variant='secondary'
-                                      className='bg-white/20 text-white border-white/30'
-                                    >
-                                      <Timer className='w-3 h-3 mr-1' />
-                                      {dayPlan.duration} min
-                                    </Badge>
-                                    <Badge
-                                      variant='secondary'
-                                      className='bg-white/20 text-white border-white/30'
-                                    >
-                                      <Target className='w-3 h-3 mr-1' />
-                                      {dayPlan.mainWorkout?.length || 0}{' '}
-                                      exercises
-                                    </Badge>
-                                  </div>
-                                </div>
-                              </div>
-                              {expandedDays[dayKey] ? (
-                                <ChevronUp className='w-6 h-6 text-white' />
-                              ) : (
-                                <ChevronDown className='w-6 h-6 text-white' />
-                              )}
-                            </div>
-                          </CardHeader>
-
-                          {expandedDays[dayKey] && (
-                            <CardContent className='p-8 space-y-8'>
-                              {dayPlan.warmup &&
-                                dayPlan.warmup.exercises &&
-                                dayPlan.warmup.exercises.length > 0 && (
-                                  <div className='space-y-4'>
-                                    <div className='flex items-center gap-2 mb-4'>
-                                      <div className='bg-orange-100 p-2 rounded-full'>
-                                        <Zap className='w-5 h-5 text-orange-600' />
-                                      </div>
-                                      <h4 className='text-xl font-bold text-orange-700'>
-                                        Warm-up
-                                      </h4>
-                                    </div>
-                                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                                      {dayPlan.warmup.exercises.map(
-                                        (exercise: any, idx: number) => (
-                                          <Card
-                                            key={idx}
-                                            className='border-orange-200 bg-orange-50'
-                                          >
-                                            <CardContent className='p-4'>
-                                              <div className='flex items-center justify-between mb-2'>
-                                                <h5 className='font-semibold text-orange-800'>
-                                                  {exercise.name}
-                                                </h5>
-                                                <Badge
-                                                  variant='outline'
-                                                  className='text-orange-600 border-orange-300'
-                                                >
-                                                  {exercise.duration} min
-                                                </Badge>
-                                              </div>
-                                              <p className='text-sm text-orange-700'>
-                                                {exercise.instructions}
-                                              </p>
-                                            </CardContent>
-                                          </Card>
-                                        )
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-
-                              <Separator />
-
-                              {dayPlan.mainWorkout &&
-                                dayPlan.mainWorkout.length > 0 && (
-                                  <div className='space-y-6'>
-                                    <div className='flex items-center gap-2 mb-6'>
-                                      <div className='bg-blue-100 p-2 rounded-full'>
-                                        <Activity className='w-5 h-5 text-blue-600' />
-                                      </div>
-                                      <h4 className='text-xl font-bold text-blue-700'>
-                                        Main Workout
-                                      </h4>
-                                    </div>
-
-                                    {dayPlan.mainWorkout.map(
-                                      (exercise: any, idx: number) => {
-                                        const exerciseKey = `${dayKey}-exercise-${idx}`;
-                                        return (
-                                          <Card
-                                            key={idx}
-                                            className='border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg'
-                                          >
-                                            <CardContent className='p-6'>
-                                              <div className='space-y-4'>
-                                                <div className='flex items-center justify-between'>
-                                                  <div className='flex items-center gap-3'>
-                                                    <div className='bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold'>
-                                                      {idx + 1}
-                                                    </div>
-                                                    <h5 className='text-xl font-bold text-blue-800'>
-                                                      {exercise.exerciseName}
-                                                    </h5>
-                                                  </div>
-                                                  <div className='flex gap-2'>
-                                                    {exercise.youtubeSearchTerm && (
-                                                      <Button
-                                                        variant='outline'
-                                                        size='sm'
-                                                        className='border-red-300 text-red-600 hover:bg-red-50'
-                                                        onClick={() =>
-                                                          window.open(
-                                                            `https://www.youtube.com/results?search_query=${encodeURIComponent(
-                                                              exercise.youtubeSearchTerm
-                                                            )}`,
-                                                            '_blank'
-                                                          )
-                                                        }
-                                                      >
-                                                        <Youtube className='w-4 h-4 mr-1' />
-                                                        Watch Tutorial
-                                                      </Button>
-                                                    )}
-                                                  </div>
-                                                </div>
-
-                                                <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-                                                  <div className='bg-white/60 backdrop-blur-sm rounded-lg p-3 text-center'>
-                                                    <div className='text-lg font-bold text-blue-600'>
-                                                      {exercise.sets}
-                                                    </div>
-                                                    <div className='text-sm text-blue-700'>
-                                                      Sets
-                                                    </div>
-                                                  </div>
-                                                  <div className='bg-white/60 backdrop-blur-sm rounded-lg p-3 text-center'>
-                                                    <div className='text-lg font-bold text-green-600'>
-                                                      {exercise.reps}
-                                                    </div>
-                                                    <div className='text-sm text-green-700'>
-                                                      Reps
-                                                    </div>
-                                                  </div>
-                                                  <div className='bg-white/60 backdrop-blur-sm rounded-lg p-3 text-center'>
-                                                    <div className='text-lg font-bold text-purple-600'>
-                                                      {exercise.restSeconds}s
-                                                    </div>
-                                                    <div className='text-sm text-purple-700'>
-                                                      Rest
-                                                    </div>
-                                                  </div>
-                                                  <div className='bg-white/60 backdrop-blur-sm rounded-lg p-3 text-center'>
-                                                    <div className='text-lg font-bold text-orange-600'>
-                                                      {exercise.targetMuscles
-                                                        ?.length || 0}
-                                                    </div>
-                                                    <div className='text-sm text-orange-700'>
-                                                      Muscles
-                                                    </div>
-                                                  </div>
-                                                </div>
-
-                                                {exercise.targetMuscles &&
-                                                  exercise.targetMuscles
-                                                    .length > 0 && (
-                                                    <div className='space-y-2'>
-                                                      <p className='font-medium text-blue-700'>
-                                                        Target Muscles:
-                                                      </p>
-                                                      <div className='flex flex-wrap gap-2'>
-                                                        {exercise.targetMuscles.map(
-                                                          (
-                                                            muscle: string,
-                                                            muscleIdx: number
-                                                          ) => (
-                                                            <Badge
-                                                              key={muscleIdx}
-                                                              variant='secondary'
-                                                              className='bg-blue-100 text-blue-700'
-                                                            >
-                                                              {muscle}
-                                                            </Badge>
-                                                          )
-                                                        )}
-                                                      </div>
-                                                    </div>
-                                                  )}
-
-                                                <div className='bg-white/80 backdrop-blur-sm rounded-lg p-4'>
-                                                  <p className='text-gray-700 leading-relaxed'>
-                                                    {exercise.instructions}
-                                                  </p>
-                                                </div>
-
-                                                {exercise.alternatives &&
-                                                  exercise.alternatives.length >
-                                                    0 && (
-                                                    <div className='space-y-3'>
-                                                      <Button
-                                                        variant='outline'
-                                                        size='sm'
-                                                        onClick={() =>
-                                                          toggleExerciseExpansion(
-                                                            exerciseKey
-                                                          )
-                                                        }
-                                                        className='w-full border-indigo-300 text-indigo-600 hover:bg-indigo-50'
-                                                      >
-                                                        <Repeat className='w-4 h-4 mr-2' />
-                                                        {expandedExercises[
-                                                          exerciseKey
-                                                        ]
-                                                          ? 'Hide'
-                                                          : 'Show'}{' '}
-                                                        Alternative Exercises (
-                                                        {
-                                                          exercise.alternatives
-                                                            .length
-                                                        }
-                                                        )
-                                                        {expandedExercises[
-                                                          exerciseKey
-                                                        ] ? (
-                                                          <ChevronUp className='w-4 h-4 ml-2' />
-                                                        ) : (
-                                                          <ChevronDown className='w-4 h-4 ml-2' />
-                                                        )}
-                                                      </Button>
-
-                                                      {expandedExercises[
-                                                        exerciseKey
-                                                      ] && (
-                                                        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
-                                                          {exercise.alternatives.map(
-                                                            (
-                                                              alt: any,
-                                                              altIdx: number
-                                                            ) => (
-                                                              <Card
-                                                                key={altIdx}
-                                                                className='border-indigo-200 bg-indigo-50'
-                                                              >
-                                                                <CardContent className='p-4'>
-                                                                  <div className='space-y-3'>
-                                                                    <div className='flex items-center justify-between'>
-                                                                      <h6 className='font-semibold text-indigo-800'>
-                                                                        {
-                                                                          alt.name
-                                                                        }
-                                                                      </h6>
-                                                                      {alt.youtubeSearchTerm && (
-                                                                        <Button
-                                                                          variant='ghost'
-                                                                          size='sm'
-                                                                          className='text-red-600 hover:bg-red-50 p-1'
-                                                                          onClick={() =>
-                                                                            window.open(
-                                                                              `https://www.youtube.com/results?search_query=${encodeURIComponent(
-                                                                                alt.youtubeSearchTerm
-                                                                              )}`,
-                                                                              '_blank'
-                                                                            )
-                                                                          }
-                                                                        >
-                                                                          <Youtube className='w-4 h-4' />
-                                                                        </Button>
-                                                                      )}
-                                                                    </div>
-                                                                    <p className='text-sm text-indigo-700'>
-                                                                      {
-                                                                        alt.instructions
-                                                                      }
-                                                                    </p>
-                                                                  </div>
-                                                                </CardContent>
-                                                              </Card>
-                                                            )
-                                                          )}
-                                                        </div>
-                                                      )}
-                                                    </div>
-                                                  )}
-                                              </div>
-                                            </CardContent>
-                                          </Card>
-                                        );
-                                      }
-                                    )}
-                                  </div>
-                                )}
-
-                              <Separator />
-
-                              {dayPlan.cooldown &&
-                                dayPlan.cooldown.exercises &&
-                                dayPlan.cooldown.exercises.length > 0 && (
-                                  <div className='space-y-4'>
-                                    <div className='flex items-center gap-2 mb-4'>
-                                      <div className='bg-green-100 p-2 rounded-full'>
-                                        <CheckCircle className='w-5 h-5 text-green-600' />
-                                      </div>
-                                      <h4 className='text-xl font-bold text-green-700'>
-                                        Cool-down
-                                      </h4>
-                                    </div>
-                                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                                      {dayPlan.cooldown.exercises.map(
-                                        (exercise: any, idx: number) => (
-                                          <Card
-                                            key={idx}
-                                            className='border-green-200 bg-green-50'
-                                          >
-                                            <CardContent className='p-4'>
-                                              <div className='flex items-center justify-between mb-2'>
-                                                <h5 className='font-semibold text-green-800'>
-                                                  {exercise.name}
-                                                </h5>
-                                                <Badge
-                                                  variant='outline'
-                                                  className='text-green-600 border-green-300'
-                                                >
-                                                  {exercise.duration} min
-                                                </Badge>
-                                              </div>
-                                              <p className='text-sm text-green-700'>
-                                                {exercise.instructions}
-                                              </p>
-                                            </CardContent>
-                                          </Card>
-                                        )
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                            </CardContent>
-                          )}
-                        </Card>
-                      )
-                    )}
-                </div>
-
-                <div className='grid md:grid-cols-3 gap-6 mt-12'>
-                  {generatedPlan.progressionTips && (
-                    <Card className='border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100'>
-                      <CardHeader>
-                        <CardTitle className='text-blue-800 flex items-center gap-2'>
-                          <TrendingUp className='w-5 h-5' />
-                          Progression Tips
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className='space-y-3'>
-                          {generatedPlan.progressionTips.map(
-                            (tip: string, idx: number) => (
-                              <li
-                                key={idx}
-                                className='flex items-start gap-2 text-sm text-blue-700'
-                              >
-                                <ArrowRight className='w-4 h-4 mt-0.5 text-blue-500 flex-shrink-0' />
-                                {tip}
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {generatedPlan.safetyNotes && (
-                    <Card className='border-red-200 bg-gradient-to-br from-red-50 to-red-100'>
-                      <CardHeader>
-                        <CardTitle className='text-red-800 flex items-center gap-2'>
-                          <Heart className='w-5 h-5' />
-                          Safety Notes
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className='space-y-3'>
-                          {generatedPlan.safetyNotes.map(
-                            (note: string, idx: number) => (
-                              <li
-                                key={idx}
-                                className='flex items-start gap-2 text-sm text-red-700'
-                              >
-                                <ArrowRight className='w-4 h-4 mt-0.5 text-red-500 flex-shrink-0' />
-                                {note}
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {generatedPlan.nutritionTips && (
-                    <Card className='border-green-200 bg-gradient-to-br from-green-50 to-green-100'>
-                      <CardHeader>
-                        <CardTitle className='text-green-800 flex items-center gap-2'>
-                          <Utensils className='w-5 h-5' />
-                          Nutrition Tips
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <ul className='space-y-3'>
-                          {generatedPlan.nutritionTips.map(
-                            (tip: string, idx: number) => (
-                              <li
-                                key={idx}
-                                className='flex items-start gap-2 text-sm text-green-700'
-                              >
-                                <ArrowRight className='w-4 h-4 mt-0.5 text-green-500 flex-shrink-0' />
-                                {tip}
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        )}
+        <GeneratedPlanSection
+          generatedPlan={generatedPlan}
+          expandedDays={expandedDays}
+          onClick={toggleDayExpansion}
+        />
       </div>
     </div>
   );

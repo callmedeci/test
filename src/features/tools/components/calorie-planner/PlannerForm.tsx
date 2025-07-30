@@ -27,7 +27,7 @@ import { editPlan } from '@/features/profile/actions/apiUserPlan';
 import { editProfile } from '@/features/profile/actions/apiUserProfile';
 import HelpAccordion from '@/features/tools/components/calorie-planner/HelpAccordion';
 import PlanResult from '@/features/tools/components/calorie-planner/PlanResult';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import {
   activityLevels,
   genders,
@@ -44,7 +44,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Calculator, RefreshCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { FieldPath, useForm, SubmitHandler } from 'react-hook-form';
+import { FieldPath, SubmitHandler, useForm } from 'react-hook-form';
 
 type PlannerFormProps = {
   plan: UserPlanType;
@@ -53,7 +53,6 @@ type PlannerFormProps = {
 };
 
 function PlannerForm({ plan, profile, clientId }: PlannerFormProps) {
-  const { toast } = useToast();
   const [results, setResults] = useState<GlobalCalculatedTargets | null>(null);
 
   const form = useForm<SmartCaloriePlannerFormValues>({

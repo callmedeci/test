@@ -18,17 +18,17 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import SubmitButton from '@/components/ui/SubmitButton';
-import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 import { sendApprovalRequest } from '@/features/coach/actions/sendEmail';
 import {
   SendClientRequestSchema,
   type SendClientRequestValues,
 } from '@/features/coach/schemas/coachSchemas';
+import { toast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Send } from 'lucide-react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 
 interface SendRequestModalProps {
   isOpen: boolean;
@@ -36,8 +36,6 @@ interface SendRequestModalProps {
 }
 
 export function SendRequestModal({ isOpen, onClose }: SendRequestModalProps) {
-  const { toast } = useToast();
-
   const form = useForm<SendClientRequestValues>({
     resolver: zodResolver(SendClientRequestSchema),
     defaultValues: {

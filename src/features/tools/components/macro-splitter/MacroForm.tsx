@@ -23,7 +23,7 @@ import {
   getMealMacroStats,
 } from '@/features/tools/lib/utils';
 import { CalculatedMealMacros } from '@/features/tools/types/toolsGlobalTypes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import {
   defaultMacroPercentages,
   mealNames as defaultMealNames,
@@ -44,7 +44,7 @@ import {
   SplitSquareHorizontal,
 } from 'lucide-react';
 import { useState } from 'react';
-import { useFieldArray, useForm, SubmitHandler } from 'react-hook-form';
+import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 
 type MacroFormProps = {
   profile: BaseProfileData;
@@ -53,7 +53,6 @@ type MacroFormProps = {
 };
 
 function MacroForm({ plan, profile, clientId }: MacroFormProps) {
-  const { toast } = useToast();
   const [calculatedSplit, setCalculatedSplit] = useState<
     CalculatedMealMacros[] | null
   >(null);
