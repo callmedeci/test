@@ -1,12 +1,13 @@
-import ErrorMessage from '@/components/ui/ErrorMessage';
+
 import { getUserProfile } from '@/lib/supabase/data-service';
-import WorkoutPlannerContent from './WorkoutPlannerContent';
+import WorkoutPlanGenerator from './WorkoutPlanGenerator';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 
 export default async function WorkoutPlannerSection() {
   try {
     const profile = await getUserProfile();
     
-    return <WorkoutPlannerContent profile={profile} />;
+    return <WorkoutPlanGenerator profile={profile} />;
   } catch (error: any) {
     return (
       <ErrorMessage
