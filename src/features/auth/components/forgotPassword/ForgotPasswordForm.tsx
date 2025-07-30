@@ -9,10 +9,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Mail } from 'lucide-react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
-import { toast } from '@/hooks/use-toast';
-import SubmitButton from '../../../../components/ui/SubmitButton';
+import { useToast } from '@/hooks/use-toast';
 import { forgotPasswordAction } from '../../actions/forgotPassword';
 import { forgotPasswordSchema } from '../../schemas/authSchema';
+import SubmitButton from '../../../../components/ui/SubmitButton';
 
 type ForgotPasswordFormValues = {
   email: string;
@@ -20,6 +20,7 @@ type ForgotPasswordFormValues = {
 
 function ForgotPasswordForm() {
   const [message, setMessage] = useState<string>('');
+  const { toast } = useToast();
   const { formState, handleSubmit, register } =
     useForm<ForgotPasswordFormValues>({
       resolver: zodResolver(forgotPasswordSchema),

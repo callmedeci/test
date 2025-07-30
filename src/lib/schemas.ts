@@ -240,89 +240,30 @@ export const UserMealPlanSchema = z.object({
 export type UserMealPlan = z.infer<typeof UserMealPlanSchema>;
 
 // Exercise Planner Data Schema and Types
-export const exercisePlannerSchema = z.object({
-  fitness_level: z
-    .enum(['Beginner', 'Intermediate', 'Advanced', ''])
-    .refine((val) => val !== '', { message: 'Please select a fitness level' }),
-  exercise_experience: z.array(z.string()).optional(),
-  exercise_experience_other: z.string().optional(),
-  existing_medical_conditions: z.array(z.string()).optional(),
-  existing_medical_conditions_other: z.string().optional(),
-  injuries_or_limitations: z.string().optional(),
-  current_medications: z.array(z.string()).optional(),
-  current_medications_other: z.string().optional(),
-  doctor_clearance: z.boolean(),
-  primary_goal: z
-    .enum([
-      'Lose fat',
-      'Build muscle',
-      'Increase endurance',
-      'Flexibility',
-      'General fitness',
-      '',
-    ])
-    .refine((val) => val !== '', { message: 'Please select a primary goal' }),
-  secondary_goal: z
-    .enum([
-      'Lose fat',
-      'Build muscle',
-      'Increase endurance',
-      'Flexibility',
-      'General fitness',
-      '',
-    ])
-    .optional(),
-  goal_timeline_weeks: z
-    .number()
-    .min(1, { message: 'Timeline must be at least 1 week' })
-    .max(52),
-  target_weight_kg: z.number().min(30).max(300).or(z.literal(0)).optional(),
-  muscle_groups_focus: z.array(z.string()).optional(),
-  exercise_days_per_week: z
-    .number()
-    .min(1, { message: 'Must exercise at least 1 day per week' })
-    .max(7),
-  available_time_per_session: z
-    .number()
-    .min(15, { message: 'Session must be at least 15 minutes' })
-    .max(180),
-  preferred_time_of_day: z
-    .enum(['Morning', 'Afternoon', 'Evening', ''])
-    .refine((val) => val !== '', { message: 'Please select preferred time' }),
-  exercise_location: z
-    .enum(['Home', 'Gym', 'Outdoor', ''])
-    .refine((val) => val !== '', {
-      message: 'Please select exercise location',
-    }),
-  daily_step_count_avg: z
-    .number()
-    .min(0)
-    .max(30000)
-    .or(z.literal(0))
-    .optional(),
-  job_type: z
-    .enum(['Desk job', 'Active job', 'Standing job', ''])
-    .refine((val) => val !== '', { message: 'Please select job type' }),
-  available_equipment: z.array(z.string()).optional(),
-  available_equipment_other: z.string().optional(),
-  machines_access: z.boolean().optional(),
-  space_availability: z
-    .enum(['Small room', 'Open area', 'Gym space', ''])
-    .refine((val) => val !== '', {
-      message: 'Please select space availability',
-    }),
-  want_to_track_progress: z.boolean(),
-  weekly_checkins_enabled: z.boolean(),
-  accountability_support: z.boolean(),
-  preferred_difficulty_level: z
-    .enum(['Low', 'Medium', 'High', ''])
-    .refine((val) => val !== '', { message: 'Please select difficulty level' }),
-  sleep_quality: z
-    .enum(['Poor', 'Average', 'Good', ''])
-    .refine((val) => val !== '', { message: 'Please select sleep quality' }),
+export const ExercisePlannerDataSchema = z.object({
+  id: z.number().optional(),
+  user_id: z.string(),
+  fitness_level: z.string().nullable().optional(),
+  exercise_experience: z.string().nullable().optional(),
+  existing_medical_conditions: z.array(z.string()).nullable().optional(),
+  injuries_or_limitations: z.array(z.string()).nullable().optional(),
+  current_medications: z.array(z.string()).nullable().optional(),
+  primary_goal: z.string().nullable().optional(),
+  exercise_days_per_week: z.number().min(1).max(7).nullable().optional(),
+  available_time_per_session: z.number().min(5).max(300).nullable().optional(),
+  preferred_time_of_day: z.string().nullable().optional(),
+  exercise_location: z.string().nullable().optional(),
+  available_equipment: z.array(z.string()).nullable().optional(),
+  machines_access: z.boolean().nullable().optional(),
+  space_availability: z.string().nullable().optional(),
+  preferred_difficulty_level: z.string().nullable().optional(),
+  sleep_quality: z.string().nullable().optional(),
+  generated_plan: z.any().nullable().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
 });
 
-export type ExercisePlannerFormData = z.infer<typeof exercisePlannerSchema>;
+export type ExercisePlannerData = z.infer<typeof ExercisePlannerDataSchema>;
 
 // Exercise Progress Schema and Types
 export const ExerciseProgressSchema = z.object({

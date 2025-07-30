@@ -28,14 +28,13 @@ import {
 } from '@/components/ui/table';
 
 import { getMissingProfileFields } from '@/features/meal-plan/lib/utils';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { defaultMacroPercentages, mealNames } from '@/lib/constants';
 import {
   BaseProfileData,
   SuggestMealsForMacrosOutput,
   UserPlanType,
 } from '@/lib/schemas';
-import { getUserProfile } from '@/lib/supabase/data-service';
 import { AlertTriangle, Loader2, Sparkles } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -47,6 +46,7 @@ import {
 } from 'react';
 import { useMealUrlParams } from '../../hooks/useMealUrlParams';
 import { getExampleTargetsForMeal, prepareAiMealInput } from '../../lib/utils';
+import { getUserProfile } from '@/lib/supabase/data-service';
 
 function AIMealSuggestionGenerator({
   profile,
@@ -57,6 +57,8 @@ function AIMealSuggestionGenerator({
 }) {
   const { updateUrlWithMeal, getQueryParams, getCurrentMealParams } =
     useMealUrlParams();
+
+  const { toast } = useToast();
 
   const searchParams = useSearchParams();
   const router = useRouter();

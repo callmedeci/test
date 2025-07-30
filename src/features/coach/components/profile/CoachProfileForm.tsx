@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import SubmitButton from '@/components/ui/SubmitButton';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Save } from 'lucide-react';
@@ -33,6 +33,8 @@ interface CoachData {
 }
 
 export function CoachProfileForm({ coach }: { coach: CoachData }) {
+  const { toast } = useToast();
+
   const [firstName, lastName] = coach.full_name.split(' ');
   const form = useForm<CoachProfileFormValues>({
     resolver: zodResolver(CoachProfileFormSchema),

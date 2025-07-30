@@ -1,14 +1,15 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
-import { useTransition } from 'react';
 import Google from '../../../../public/google.svg';
+import { useTransition } from 'react';
 import { loginWithGoogle } from '../../actions/loginWithOAuth';
+import { useToast } from '@/hooks/use-toast';
 
 function LoginWithGoogleButton({ disabled }: { disabled: boolean }) {
+  const { toast } = useToast();
   const [isLoggingIn, startLoginWithGoogle] = useTransition();
 
   async function handleClick() {

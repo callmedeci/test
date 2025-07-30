@@ -2,16 +2,16 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserPlus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
-import SubmitButton from '../../../../components/ui/SubmitButton';
-import { signupAction } from '../../actions/signup';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { signupSchema } from '../../schemas/authSchema';
 import LoginWithGoogleButton from '../shared/LoginWithGoogleButton';
+import SubmitButton from '../../../../components/ui/SubmitButton';
+import { useRouter } from 'next/navigation';
+import { signupAction } from '../../actions/signup';
 
 type SignupFormValues = {
   email: string;
@@ -22,6 +22,7 @@ type SignupFormValues = {
 function SignupForm() {
   const router = useRouter();
 
+  const { toast } = useToast();
   const { register, formState, handleSubmit } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
   });

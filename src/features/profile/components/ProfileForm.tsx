@@ -21,7 +21,7 @@ import {
 import SubmitButton from '@/components/ui/SubmitButton';
 import CommaSeparatedInput from '@/features/profile/components/CommaSeparatedInput';
 import ProfileAccordionItem from '@/features/profile/components/ProfileAccordionItem';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import {
   exerciseFrequencies,
   exerciseIntensities,
@@ -44,6 +44,8 @@ type ProfileFormProps = {
 };
 
 function ProfileForm({ user, profile, clientId }: ProfileFormProps) {
+  const { toast } = useToast();
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(ProfileFormSchema),
     defaultValues: {

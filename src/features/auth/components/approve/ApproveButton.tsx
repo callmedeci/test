@@ -1,12 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import Spinner from '@/components/ui/Spinner';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { grantAccessAction } from '../../actions/grantAccess';
+import Spinner from '@/components/ui/Spinner';
 
 function ApproveButton({
   userId,
@@ -19,6 +19,7 @@ function ApproveButton({
   reqId: string;
   token: string;
 }) {
+  const { toast } = useToast();
   const router = useRouter();
   const [isLoading, startTransition] = useTransition();
 

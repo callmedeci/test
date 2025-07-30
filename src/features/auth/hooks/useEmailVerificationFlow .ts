@@ -1,3 +1,4 @@
+import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -10,6 +11,7 @@ export function useEmailVerificationFlow() {
     'verifying'
   );
   const [message, setMessage] = useState('Verifying your email address...');
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!oobCode) {
@@ -17,7 +19,7 @@ export function useEmailVerificationFlow() {
       setStatus('error');
       return;
     }
-  }, [oobCode, router]);
+  }, [oobCode, router, toast]);
 
   return { status, message, oobCode };
 }

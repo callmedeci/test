@@ -12,8 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import SubmitButton from '@/components/ui/SubmitButton';
-import { editPlan } from '@/features/profile/actions/apiUserPlan';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import {
   BaseProfileData,
   GlobalCalculatedTargets,
@@ -23,11 +22,13 @@ import { formatNumber } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RefreshCcw, Save } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { customizePlanFormSchema } from '../../lib/schema';
 import { CustomizePlanFormValues } from '../../types/toolsGlobalTypes';
 import CustomizePlanTable from './CustomizePlanTable';
 import CustomizeToolTip from './CustomizeToolTip';
+import { editPlan } from '@/features/profile/actions/apiUserPlan';
+import { SubmitHandler } from 'react-hook-form';
 
 type CustomizePlanFormProps = {
   plan: UserPlanType;
@@ -40,6 +41,8 @@ function CustomizePlanForm({
   profile,
   clientId,
 }: CustomizePlanFormProps) {
+  const { toast } = useToast();
+
   const form = useForm<CustomizePlanFormValues>({
     resolver: zodResolver(customizePlanFormSchema),
     defaultValues: {
