@@ -20,9 +20,8 @@ import { useForm } from 'react-hook-form';
 import { saveUserProgress } from '../lib/progress-service';
 import { entryFormSchema, EntryFormValues } from '../types/schema';
 
-import CustomDatePicker from '@/components/ui/CustomDatePicker';
-import 'react-datepicker/dist/react-datepicker.css';
 import { BodyProgressEntry } from '../types';
+import CustomDatePicker from '@/components/ui/CustomDatePicker';
 
 export function WeeklyEntryForm({ entries }: { entries: BodyProgressEntry[] }) {
   const form = useForm<EntryFormValues>({
@@ -143,7 +142,7 @@ export function WeeklyEntryForm({ entries }: { entries: BodyProgressEntry[] }) {
                   <FormItem>
                     <FormLabel className='flex items-center gap-2'>
                       <Activity className='h-4 w-4' />
-                      Body Fat (%)
+                      Body Fat (%) (Optional)
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -176,7 +175,7 @@ export function WeeklyEntryForm({ entries }: { entries: BodyProgressEntry[] }) {
                   <FormItem>
                     <FormLabel className='flex items-center gap-2'>
                       <Ruler className='h-4 w-4' />
-                      Waist (cm)
+                      Waist (cm) (Optional)
                     </FormLabel>
                     <FormControl>
                       <Input
