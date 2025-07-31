@@ -46,7 +46,7 @@ export function ProgressChart({ entries, selectedMonth }: ProgressChartProps) {
         day: 'numeric',
       }),
       weight: entry.weight_kg,
-      bodyFat: entry.body_fat_percentage,
+      bodyFat: entry.bf_percentage,
       waist: entry.waist_cm,
       fullDate: entry.date,
     }));
@@ -72,7 +72,9 @@ export function ProgressChart({ entries, selectedMonth }: ProgressChartProps) {
             <div className='text-center'>
               <TrendingDown className='h-12 w-12 mx-auto mb-4 opacity-50' />
               <p className='text-lg'>No progress data for {monthLabel}</p>
-              <p className='text-sm'>Add your first weekly measurement below!</p>
+              <p className='text-sm'>
+                Add your first weekly measurement below!
+              </p>
             </div>
           </div>
         </CardContent>
@@ -91,19 +93,22 @@ export function ProgressChart({ entries, selectedMonth }: ProgressChartProps) {
       <CardContent>
         <ChartContainer config={chartConfig} className='h-64 w-full'>
           <ResponsiveContainer width='100%' height='100%'>
-            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <LineChart
+              data={chartData}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray='3 3' className='stroke-muted' />
-              <XAxis 
-                dataKey='date' 
+              <XAxis
+                dataKey='date'
                 className='text-xs'
                 tick={{ fontSize: 12 }}
               />
-              <YAxis 
+              <YAxis
                 className='text-xs'
                 tick={{ fontSize: 12 }}
                 domain={['dataMin - 1', 'dataMax + 1']}
               />
-              <ChartTooltip 
+              <ChartTooltip
                 content={<ChartTooltipContent />}
                 labelFormatter={(value, payload) => {
                   if (payload && payload[0]) {
@@ -118,7 +123,11 @@ export function ProgressChart({ entries, selectedMonth }: ProgressChartProps) {
                 stroke='var(--color-weight)'
                 strokeWidth={3}
                 dot={{ fill: 'var(--color-weight)', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: 'var(--color-weight)', strokeWidth: 2 }}
+                activeDot={{
+                  r: 6,
+                  stroke: 'var(--color-weight)',
+                  strokeWidth: 2,
+                }}
               />
             </LineChart>
           </ResponsiveContainer>

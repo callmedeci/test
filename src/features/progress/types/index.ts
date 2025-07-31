@@ -1,11 +1,13 @@
 export interface BodyProgressEntry {
   id: string;
   user_id: string;
-  date: string; // ISO format like "2025-07-21"
+  date: string;
   weight_kg: number;
-  body_fat_percentage: number;
+  bf_percentage: number;
   waist_cm: number;
   notes?: string;
+  updated_at: string;
+  created_at: string;
 }
 
 export type MockUserProgress = BodyProgressEntry[];

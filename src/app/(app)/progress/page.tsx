@@ -3,7 +3,11 @@ import SectionHeader from '@/components/ui/SectionHeader';
 import { ProgressTrackingSection } from '@/features/progress/components/ProgressTrackingSection';
 import { TrendingUp } from 'lucide-react';
 
-export default function ProgressPage() {
+export default function ProgressPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) {
   return (
     <div className='container mx-auto py-8'>
       <Card className='shadow-xl'>
@@ -14,7 +18,7 @@ export default function ProgressPage() {
           description='Track your weekly body measurements and visualize your fitness journey over time.'
         />
         <CardContent>
-          <ProgressTrackingSection />
+          <ProgressTrackingSection searchParams={searchParams} />
         </CardContent>
       </Card>
     </div>

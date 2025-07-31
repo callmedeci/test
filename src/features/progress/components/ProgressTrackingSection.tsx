@@ -1,35 +1,37 @@
-'use client';
-
-import { useState } from 'react';
+import { getAvailableMonths, getEntriesForMonth } from '../lib/mockData';
+import { getUserProgress } from '../lib/progress-service';
 import { MonthSelector } from './MonthSelector';
 import { ProgressChart } from './ProgressChart';
-import { WeeklyEntryForm } from './WeeklyEntryForm';
 import { ProgressEntriesList } from './ProgressEntriesList';
-import { getAvailableMonths, getEntriesForMonth } from '../lib/mockData';
+import { WeeklyEntryForm } from './WeeklyEntryForm';
 
-export function ProgressTrackingSection() {
-  const availableMonths = getAvailableMonths();
-  const [selectedMonth, setSelectedMonth] = useState(
-    availableMonths[0]?.value || '2025-1'
-  );
+type ProgressTrackingParams = {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+};
+
+export async function ProgressTrackingSection({
+  searchParams,
+}: ProgressTrackingParams) {
+  const progress = await getUserProgress();
+
+  const availableMonths = getAvailableMonths(progress);
+
+  const params = await searchParams;
+  const selectedMonth = params?.selected_month || '2025-1';
 
   const selectedMonthData = selectedMonth
-    ? availableMonths.find(m => m.value === selectedMonth)
+    ? availableMonths.find((m) => m.value === selectedMonth)
     : null;
 
   const entries = selectedMonthData
-    ? getEntriesForMonth(selectedMonthData.year, selectedMonthData.month)
+    ? getEntriesForMonth({ progress, ...selectedMonthData })
     : [];
 
   return (
     <div className='space-y-6'>
       {/* Month Selector */}
       <div className='flex justify-between items-center'>
-        <MonthSelector
-          months={availableMonths}
-          selectedMonth={selectedMonth}
-          onMonthChange={setSelectedMonth}
-        />
+        <MonthSelector months={availableMonths} />
       </div>
 
       {/* Progress Chart */}
