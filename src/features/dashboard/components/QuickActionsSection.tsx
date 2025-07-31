@@ -4,6 +4,7 @@ import {
   BrainCircuit,
   Calendar,
   ChefHat,
+  ClipboardCheck,
   FileText,
   MessageSquareQuote,
   SlidersHorizontal,
