@@ -20,6 +20,7 @@ import {
   Bot,
   BrainCircuit,
   ChefHat,
+  ClipboardCheck,
   Dumbbell,
   HelpCircle,
   LayoutDashboard,
@@ -55,6 +56,7 @@ const navItems = [
     icon: NotebookText,
   },
   { href: '/meal-plan/optimized', label: 'AI Meal Plan', icon: Bot },
+  { href: '/meal-tracker', label: 'Meal Tracker', icon: ClipboardCheck },
   { section: 'Progress Tracking' },
   {
     href: '/progress',
