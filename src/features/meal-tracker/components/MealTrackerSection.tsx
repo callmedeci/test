@@ -10,6 +10,8 @@ import DateSelector from './DateSelector';
 import MealTrackingGrid from './MealTrackingGrid';
 import CalorieSummaryCard from './CalorieSummaryCard';
 import ProgressOverviewCard from './ProgressOverviewCard';
+import WeeklyMealChart from './WeeklyMealChart';
+import MealTimelineView from './MealTimelineView';
 
 export default function MealTrackerSection() {
   const [viewMode, setViewMode] = useState<ViewMode>('day');
@@ -38,13 +40,60 @@ export default function MealTrackerSection() {
           />
 
           <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-            <div className='lg:col-span-2'>
-              <MealTrackingGrid dayData={selectedDayData} />
+            <div className='lg:col-span-2 space-y-6'>
+              {viewMode === 'day' ? (
+                <>
+                  <MealTrackingGrid dayData={selectedDayData} />
+                  <MealTimelineView dayData={selectedDayData} />
+                </>
+              ) : (
+                <div className='space-y-4'>
+                  <h3 className='text-xl font-semibold text-primary'>Weekly Overview</h3>
+                  <div className='grid gap-4'>
+                    {mockWeekData.slice(-7).map((dayData) => (
+                      <Card key={dayData.date} className='p-4'>
+                        <div className='flex items-center justify-between'>
+                          <div>
+                            <h4 className='font-medium'>
+                              {new Date(dayData.date).toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </h4>
+                            <p className='text-sm text-muted-foreground'>
+                              {dayData.trackedMeals.filter(t => t.followed).length} / {dayData.plannedMeals.length} meals followed
+                            </p>
+                          </div>
+                          <div className='flex gap-2'>
+                            {dayData.plannedMeals.map((meal) => {
+                              const tracked = dayData.trackedMeals.find(t => t.mealType === meal.mealType);
+                              return (
+                                <div
+                                  key={meal.mealType}
+                                  className={cn(
+                                    'w-3 h-3 rounded-full',
+                                    tracked?.followed && 'bg-green-500',
+                                    tracked && !tracked.followed && 'bg-orange-500',
+                                    !tracked && 'bg-muted-foreground/30'
+                                  )}
+                                  title={meal.mealType}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className='space-y-6'>
               <CalorieSummaryCard dayData={selectedDayData} />
               <ProgressOverviewCard dayData={selectedDayData} />
+              {viewMode === 'week' && <WeeklyMealChart />}
             </div>
           </div>
         </CardContent>
