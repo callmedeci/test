@@ -1,7 +1,9 @@
 import { Card, CardContent } from '@/components/ui/card';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { ProgressTrackingSection } from '@/features/progress/components/ProgressTrackingSection';
 import { TrendingUp } from 'lucide-react';
+import { Suspense } from 'react';
 
 export default function ProgressPage({
   searchParams,
@@ -18,7 +20,11 @@ export default function ProgressPage({
           description='Track your weekly body measurements and visualize your fitness journey over time.'
         />
         <CardContent>
-          <ProgressTrackingSection searchParams={searchParams} />
+          <Suspense
+            fallback={<LoadingScreen loadingLabel='loading you data...' />}
+          >
+            <ProgressTrackingSection searchParams={searchParams} />
+          </Suspense>
         </CardContent>
       </Card>
     </div>
