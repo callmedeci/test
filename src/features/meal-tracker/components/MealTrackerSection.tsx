@@ -12,6 +12,7 @@ import CalorieSummaryCard from './CalorieSummaryCard';
 import ProgressOverviewCard from './ProgressOverviewCard';
 import WeeklyMealChart from './WeeklyMealChart';
 import MealTimelineView from './MealTimelineView';
+import MealTrackerStats from './MealTrackerStats';
 
 export default function MealTrackerSection() {
   const [viewMode, setViewMode] = useState<ViewMode>('day');
@@ -32,6 +33,9 @@ export default function MealTrackerSection() {
         />
 
         <CardContent className='space-y-6'>
+          {/* Weekly Stats Overview */}
+          <MealTrackerStats />
+
           <DateSelector
             viewMode={viewMode}
             selectedDate={selectedDate}
