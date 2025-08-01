@@ -20,7 +20,6 @@ import {
   Bot,
   BrainCircuit,
   ChefHat,
-  ClipboardCheck,
   Dumbbell,
   HelpCircle,
   LayoutDashboard,
@@ -61,11 +60,6 @@ const navItems = [
     href: '/body-progress',
     label: 'Body Progress',
     icon: TrendingUp,
-  },
-  {
-    href: '/meal-progress',
-    label: 'Meal Progress',
-    icon: ClipboardCheck,
   },
   { section: 'Exercise Planning' },
   {
