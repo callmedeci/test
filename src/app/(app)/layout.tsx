@@ -27,6 +27,7 @@ import {
   NotebookText,
   SplitSquareHorizontal,
   TrendingUp,
+  UtensilsCrossed,
   User,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -56,6 +57,11 @@ const navItems = [
   },
   { href: '/meal-plan/optimized', label: 'AI Meal Plan', icon: Bot },
   { section: 'Progress Tracking' },
+  {
+    href: '/meal-tracker',
+    label: 'Meal Tracker',
+    icon: UtensilsCrossed,
+  },
   {
     href: '/progress',
     label: 'Body Progress',
