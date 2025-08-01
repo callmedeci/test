@@ -23,16 +23,16 @@ export function MealProgressSection() {
   } = useMealProgress();
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      <Card className="shadow-xl">
+    <div className='container mx-auto py-8 space-y-6'>
+      <Card className='shadow-xl'>
         <SectionHeader
-          icon={<Activity className="h-8 w-8 text-primary" />}
-          className="text-3xl font-bold"
-          title="Meal Progress Tracking"
+          icon={<Activity className='h-8 w-8 text-primary' />}
+          className='text-3xl font-bold'
+          title='Meal Progress Tracking'
           description="Track your daily meals and compare them to your nutrition plan. See how well you're following your personalized meal schedule."
         />
 
-        <CardContent className="space-y-6">
+        <CardContent className='space-y-6'>
           {/* Date Picker */}
           <DatePicker
             selectedDate={selectedDate}
@@ -41,7 +41,7 @@ export function MealProgressSection() {
           />
 
           {/* Status Overview */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
             <TrackingStatus
               plannedMeals={plannedMeals}
               dayProgress={selectedDayProgress}
@@ -64,7 +64,7 @@ export function MealProgressSection() {
 
           {/* Meal Cards Grid */}
           <div>
-            <h3 className="text-xl font-semibold mb-4 text-primary">
+            <h3 className='text-xl font-semibold mb-4 text-primary'>
               Track Your Meals
             </h3>
             <MealProgressGrid

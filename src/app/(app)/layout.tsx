@@ -17,6 +17,7 @@ import { Toaster } from '@/components/ui/toaster';
 import SignoutButton from '@/features/auth/components/signup/SignoutButton';
 import { createClient } from '@/lib/supabase/server';
 import {
+  Activity,
   Bot,
   BrainCircuit,
   ChefHat,
