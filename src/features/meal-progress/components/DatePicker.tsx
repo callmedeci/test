@@ -59,13 +59,13 @@ export function DatePicker({ selectedDate, onDateChange, dayStatuses }: DatePick
   );
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div className="flex items-center gap-2">
         <Button
           variant="outline"
           size="icon"
           onClick={handlePreviousDay}
-          className="h-8 w-8"
+          className="h-9 w-9 border-border/50 hover:border-border"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -74,16 +74,13 @@ export function DatePicker({ selectedDate, onDateChange, dayStatuses }: DatePick
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className={cn(
-                "min-w-[200px] justify-start text-left font-normal",
-                !selectedDate && "text-muted-foreground"
-              )}
+              className="min-w-[220px] justify-start text-left font-medium border-border/50 hover:border-border bg-background"
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {formatDateDisplay(selectedDate)}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 border-border/50 shadow-lg" align="start">
             <Calendar
               mode="single"
               selected={selectedDateObj}
@@ -105,9 +102,9 @@ export function DatePicker({ selectedDate, onDateChange, dayStatuses }: DatePick
                 },
               }}
               modifiersStyles={{
-                success: { backgroundColor: 'rgb(34 197 94)', color: 'white' },
-                failure: { backgroundColor: 'rgb(239 68 68)', color: 'white' },
-                undereaten: { backgroundColor: 'rgb(249 115 22)', color: 'white' },
+                success: { backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' },
+                failure: { backgroundColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive-foreground))' },
+                undereaten: { backgroundColor: 'hsl(var(--chart-4))', color: 'white' },
               }}
             />
           </PopoverContent>
@@ -118,7 +115,7 @@ export function DatePicker({ selectedDate, onDateChange, dayStatuses }: DatePick
           size="icon"
           onClick={handleNextDay}
           disabled={!canGoNext}
-          className="h-8 w-8"
+          className="h-9 w-9 border-border/50 hover:border-border disabled:opacity-50"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -127,10 +124,10 @@ export function DatePicker({ selectedDate, onDateChange, dayStatuses }: DatePick
       <div className="flex items-center gap-2">
         {!isToday(selectedDate) && (
           <Button
-            variant="default"
-            size="sm"
+            variant="outline"
+            size="default"
             onClick={handleToday}
-            className="text-sm"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 border-primary"
           >
             Today
           </Button>

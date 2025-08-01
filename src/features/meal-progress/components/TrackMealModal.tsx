@@ -162,12 +162,12 @@ export function TrackMealModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto border-border/50 shadow-xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
+          <DialogTitle className="text-xl font-bold text-primary">
             Track {formatMealTypeName(mealType)}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-muted-foreground">
             Record what you ate for {formatMealTypeName(mealType).toLowerCase()} on{' '}
             {new Date(selectedDate).toLocaleDateString('en-US', {
               weekday: 'long',
@@ -180,8 +180,8 @@ export function TrackMealModal({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Did you follow the plan? */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">
+            <div className="space-y-4">
+              <Label className="text-sm font-semibold text-foreground">
                 Did you follow your meal plan?
               </Label>
               <RadioGroup
@@ -191,17 +191,17 @@ export function TrackMealModal({
                   setFollowedPlan(followed);
                   form.setValue('followed_plan', followed);
                 }}
-                className="flex gap-6"
+                className="flex gap-8"
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="yes" id="yes" />
-                  <Label htmlFor="yes" className="text-sm">
+                  <Label htmlFor="yes" className="text-sm font-medium">
                     Yes, I followed the plan
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="no" id="no" />
-                  <Label htmlFor="no" className="text-sm">
+                  <Label htmlFor="no" className="text-sm font-medium">
                     No, I ate something else
                   </Label>
                 </div>
@@ -210,23 +210,24 @@ export function TrackMealModal({
 
             {/* Custom ingredients (only if didn't follow plan) */}
             {!followedPlan && (
-              <div className="space-y-3">
+              <div className="space-y-4 p-4 bg-muted/30 rounded-lg border border-border/50">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">What did you eat?</Label>
+                  <Label className="text-sm font-semibold text-foreground">What did you eat?</Label>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={addIngredient}
+                    className="border-border/50 hover:border-border"
                   >
                     <PlusCircle className="h-4 w-4 mr-1" />
                     Add Ingredient
                   </Button>
                 </div>
 
-                <div className="space-y-2 max-h-32 overflow-y-auto">
+                <div className="space-y-3 max-h-40 overflow-y-auto">
                   {fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2 items-start">
+                    <div key={field.id} className="flex gap-3 items-start p-3 bg-background rounded-md border border-border/30">
                       <FormField
                         control={form.control}
                         name={`custom_ingredients.${index}.name`}
@@ -236,7 +237,7 @@ export function TrackMealModal({
                               <Input
                                 placeholder="Ingredient name"
                                 {...field}
-                                className="text-sm"
+                                className="text-sm border-border/50"
                               />
                             </FormControl>
                             <FormMessage />
@@ -247,12 +248,12 @@ export function TrackMealModal({
                         control={form.control}
                         name={`custom_ingredients.${index}.quantity`}
                         render={({ field }) => (
-                          <FormItem className="w-24">
+                          <FormItem className="w-28">
                             <FormControl>
                               <Input
                                 placeholder="Qty"
                                 {...field}
-                                className="text-sm"
+                                className="text-sm border-border/50"
                               />
                             </FormControl>
                             <FormMessage />
@@ -265,7 +266,7 @@ export function TrackMealModal({
                           variant="ghost"
                           size="sm"
                           onClick={() => removeIngredient(index)}
-                          className="mt-0 p-2"
+                          className="mt-0 p-2 hover:bg-destructive/10 hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -277,20 +278,20 @@ export function TrackMealModal({
             )}
 
             {/* Nutrition values */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="consumed_calories"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm">Calories</FormLabel>
+                    <FormLabel className="text-sm font-semibold">Calories</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         placeholder="0"
                         {...field}
                         disabled={followedPlan}
-                        className="text-sm"
+                        className="text-sm border-border/50"
                       />
                     </FormControl>
                     <FormMessage />
@@ -302,14 +303,14 @@ export function TrackMealModal({
                 name="consumed_protein"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm">Protein (g)</FormLabel>
+                    <FormLabel className="text-sm font-semibold">Protein (g)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         placeholder="0"
                         {...field}
                         disabled={followedPlan}
-                        className="text-sm"
+                        className="text-sm border-border/50"
                       />
                     </FormControl>
                     <FormMessage />
@@ -321,14 +322,14 @@ export function TrackMealModal({
                 name="consumed_carbs"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm">Carbs (g)</FormLabel>
+                    <FormLabel className="text-sm font-semibold">Carbs (g)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         placeholder="0"
                         {...field}
                         disabled={followedPlan}
-                        className="text-sm"
+                        className="text-sm border-border/50"
                       />
                     </FormControl>
                     <FormMessage />
@@ -340,14 +341,14 @@ export function TrackMealModal({
                 name="consumed_fat"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm">Fat (g)</FormLabel>
+                    <FormLabel className="text-sm font-semibold">Fat (g)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         placeholder="0"
                         {...field}
                         disabled={followedPlan}
-                        className="text-sm"
+                        className="text-sm border-border/50"
                       />
                     </FormControl>
                     <FormMessage />
@@ -363,7 +364,7 @@ export function TrackMealModal({
                 name="note"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm">
+                    <FormLabel className="text-sm font-semibold">
                       Notes (Optional)
                     </FormLabel>
                     <FormControl>
@@ -371,7 +372,7 @@ export function TrackMealModal({
                         placeholder="Why didn't you follow the plan? Any observations..."
                         rows={3}
                         {...field}
-                        className="text-sm"
+                        className="text-sm border-border/50 resize-none"
                       />
                     </FormControl>
                     <FormMessage />
@@ -380,15 +381,16 @@ export function TrackMealModal({
               />
             )}
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleClose}
+                className="border-border/50 hover:border-border bg-transparent"
               >
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type="submit" className="bg-primary hover:bg-primary/90">
                 <Save className="h-4 w-4 mr-2" />
                 Save Tracking
               </Button>

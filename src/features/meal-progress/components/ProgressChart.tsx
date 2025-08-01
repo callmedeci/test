@@ -46,31 +46,31 @@ export function ProgressChart({ chartData, totalConsumed, totalTarget }: Progres
   ];
 
   return (
-    <Card className="shadow-lg">
+    <Card className="shadow-lg border-border/50">
       <CardHeader>
-        <CardTitle className="text-xl flex items-center gap-2 text-primary">
+        <CardTitle className="text-lg font-semibold flex items-center gap-2 text-primary">
           <BarChart3 className="h-5 w-5" />
           Daily Calorie Progress
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-80 w-full">
+        <ChartContainer config={chartConfig} className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartDataWithTotal}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              margin={{ top: 20, right: 20, left: 20, bottom: 60 }}
             >
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
               <XAxis
                 dataKey="meal_type"
-                className="text-xs"
+                className="text-xs fill-muted-foreground"
                 tick={{ fontSize: 11 }}
                 angle={-45}
                 textAnchor="end"
                 height={80}
               />
               <YAxis
-                className="text-xs"
+                className="text-xs fill-muted-foreground"
                 tick={{ fontSize: 11 }}
                 label={{ value: 'Calories', angle: -90, position: 'insideLeft' }}
               />
@@ -82,25 +82,25 @@ export function ProgressChart({ chartData, totalConsumed, totalTarget }: Progres
                 dataKey="target_calories"
                 fill="var(--color-target_calories)"
                 name="Target"
-                radius={[0, 0, 4, 4]}
+                radius={[0, 0, 6, 6]}
               />
               <Bar
                 dataKey="consumed_calories"
                 fill="var(--color-consumed_calories)"
                 name="Consumed"
-                radius={[4, 4, 0, 0]}
+                radius={[6, 6, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
 
         <div className="mt-4 grid grid-cols-2 gap-4 text-center">
-          <div className="p-3 bg-primary/10 rounded-lg">
-            <p className="text-sm text-muted-foreground">Target Calories</p>
+          <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+            <p className="text-sm text-muted-foreground font-medium">Target Calories</p>
             <p className="text-xl font-bold text-primary">{totalTarget}</p>
           </div>
-          <div className="p-3 bg-secondary/10 rounded-lg">
-            <p className="text-sm text-muted-foreground">Consumed Calories</p>
+          <div className="p-4 bg-secondary/10 rounded-lg border border-secondary/20">
+            <p className="text-sm text-muted-foreground font-medium">Consumed Calories</p>
             <p className="text-xl font-bold text-secondary">{totalConsumed}</p>
           </div>
         </div>

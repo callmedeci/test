@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { Activity } from 'lucide-react';
 import { useMealProgress } from '../hooks/useMealProgress';
@@ -23,22 +23,31 @@ export function MealProgressSection() {
   } = useMealProgress();
 
   return (
-    <div className='container mx-auto py-8 space-y-6'>
+    <div className='max-w-7xl mx-auto space-y-6'>
       <Card className='shadow-xl'>
         <SectionHeader
           icon={<Activity className='h-8 w-8 text-primary' />}
-          className='text-3xl font-bold'
+          className='text-2xl font-bold'
           title='Meal Progress Tracking'
           description="Track your daily meals and compare them to your nutrition plan. See how well you're following your personalized meal schedule."
         />
 
-        <CardContent className='space-y-6'>
+        <CardContent className='space-y-8'>
           {/* Date Picker */}
-          <DatePicker
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            dayStatuses={dayStatuses}
-          />
+          <Card className='border-border/50'>
+            <CardHeader className='pb-4'>
+              <CardTitle className='text-lg font-semibold text-primary'>
+                Select Date
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DatePicker
+                selectedDate={selectedDate}
+                onDateChange={setSelectedDate}
+                dayStatuses={dayStatuses}
+              />
+            </CardContent>
+          </Card>
 
           {/* Status Overview */}
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
@@ -63,10 +72,26 @@ export function MealProgressSection() {
           />
 
           {/* Meal Cards Grid */}
-          <div>
-            <h3 className='text-xl font-semibold mb-4 text-primary'>
-              Track Your Meals
-            </h3>
+          <Card className='border-border/50'>
+            <CardHeader>
+              <CardTitle className='text-xl font-semibold text-primary'>
+                Track Your Meals
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MealProgressGrid
+                plannedMeals={plannedMeals}
+                dayProgress={selectedDayProgress}
+                selectedDate={selectedDate}
+                onUpdateProgress={addOrUpdateProgress}
+              />
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
             <MealProgressGrid
               plannedMeals={plannedMeals}
               dayProgress={selectedDayProgress}
