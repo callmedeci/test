@@ -19,7 +19,6 @@ import { createClient } from '@/lib/supabase/server';
 import {
   Bot,
   BrainCircuit,
-  CheckSquare,
   ChefHat,
   Dumbbell,
   HelpCircle,
@@ -56,7 +55,6 @@ const navItems = [
     icon: NotebookText,
   },
   { href: '/meal-plan/optimized', label: 'AI Meal Plan', icon: Bot },
-  { href: '/meal-tracker', label: 'Meal Tracker', icon: CheckSquare },
   { section: 'Progress Tracking' },
   {
     href: '/progress',
